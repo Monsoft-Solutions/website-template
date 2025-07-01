@@ -5,34 +5,97 @@ alwaysApply: false
 ---
 # UI Components and Styling Guidelines
 
+## Existing Components Inventory
+
+### Layout Components
+- **Header** (`components/layout/Header.tsx`) - Responsive navigation with mobile menu, sticky behavior, and scroll detection
+- **Footer** (`components/layout/Footer.tsx`) - Multi-column layout with social links and responsive grid
+- **Loading** (`components/layout/Loading.tsx`) - Multiple loading components: `Loading`, `LoadingSpinner`, `LoadingSkeleton`
+- **ErrorBoundary** (`components/layout/ErrorBoundary.tsx`) - User-friendly error handling with reset functionality
+
+### UI Components (Shadcn-based)
+- **Button** (`components/ui/button.tsx`) - Multiple variants and sizes with full TypeScript support
+- **Card** (`components/ui/card.tsx`) - Composable card structure with header, content, and footer
+- **Input** (`components/ui/input.tsx`) - Styled form input with focus states and file support
+- **Label** (`components/ui/label.tsx`) - Accessible form labels with Radix UI integration
+- **Toaster** (`components/ui/toaster.tsx`) - Toast notifications using Sonner with theme integration
+
+### Form Components
+- **FormField** (`components/forms/FormField.tsx`) - React Hook Form integration with error handling
+- **ContactForm** (`components/forms/ContactForm.tsx`) - Complete form example with Zod validation
+
+### SEO Components
+- **JsonLd** (`components/seo/JsonLd.tsx`) - Structured data implementation for rich snippets
+- **Site Config** (`lib/config/site.ts`) - Centralized site configuration and metadata
+- **SEO Config** (`lib/config/seo.ts`) - Metadata generation helpers and JSON-LD schemas
+
 ## Architecture Principles
 
 - **Component Location**: 
   - Before implementing a component for a basic element, check if we can accomplish it with shadcn. If we do, then install the component
+  - Layout components go in `components/layout/`
+  - UI components go in `components/ui/` (shadcn-managed)
+  - Form components go in `components/forms/`
+  - SEO components go in `components/seo/`
   - App-specific components should be in their respective app directories
   - Break complex views into smaller, reusable components
 
 - **Component Organization**:
   - Group related components in directories with an index.ts barrel file
   - Include component tests alongside the component files
+  - Follow the established naming patterns: use kebab-case for files, PascalCase for components
 
 ## UI Framework and Styling
 
 - Use Shadcn UI components as the foundation with Tailwind CSS for styling
 - Implement responsive design with Tailwind using a mobile-first approach
 - Follow the project's design tokens for consistent spacing, colors, and typography
+- Use CSS custom properties defined in `app/globals.css` for theming
 
 ### Installing New Shadcn Components
+
+Always check if the component you need already exists in our `components/ui/` directory first. If not, install it:
 
 ```sh
 npx shadcn@latest add <COMPONENT>
 ```
 
-Example:
-
+Examples:
 ```sh
 npx shadcn@latest add progress
+npx shadcn@latest add dialog
+npx shadcn@latest add tabs
 ```
+
+After installation, the component will be available in `components/ui/` and ready to use.
+
+### Using Existing UI Components
+
+```tsx
+// Button usage
+import { Button } from "@/components/ui/button";
+<Button variant="default" size="lg">Click me</Button>
+
+// Card usage
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+  </CardHeader>
+  <CardContent>Card content here</CardContent>
+</Card>
+
+// Form field usage
+import { FormField } from "@/components/forms/FormField";
+<FormField
+  name="email"
+  label="Email Address"
+  type="email"
+  required
+  description="We'll never share your email"
+/>
+```
+
 ### Image Optimization
 
 - Always use `next/image` for optimal performance and responsive behavior:
@@ -49,22 +112,122 @@ import Image from 'next/image';
   className="rounded-lg"
 />
 ```
-## Loading and Error States
 
-Use the `LoadingContent` component to handle loading and error states consistently:
+## Form Handling Patterns
+
+Use our established form patterns with React Hook Form and Zod validation:
 
 ```tsx
-<Card>
-  <LoadingContent 
-    loading={isLoading} 
-    error={error}
-    loadingFallback={<Skeleton className="h-40 w-full" />}
-    errorFallback={<ErrorDisplay message={error?.message} retry={() => mutate()} />}
-  >
-    {data && <MyComponent data={data} />}
-  </LoadingContent>
-</Card>
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { contactFormSchema } from "@/lib/utils/validation";
+import { FormField } from "@/components/forms/FormField";
+
+const form = useForm({
+  resolver: zodResolver(contactFormSchema),
+  defaultValues: { name: "", email: "", message: "" }
+});
 ```
+
+Validation schemas are available in `lib/utils/validation.ts` for common use cases.
+
+## SEO Configuration
+
+### Page Metadata
+Use the SEO helper functions for consistent metadata:
+
+```tsx
+import { generateSeoMetadata } from "@/lib/config/seo";
+
+export const metadata = generateSeoMetadata({
+  title: "Page Title",
+  description: "Page description for SEO",
+  keywords: ["keyword1", "keyword2"],
+  canonicalUrl: "/page-url"
+});
+```
+
+### JSON-LD Structured Data
+Add structured data for better search engine understanding:
+
+```tsx
+import { JsonLd } from "@/components/seo/JsonLd";
+
+<JsonLd
+  data={{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Article Title",
+    "description": "Article description",
+    "author": { "@type": "Person", "name": "Author Name" }
+  }}
+/>
+```
+
+### Site Configuration
+Update site-wide SEO settings in `lib/config/site.ts`:
+
+```ts
+export const siteConfig = {
+  name: "Site Name",
+  description: "Site description",
+  url: "https://yoursite.com",
+  ogImage: "/og-image.jpg",
+  // ... other config
+};
+```
+
+### Dynamic OG Images
+The site includes dynamic OG image generation at `/api/og`. Use query parameters to customize:
+
+```tsx
+// In your metadata
+openGraph: {
+  images: [`/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`]
+}
+```
+
+## Loading and Error States
+
+Use our existing loading and error components for consistency:
+
+```tsx
+import { Loading, LoadingSpinner, LoadingSkeleton } from "@/components/layout/Loading";
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
+
+// For loading states
+<LoadingSpinner />
+<LoadingSkeleton className="h-40 w-full" />
+
+// For error boundaries
+<ErrorBoundary>
+  <YourComponent />
+</ErrorBoundary>
+```
+
+## Toast Notifications
+
+Use the configured toast system for user feedback:
+
+```tsx
+import { toast } from "sonner";
+
+// Success toast
+toast.success("Form submitted successfully!");
+
+// Error toast
+toast.error("Something went wrong");
+
+// Custom toast
+toast("Custom message", {
+  description: "Additional details",
+  action: {
+    label: "Undo",
+    onClick: () => console.log("Undo"),
+  },
+});
+```
+
 ## Accessibility Best Practices
 
 - Ensure all interactive elements have appropriate ARIA attributes
@@ -72,14 +235,18 @@ Use the `LoadingContent` component to handle loading and error states consistent
 - Use semantic HTML elements (`<button>`, `<nav>`, `<article>`, etc.)
 - Ensure color contrast meets WCAG standards (minimum ratio of 4.5:1)
 - Make all functionality available via keyboard
+- Use our accessible form components that include built-in ARIA attributes
 
 ## Performance Considerations
 
 - Implement virtualization for long lists using `react-virtualized` or `react-window`
 - Lazy load components below the fold using `next/dynamic` or React's `Suspense` and `lazy`
 - Optimize images with appropriate sizes and formats
+- Use our loading states to improve perceived performance
 
 ## Testing Guidelines
 
 - Test visual appearance with Storybook and implement visual regression tests
-
+- Test form validation with various input scenarios
+- Ensure SEO metadata is properly generated for different page types
+- Test responsive behavior across different screen sizes 
