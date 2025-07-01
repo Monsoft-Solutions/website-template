@@ -211,7 +211,31 @@ site-wave-website/
    - Implement JSON-LD structured data
    - Build dynamic OG image generation
 
-### Phase 3: Blog System (Week 3)
+### Phase 3: Core Pages & Features (Week 4)
+
+1. **Static Pages**
+
+   - Design and implement Home page
+   - Create About page
+   - Blog Listing Page (use dummy data for the momment)
+   - Blog Entry Template view
+   - Build Contact page with form
+   - Add 404 and error pages
+
+2. **Contact Form**
+
+   - Implement form validation with Zod
+   - Create API endpoint for submissions
+   - Set up email notifications
+   - Add spam protection (reCAPTCHA)
+
+3. **Performance Optimization**
+   - Implement image optimization
+   - Add lazy loading
+   - Configure caching strategies
+   - Optimize bundle size
+
+### Phase 4: Blog System (Week 3)
 
 1. **Blog API Layer**
 
@@ -233,28 +257,6 @@ site-wave-website/
    - Build markdown editor
    - Implement image upload
    - Add draft/publish workflow
-
-### Phase 4: Core Pages & Features (Week 4)
-
-1. **Static Pages**
-
-   - Design and implement Home page
-   - Create About page
-   - Build Contact page with form
-   - Add 404 and error pages
-
-2. **Contact Form**
-
-   - Implement form validation with Zod
-   - Create API endpoint for submissions
-   - Set up email notifications
-   - Add spam protection (reCAPTCHA)
-
-3. **Performance Optimization**
-   - Implement image optimization
-   - Add lazy loading
-   - Configure caching strategies
-   - Optimize bundle size
 
 ### Phase 5: SEO & Google Integration (Week 5)
 
