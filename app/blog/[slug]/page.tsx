@@ -201,10 +201,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="mx-auto max-w-4xl">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <Badge variant="secondary">{post.category.name}</Badge>
+                <Badge variant="secondary" asChild>
+                  <Link href={`/blog/category/${post.category.slug}`}>
+                    {post.category.name}
+                  </Link>
+                </Badge>
                 {post.tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag.id} variant="outline">
-                    {tag.name}
+                  <Badge key={tag.id} variant="outline" asChild>
+                    <Link href={`/blog/tag/${tag.slug}`}>{tag.name}</Link>
                   </Badge>
                 ))}
               </div>
@@ -365,8 +369,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                             key={tag.id}
                             variant="secondary"
                             className="text-xs"
+                            asChild
                           >
-                            {tag.name}
+                            <Link href={`/blog/tag/${tag.slug}`}>
+                              {tag.name}
+                            </Link>
                           </Badge>
                         ))}
                       </div>

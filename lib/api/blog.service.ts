@@ -9,7 +9,7 @@ import type {
   BlogListOptions,
   BlogListResponse,
 } from "@/lib/types";
-import { eq, desc, and, sql, count } from "drizzle-orm";
+import { eq, desc, and, sql, count, like, or, exists } from "drizzle-orm";
 
 /**
  * Calculate estimated reading time based on content length
@@ -23,15 +23,56 @@ const calculateReadingTime = (content: string): number => {
 };
 
 /**
- * Get published blog posts with basic pagination
- * Simplified version to avoid complex query typing issues
+ * Get published blog posts with filtering, search, and pagination
  */
 export const getBlogPosts = async (
   options: BlogListOptions = {}
 ): Promise<BlogListResponse> => {
-  const { page = 1, limit = 10, status = "published" } = options;
+  const {
+    page = 1,
+    limit = 10,
+    status = "published",
+    categorySlug,
+    tagSlug,
+    searchQuery,
+  } = options;
 
   const offset = (page - 1) * limit;
+
+  // Build where conditions
+  const conditions = [eq(blogPosts.status, status)];
+
+  // Add category filter
+  if (categorySlug && categorySlug !== "all") {
+    conditions.push(eq(categories.slug, categorySlug));
+  }
+
+  // Add search filter
+  if (searchQuery) {
+    const searchTerm = `%${searchQuery}%`;
+    conditions.push(
+      or(
+        like(blogPosts.title, searchTerm),
+        like(blogPosts.excerpt, searchTerm),
+        like(blogPosts.content, searchTerm)
+      )!
+    );
+  }
+
+  // Add tag filter
+  if (tagSlug) {
+    conditions.push(
+      exists(
+        db
+          .select({ id: blogPostsTags.postId })
+          .from(blogPostsTags)
+          .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
+          .where(
+            and(eq(blogPostsTags.postId, blogPosts.id), eq(tags.slug, tagSlug))
+          )
+      )
+    );
+  }
 
   // Get posts with basic joins
   const postsResult = await db
@@ -43,16 +84,17 @@ export const getBlogPosts = async (
     .from(blogPosts)
     .leftJoin(authors, eq(blogPosts.authorId, authors.id))
     .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
-    .where(eq(blogPosts.status, status))
+    .where(and(...conditions))
     .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
     .limit(limit)
     .offset(offset);
 
-  // Get total count
+  // Get total count with same conditions
   const totalCountResult = await db
     .select({ count: count() })
     .from(blogPosts)
-    .where(eq(blogPosts.status, status));
+    .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
+    .where(and(...conditions));
 
   const totalPosts = totalCountResult[0]?.count || 0;
   const totalPages = Math.ceil(totalPosts / limit);
@@ -236,7 +278,78 @@ export const getBlogCategories = async () => {
 };
 
 /**
- * Get featured blog posts (latest published posts)
+ * Get all tags with post counts
+ */
+export const getBlogTags = async () => {
+  const tagsResult = await db
+    .select({
+      tag: tags,
+      postCount: count(blogPosts.id),
+    })
+    .from(tags)
+    .leftJoin(blogPostsTags, eq(tags.id, blogPostsTags.tagId))
+    .leftJoin(
+      blogPosts,
+      and(
+        eq(blogPostsTags.postId, blogPosts.id),
+        eq(blogPosts.status, "published")
+      )
+    )
+    .groupBy(tags.id)
+    .having(sql`count(${blogPosts.id}) > 0`)
+    .orderBy(desc(count(blogPosts.id)), tags.name);
+
+  return tagsResult;
+};
+
+/**
+ * Get posts by category slug
+ */
+export const getBlogPostsByCategory = async (
+  categorySlug: string,
+  options: Omit<BlogListOptions, "categorySlug"> = {}
+): Promise<BlogListResponse> => {
+  return getBlogPosts({ ...options, categorySlug });
+};
+
+/**
+ * Get posts by tag slug
+ */
+export const getBlogPostsByTag = async (
+  tagSlug: string,
+  options: Omit<BlogListOptions, "tagSlug"> = {}
+): Promise<BlogListResponse> => {
+  return getBlogPosts({ ...options, tagSlug });
+};
+
+/**
+ * Get category by slug
+ */
+export const getCategoryBySlug = async (slug: string) => {
+  const result = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.slug, slug))
+    .limit(1);
+
+  return result[0] || null;
+};
+
+/**
+ * Get tag by slug
+ */
+export const getTagBySlug = async (slug: string) => {
+  const result = await db
+    .select()
+    .from(tags)
+    .where(eq(tags.slug, slug))
+    .limit(1);
+
+  return result[0] || null;
+};
+
+/**
+ * Featured blog posts (latest published posts)
  */
 export const getFeaturedBlogPosts = async (
   limit: number = 5

@@ -6,19 +6,12 @@ interface RouteParams {
 }
 
 /**
- * GET endpoint - Get related blog posts by post slug
+ * GET endpoint - Get related blog posts for a specific post
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
-
-    if (!slug) {
-      return NextResponse.json(
-        { error: "Post slug parameter is required" },
-        { status: 400 }
-      );
-    }
 
     // Parse query parameters
     const limit = parseInt(searchParams.get("limit") || "3", 10);
@@ -31,18 +24,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // First get the post by slug to get its ID
-    const post = await getBlogPostBySlug(slug);
+    // First, get the current post to get its ID
+    const currentPost = await getBlogPostBySlug(slug);
 
-    if (!post) {
+    if (!currentPost) {
       return NextResponse.json(
         { error: "Blog post not found" },
         { status: 404 }
       );
     }
 
-    // Get related blog posts using the post ID
-    const relatedPosts = await getRelatedBlogPosts(post.id, limit);
+    // Get related posts
+    const relatedPosts = await getRelatedBlogPosts(currentPost.id, limit);
 
     return NextResponse.json({
       success: true,
@@ -61,8 +54,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 /**
- * POST endpoint - Method not allowed
+ * Other methods not allowed
  */
 export async function POST() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
+export async function PUT() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
+export async function DELETE() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

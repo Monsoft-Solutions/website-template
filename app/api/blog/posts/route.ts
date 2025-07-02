@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const categorySlug = searchParams.get("categorySlug") || undefined;
+    const tagSlug = searchParams.get("tagSlug") || undefined;
+    const searchQuery = searchParams.get("searchQuery") || undefined;
     const status =
       (searchParams.get("status") as "published" | "draft" | "archived") ||
       "published";
@@ -38,6 +40,8 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       categorySlug,
+      tagSlug,
+      searchQuery,
       status,
     };
 
