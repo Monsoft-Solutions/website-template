@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -289,18 +290,18 @@ export default function AboutPage() {
                 Let&apos;s discuss how we can help bring your vision to life.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a
+                <Link
                   href="/contact"
                   className="inline-flex items-center justify-center rounded-md bg-background text-foreground px-6 py-3 font-medium hover:bg-background/90 transition-colors"
                 >
                   Get In Touch
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/blog"
                   className="inline-flex items-center justify-center rounded-md border border-primary-foreground/20 px-6 py-3 font-medium hover:bg-primary-foreground/10 transition-colors"
                 >
                   Read Our Blog
-                </a>
+                </Link>
               </div>
             </CardContent>
           </Card>

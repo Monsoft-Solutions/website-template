@@ -11,7 +11,7 @@ export function JsonLd({ type, data }: JsonLdProps) {
       dangerouslySetInnerHTML={{
         __html: JSON.stringify(jsonLd),
       }}
-      strategy="beforeInteractive"
+      strategy="afterInteractive"
     />
   );
 }

@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { generateSeoMetadata } from "@/lib/config/seo";
 import {
   Home,
   Search,
@@ -20,12 +20,7 @@ import {
   FileQuestion,
 } from "lucide-react";
 
-export const metadata: Metadata = generateSeoMetadata({
-  title: "Page Not Found - 404",
-  description:
-    "The page you're looking for doesn't exist. Find what you need with our helpful navigation and search options.",
-  noIndex: true,
-});
+// Note: metadata moved to layout or removed since this is now a client component
 
 const quickLinks = [
   {

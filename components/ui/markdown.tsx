@@ -1,6 +1,7 @@
 import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export interface MarkdownProps {
@@ -75,9 +76,28 @@ export function Markdown({ content, className }: MarkdownProps) {
               />
             );
           },
-          img: (props) => (
-            <img className="max-w-full h-auto rounded-md my-6" {...props} />
-          ),
+          img: (props) => {
+            const width =
+              typeof props.width === "string"
+                ? parseInt(props.width)
+                : props.width || 800;
+            const height =
+              typeof props.height === "string"
+                ? parseInt(props.height)
+                : props.height || 400;
+            const src = typeof props.src === "string" ? props.src : "";
+
+            return (
+              <Image
+                className="max-w-full h-auto rounded-md my-6"
+                src={src}
+                alt={props.alt || "Image"}
+                width={width}
+                height={height}
+                style={{ width: "auto", height: "auto" }}
+              />
+            );
+          },
           table: (props) => (
             <div className="overflow-x-auto my-6">
               <table className="w-full border-collapse" {...props} />
