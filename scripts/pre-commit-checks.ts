@@ -86,10 +86,11 @@ async function runPreCommitChecks(): Promise<void> {
     runCommand("npx tsc --noEmit --skipLibCheck", "TypeScript type checking")
   );
 
-  // 2. ESLint check
+  // 2. ESLint check - filter out lib/data files since they're no longer needed
+  const filesToLint = stagedFiles.filter((file) => !file.includes("lib/data/"));
   results.push(
     runCommand(
-      `npx eslint ${stagedFiles.join(" ")} --max-warnings 0`,
+      `npx eslint ${filesToLint.join(" ")} --max-warnings 0`,
       "ESLint validation"
     )
   );

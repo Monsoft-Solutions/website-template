@@ -1,4 +1,5 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,34 +18,35 @@ import {
   Lightbulb,
   Target,
 } from "lucide-react";
-import { services } from "@/lib/data/services";
-import { serviceCategories } from "@/lib/data/service-categories";
 import { JsonLd } from "@/components/seo/JsonLd";
-
-export const metadata: Metadata = {
-  title: "Our Services | Professional Digital Solutions",
-  description:
-    "Discover our comprehensive range of digital services including web development, mobile apps, UI/UX design, digital consulting, and cloud solutions.",
-  keywords:
-    "web development, mobile app development, UI UX design, digital consulting, cloud solutions, technology services",
-};
-
-const serviceStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  name: "Digital Services",
-  description:
-    "Comprehensive digital solutions including web development, mobile apps, design, and consulting",
-  provider: {
-    "@type": "Organization",
-    name: "Your Company Name",
-    url: "https://yoursite.com",
-  },
-  serviceType: services.map((service) => service.title),
-  areaServed: "Global",
-};
+import { useServices } from "@/lib/hooks/use-services.hook";
+import { useServiceCategories } from "@/lib/hooks/use-service-categories.hook";
+import { useState } from "react";
 
 export default function ServicesPage() {
+  const { data: services, isLoading, error } = useServices();
+  const { data: categories, isLoading: categoriesLoading } =
+    useServiceCategories();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const filteredServices = selectedCategory
+    ? services.filter((service) => service.category === selectedCategory)
+    : services;
+
+  const serviceStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Digital Services",
+    description:
+      "Comprehensive digital solutions including web development, mobile apps, design, and consulting",
+    provider: {
+      "@type": "Organization",
+      name: "Your Company Name",
+      url: "https://yoursite.com",
+    },
+    serviceType: services.map((service) => service.title),
+    areaServed: "Global",
+  };
   return (
     <>
       <JsonLd type="Organization" data={serviceStructuredData} />
@@ -141,87 +143,108 @@ export default function ServicesPage() {
 
             {/* Category Filter */}
             <div className="flex flex-wrap justify-center gap-2 mb-12">
-              <Badge variant="default" className="cursor-pointer">
+              <Badge
+                variant={selectedCategory === null ? "default" : "secondary"}
+                className="cursor-pointer"
+                onClick={() => setSelectedCategory(null)}
+              >
                 All Services
               </Badge>
-              {serviceCategories.map((category) => (
-                <Badge
-                  key={category}
-                  variant="secondary"
-                  className="cursor-pointer"
-                >
-                  {category}
-                </Badge>
-              ))}
+              {categoriesLoading ? (
+                <div className="py-2 px-4">Loading categories...</div>
+              ) : (
+                categories.map((category) => (
+                  <Badge
+                    key={category}
+                    variant={
+                      selectedCategory === category ? "default" : "secondary"
+                    }
+                    className="cursor-pointer"
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {category}
+                  </Badge>
+                ))
+              )}
             </div>
 
             {/* Services Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {services.map((service) => (
-                <Card
-                  key={service.id}
-                  className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md"
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge variant="outline">{service.category}</Badge>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {service.timeline}
-                      </div>
-                    </div>
-                    <CardTitle className="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {service.title}
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-gray-300">
-                      {service.shortDescription}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Key Features */}
-                      <div>
-                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-2">
-                          Key Features:
-                        </h4>
-                        <ul className="space-y-1">
-                          {service.features
-                            .slice(0, 3)
-                            .map((feature, index) => (
-                              <li
-                                key={index}
-                                className="flex items-center text-sm text-gray-600 dark:text-gray-300"
-                              >
-                                <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                                {feature}
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
-
-                      {/* Pricing Range */}
-                      <div className="border-t pt-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Starting from
-                          </span>
-                          <span className="font-semibold text-gray-900 dark:text-white">
-                            {service.pricing[0]?.price || "Contact us"}
-                          </span>
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <p>Loading services...</p>
+              </div>
+            ) : error ? (
+              <div className="flex justify-center py-12">
+                <p className="text-red-500">Error loading services: {error}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredServices.map((service) => (
+                  <Card
+                    key={service.id}
+                    className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md"
+                  >
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-4">
+                        <Badge variant="outline">{service.category}</Badge>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {service.timeline}
                         </div>
                       </div>
+                      <CardTitle className="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {service.title}
+                      </CardTitle>
+                      <CardDescription className="text-gray-600 dark:text-gray-300">
+                        {service.shortDescription}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {/* Key Features */}
+                        <div>
+                          <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-2">
+                            Key Features:
+                          </h4>
+                          <ul className="space-y-1">
+                            {service.features
+                              .slice(0, 3)
+                              .map((feature, index) => (
+                                <li
+                                  key={index}
+                                  className="flex items-center text-sm text-gray-600 dark:text-gray-300"
+                                >
+                                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                                  {feature}
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
 
-                      {/* CTA */}
-                      <Button asChild className="w-full group/btn">
-                        <Link href={`/services/${service.slug}`}>
-                          Learn More
-                          <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        {/* Pricing Range */}
+                        <div className="border-t pt-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              Starting from
+                            </span>
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {service.pricing[0]?.price || "Contact us"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* CTA */}
+                        <Button asChild className="w-full group/btn">
+                          <Link href={`/services/${service.slug}`}>
+                            Learn More
+                            <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

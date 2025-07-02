@@ -1,4 +1,5 @@
-import type { Service, ServiceCategory } from "../types";
+import type { ServiceCategory } from "../types";
+import type { ServiceWithRelations } from "../types/service-with-relations.type";
 
 /**
  * Find a service by its slug
@@ -7,9 +8,9 @@ import type { Service, ServiceCategory } from "../types";
  * @returns The service if found, undefined otherwise
  */
 export const getServiceBySlug = (
-  services: readonly Service[],
+  services: readonly ServiceWithRelations[],
   slug: string
-): Service | undefined => {
+): ServiceWithRelations | undefined => {
   return services.find((service) => service.slug === slug);
 };
 
@@ -20,9 +21,9 @@ export const getServiceBySlug = (
  * @returns Array of services in the specified category
  */
 export const getServicesByCategory = (
-  services: readonly Service[],
+  services: readonly ServiceWithRelations[],
   category: ServiceCategory
-): Service[] => {
+): ServiceWithRelations[] => {
   return services.filter((service) => service.category === category);
 };
 
@@ -33,9 +34,9 @@ export const getServicesByCategory = (
  * @returns Array of related services
  */
 export const getRelatedServices = (
-  services: readonly Service[],
+  services: readonly ServiceWithRelations[],
   currentServiceSlug: string
-): Service[] => {
+): ServiceWithRelations[] => {
   const currentService = getServiceBySlug(services, currentServiceSlug);
   if (!currentService) return [];
 
@@ -49,6 +50,8 @@ export const getRelatedServices = (
  * @param services - Array of services
  * @returns Array of all service slugs
  */
-export const getAllServiceSlugs = (services: readonly Service[]): string[] => {
+export const getAllServiceSlugs = (
+  services: readonly ServiceWithRelations[]
+): string[] => {
   return services.map((service) => service.slug);
 };

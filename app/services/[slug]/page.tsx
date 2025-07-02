@@ -1,7 +1,7 @@
-import { Metadata } from "next";
-import { notFound } from "next/navigation";
-import Link from "next/link";
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,13 +27,10 @@ import {
 } from "lucide-react";
 
 import { JsonLd } from "@/components/seo/JsonLd";
-import {
-  getAllServiceSlugs,
-  getServiceBySlug,
-  getRelatedServices,
-} from "@/lib/utils";
-import { services } from "@/lib/data/services";
-import type { Service } from "@/lib/types";
+import { useService } from "@/lib/hooks/use-services.hook";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 
 interface ServicePageProps {
   params: Promise<{
@@ -41,54 +38,57 @@ interface ServicePageProps {
   }>;
 }
 
-export async function generateStaticParams() {
-  const slugs = getAllServiceSlugs(services);
-  return slugs.map((slug) => ({
-    slug,
-  }));
-}
+export default function ServicePage({ params }: ServicePageProps) {
+  const [slug, setSlug] = useState<string>("");
+  const { data: service, isLoading, error } = useService(slug);
+  const router = useRouter();
 
-export async function generateMetadata({
-  params,
-}: ServicePageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const service = getServiceBySlug(services, slug);
+  useEffect(() => {
+    async function resolveParams() {
+      try {
+        const resolvedParams = await params;
+        setSlug(resolvedParams.slug);
+      } catch (error) {
+        console.error("Failed to resolve params:", error);
+      }
+    }
 
-  if (!service) {
-    return {
-      title: "Service Not Found",
-      description: "The requested service could not be found.",
-    };
+    resolveParams();
+  }, [params]);
+
+  // Handle loading and error states
+  useEffect(() => {
+    if (!isLoading && !service && slug) {
+      router.push("/404");
+    }
+  }, [isLoading, service, router, slug]);
+
+  // Show loading state
+  if (isLoading || !slug) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading service details...</p>
+      </div>
+    );
   }
 
-  return {
-    title: `${service.title} | Professional Services`,
-    description: service.shortDescription,
-    keywords: [
-      service.title.toLowerCase(),
-      service.category.toLowerCase(),
-      ...(service.technologies || []),
-      "professional services",
-      "digital solutions",
-    ].join(", "),
-    openGraph: {
-      title: service.title,
-      description: service.shortDescription,
-      images: [service.featuredImage],
-      type: "article",
-    },
-  };
-}
-
-export default async function ServicePage({ params }: ServicePageProps) {
-  const { slug } = await params;
-  const service = getServiceBySlug(services, slug);
-
-  if (!service) {
-    notFound();
+  // Handle error state
+  if (error || !service) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Service</h2>
+          <p className="mb-6">{error || "Service not found"}</p>
+          <Button asChild>
+            <Link href="/services">Back to Services</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
-  const relatedServices = getRelatedServices(services, slug);
+  // Get related services - for now we'll skip this until we implement it
+  const relatedServices: ServiceWithRelations[] = [];
 
   const serviceStructuredData = {
     "@context": "https://schema.org",
@@ -462,7 +462,7 @@ export default async function ServicePage({ params }: ServicePageProps) {
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {relatedServices.map((relatedService: Service) => (
+                {relatedServices.map((relatedService: ServiceWithRelations) => (
                   <Card
                     key={relatedService.id}
                     className="group hover:shadow-lg transition-all duration-300"
