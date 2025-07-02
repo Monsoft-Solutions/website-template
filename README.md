@@ -70,8 +70,8 @@
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/site-wave-website.git
-cd site-wave-website
+git clone https://github.com/Monsoft-Solutions/website-template
+cd website-template
 ```
 
 ### 2. Install dependencies
@@ -347,7 +347,15 @@ Contributions are welcome! Please follow these steps:
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is open source and available under the [Apache License 2.0](LICENSE).
+
+## 👤 Creator
+
+**Monsoft Solutions**
+
+- Website: [https://monsoft.io](https://monsoft.io)
+- Email: [hello@monsoftsolutions.com](mailto:hello@monsoftsolutions.com)
+- GitHub: [Monsoft-Solutions](https://github.com/Monsoft-Solutions)
 
 ## 🙏 Acknowledgments
 
@@ -359,5 +367,5 @@ This project is open source and available under the [MIT License](LICENSE).
 ---
 
 <div align="center">
-  Made with ❤️ by <link href="https://monsoftsolutions.com">Mosnoft Solutions, LLC</link>
+  Made with ❤️ by <a href="https://monsoft.io">Monsoft Solutions, LLC</a>
 </div>
