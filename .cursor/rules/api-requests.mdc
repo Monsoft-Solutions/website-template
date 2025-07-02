@@ -1,5 +1,5 @@
 ---
-description: 
+description: Contains the instructions for implementating API requests from the client and the API routes, hooks and more.
 globs: 
 alwaysApply: false
 ---
