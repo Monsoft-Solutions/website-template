@@ -15,3 +15,7 @@ export type { LazyImageProps } from "./lazy-image.type";
 
 // Shared types
 export type { ApiResponse } from "./api-response.type";
+export type {
+  ContactSubmissionResponse,
+  ContactFormResponse,
+} from "./contact-submission.type";

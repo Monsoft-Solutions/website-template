@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { contactSubmissions } from "@/lib/db/schema/contact-submission.table";
 import { contactFormSchema } from "@/lib/utils/validation";
+import { ApiResponse } from "@/lib/types/api-response.type";
+import { ContactSubmissionResponse } from "@/lib/types/contact-submission.type";
 
 // Rate limiting storage (in production, use Redis or a database)
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
@@ -41,7 +43,9 @@ function isRateLimited(ip: string): boolean {
 }
 
 /**
- * Basic spam detection heuristics
+ * Simple spam detection for contact forms
+ * This is just a basic implementation and should be expanded
+ * with a more robust solution in production
  */
 function detectSpam(data: {
   name: string;
@@ -50,30 +54,23 @@ function detectSpam(data: {
 }): boolean {
   const { name, email, message } = data;
 
-  // Check for suspicious patterns
-  const suspiciousPatterns = [
-    /viagra|cialis|casino|lottery|winner/i,
-    /click here|visit now|limited time/i,
-    /money back guarantee|100% free/i,
+  // Check for common spam indicators
+  const spamPatterns = [
+    /\b(viagra|cialis|crypto|casino|porn|xxx|seo|loan|dating|sex|free money)\b/i,
+    /\b(buy|cheap|free|discount|wholesale|sell)\b.{0,20}\b(watches|drugs|medicine|pills)\b/i,
+    /https?:\/\/\S+/g, // Multiple links in message
   ];
 
-  const text = `${name} ${email} ${message}`.toLowerCase();
-
-  // Check for spam keywords
-  if (suspiciousPatterns.some((pattern) => pattern.test(text))) {
-    return true;
+  // Check content against patterns
+  for (const pattern of spamPatterns) {
+    if (pattern.test(name) || pattern.test(email) || pattern.test(message)) {
+      return true;
+    }
   }
 
-  // Check for excessive URLs
-  const urlCount = (message.match(/https?:\/\//g) || []).length;
-  if (urlCount > 2) {
-    return true;
-  }
-
-  // Check for excessive repetition
-  const words = message.toLowerCase().split(/\s+/);
-  const uniqueWords = new Set(words);
-  if (words.length > 10 && uniqueWords.size / words.length < 0.5) {
+  // Count links in message - too many links is often spam
+  const linkMatches = message.match(/https?:\/\/\S+/g);
+  if (linkMatches && linkMatches.length > 3) {
     return true;
   }
 
@@ -100,13 +97,13 @@ export async function POST(request: NextRequest) {
 
     // Apply rate limiting
     if (isRateLimited(clientIp)) {
-      return NextResponse.json(
-        {
-          error: "Rate limit exceeded",
-          message: "Too many submissions. Please try again later.",
-        },
-        { status: 429 }
-      );
+      const response: ApiResponse<ContactSubmissionResponse> = {
+        success: false,
+        data: {} as ContactSubmissionResponse,
+        error: "Rate limit exceeded",
+        message: "Too many submissions. Please try again later.",
+      };
+      return NextResponse.json(response, { status: 429 });
     }
 
     // Parse and validate request body
@@ -114,13 +111,13 @@ export async function POST(request: NextRequest) {
     const validationResult = contactFormSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validationResult.error.errors,
-        },
-        { status: 400 }
-      );
+      const response: ApiResponse<ContactSubmissionResponse> = {
+        success: false,
+        data: {} as ContactSubmissionResponse,
+        error: "Validation failed",
+        message: validationResult.error.errors.map((e) => e.message).join(", "),
+      };
+      return NextResponse.json(response, { status: 400 });
     }
 
     const { name, email, subject, message } = validationResult.data;
@@ -134,10 +131,12 @@ export async function POST(request: NextRequest) {
       });
 
       // Return success to avoid revealing spam detection
-      return NextResponse.json({
+      const response: ApiResponse<ContactSubmissionResponse> = {
         success: true,
+        data: { submissionId: "generated" }, // Fake ID to avoid revealing spam detection
         message: "Thank you for your message. We'll get back to you soon!",
-      });
+      };
+      return NextResponse.json(response);
     }
 
     // Get user agent for tracking
@@ -162,20 +161,23 @@ export async function POST(request: NextRequest) {
     // TODO: Send email notification to admin
     // This would be implemented with your email service (Resend, NodeMailer, etc.)
 
-    return NextResponse.json({
+    const response: ApiResponse<ContactSubmissionResponse> = {
       success: true,
+      data: {
+        submissionId: submission.id,
+      },
       message: "Thank you for your message. We'll get back to you soon!",
-      submissionId: submission.id,
-    });
+    };
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Contact form submission error:", error);
 
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: "Something went wrong. Please try again later.",
-      },
-      { status: 500 }
-    );
+    const response: ApiResponse<ContactSubmissionResponse> = {
+      success: false,
+      data: {} as ContactSubmissionResponse,
+      error: "Internal server error",
+      message: "Something went wrong. Please try again later.",
+    };
+    return NextResponse.json(response, { status: 500 });
   }
 }

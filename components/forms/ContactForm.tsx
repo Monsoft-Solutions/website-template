@@ -11,6 +11,7 @@ import {
   contactFormSchema,
   type ContactFormData,
 } from "@/lib/utils/validation";
+import { ContactFormResponse } from "@/lib/types/contact-submission.type";
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +38,7 @@ export function ContactForm() {
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
+      const result: ContactFormResponse = await response.json();
 
       if (!response.ok) {
         if (response.status === 429) {
@@ -50,12 +51,13 @@ export function ContactForm() {
 
         if (response.status === 400) {
           toast.error("Validation failed", {
-            description: "Please check your form data and try again.",
+            description:
+              result.error || "Please check your form data and try again.",
           });
           return;
         }
 
-        throw new Error(result.message || "Failed to send message");
+        throw new Error(result.error || "Failed to send message");
       }
 
       toast.success("Message sent successfully!", {
@@ -67,7 +69,8 @@ export function ContactForm() {
     } catch (error) {
       console.error("Contact form error:", error);
       toast.error("Failed to send message", {
-        description: "Please try again later.",
+        description:
+          error instanceof Error ? error.message : "Please try again later.",
       });
     } finally {
       setIsSubmitting(false);
