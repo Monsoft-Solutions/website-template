@@ -226,7 +226,6 @@ site-wave-website/
 
    - Implement form validation with Zod
    - Create API endpoint for submissions
-   - Set up email notifications
    - Add spam protection (reCAPTCHA)
 
 3. **Performance Optimization**

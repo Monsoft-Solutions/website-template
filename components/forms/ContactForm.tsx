@@ -29,17 +29,43 @@ export function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-      console.log("Form data:", data);
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          toast.error("Rate limit exceeded", {
+            description:
+              result.message || "Too many submissions. Please try again later.",
+          });
+          return;
+        }
+
+        if (response.status === 400) {
+          toast.error("Validation failed", {
+            description: "Please check your form data and try again.",
+          });
+          return;
+        }
+
+        throw new Error(result.message || "Failed to send message");
+      }
 
       toast.success("Message sent successfully!", {
-        description: "We'll get back to you as soon as possible.",
+        description:
+          result.message || "We'll get back to you as soon as possible.",
       });
 
       form.reset();
-    } catch {
+    } catch (error) {
+      console.error("Contact form error:", error);
       toast.error("Failed to send message", {
         description: "Please try again later.",
       });
