@@ -1,0 +1,321 @@
+---
+description: Guidelines for working with Drizzle ORM data schemas in our project
+globs: 
+alwaysApply: false
+---
+# Drizzle ORM Data Layer Guidelines
+
+This document outlines the standards and best practices for working with our Drizzle ORM data layer.
+
+## 📁 File Structure
+
+### Naming Conventions
+
+1. All schema files must follow these naming patterns:
+   - `*.table.ts` - Table definitions
+   - `*.enum.ts` - Enum definitions
+   - `*.type.ts` - Type definitions
+   - `*.relations.ts` - Relation definitions
+
+2. Use kebab-case for all filenames:
+   ```
+   ✅ user-profile.table.ts
+   ❌ userProfile.table.ts
+   ```
+
+### Directory Organization
+
+```
+lib/db/
+├── schema/           # All schema definitions
+│   ├── index.ts      # Central export file
+│   ├── *.table.ts    # Table definitions
+│   ├── *.enum.ts     # Enum definitions
+│   ├── *.type.ts     # Type definitions
+│   └── relations.ts  # All relation definitions
+├── migrations/       # Generated migration files
+├── seed/             # Database seeding scripts
+└── index.ts          # Database connection
+```
+
+## 🏗️ Creating New Schemas
+
+### 1. Table Definitions
+
+Create a new file named `your-entity.table.ts` with the following structure:
+
+```typescript
+import { pgTable, uuid, varchar, text, timestamp } from "drizzle-orm/pg-core";
+// Import any required enums or related tables for foreign keys
+
+/**
+ * Descriptive comment about the table's purpose
+ * Include any important relationships or usage notes
+ */
+export const yourEntities = pgTable(
+  "your_entities", // Snake case for database table name
+  {
+    // Primary key (always use UUID)
+    id: uuid("id").primaryKey().defaultRandom(),
+    
+    // Required fields with validation
+    name: varchar("name", { length: 255 }).notNull(),
+    
+    // Optional fields
+    description: text("description"),
+    
+    // Always include these timestamp fields
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  // Define foreign keys in the second parameter if needed
+  (table) => ({
+    // Example foreign key
+    otherEntityFk: foreignKey({
+      columns: [table.otherEntityId],
+      foreignColumns: [otherEntities.id],
+      name: "your_entities_other_entity_id_fk",
+    }),
+  })
+);
+```
+
+### 2. Enum Definitions
+
+Create a new file named `your-enum.enum.ts`:
+
+```typescript
+import { pgEnum } from "drizzle-orm/pg-core";
+
+/**
+ * Enum for your specific use case
+ * Include description of when/how it's used
+ */
+export const yourStatusEnum = pgEnum("your_status", [
+  "active",
+  "pending",
+  "archived",
+]);
+```
+
+### 3. Type Definitions
+
+Create a new file named `your-entity.type.ts`:
+
+```typescript
+import { InferSelectModel, InferInsertModel } from "drizzle-orm";
+import { yourEntities } from "./your-entity.table";
+
+/**
+ * Type definitions for the yourEntities table
+ */
+export type YourEntity = InferSelectModel<typeof yourEntities>;
+export type NewYourEntity = InferInsertModel<typeof yourEntities>;
+
+// Add any additional custom types if needed
+export type YourEntityWithRelations = YourEntity & {
+  relatedItems?: RelatedItem[];
+};
+```
+
+### 4. Relation Definitions
+
+Add your relations to the `relations.ts` file:
+
+```typescript
+import { relations } from "drizzle-orm";
+import { yourEntities } from "./your-entity.table";
+import { relatedEntities } from "./related-entity.table";
+
+// Add your new relations
+export const yourEntitiesRelations = relations(yourEntities, ({ one, many }) => ({
+  // One-to-many relationship
+  relatedItems: many(relatedEntities),
+  
+  // Many-to-one relationship
+  parent: one(parentEntities, {
+    fields: [yourEntities.parentId],
+    references: [parentEntities.id],
+  }),
+}));
+```
+
+### 5. Update the Schema Index
+
+Always add your new schema files to `schema/index.ts`:
+
+```typescript
+// Existing exports...
+
+// Add your new exports
+export * from "./your-entity.table";
+export * from "./your-enum.enum";
+export * from "./your-entity.type";
+
+// Make sure relations are exported last
+export * from "./relations";
+```
+
+## 🔄 Many-to-Many Relationships
+
+For many-to-many relationships, create a junction table:
+
+```typescript
+import { pgTable, uuid, foreignKey, primaryKey } from "drizzle-orm/pg-core";
+import { entityA } from "./entity-a.table";
+import { entityB } from "./entity-b.table";
+
+/**
+ * Junction table for many-to-many relationship between entityA and entityB
+ */
+export const entityAEntityB = pgTable(
+  "entity_a_entity_b", // Use both entity names in snake_case
+  {
+    entityAId: uuid("entity_a_id").notNull(),
+    entityBId: uuid("entity_b_id").notNull(),
+  },
+  (table) => ({
+    // Composite primary key
+    pk: primaryKey({ columns: [table.entityAId, table.entityBId] }),
+    
+    // Foreign keys
+    entityAFk: foreignKey({
+      columns: [table.entityAId],
+      foreignColumns: [entityA.id],
+      name: "entity_a_entity_b_entity_a_id_fk",
+    }),
+    entityBFk: foreignKey({
+      columns: [table.entityBId],
+      foreignColumns: [entityB.id],
+      name: "entity_a_entity_b_entity_b_id_fk",
+    }),
+  })
+);
+```
+
+Then define relations for both sides in `relations.ts`:
+
+```typescript
+export const entityARelations = relations(entityA, ({ many }) => ({
+  entityBJunction: many(entityAEntityB),
+}));
+
+export const entityBRelations = relations(entityB, ({ many }) => ({
+  entityAJunction: many(entityAEntityB),
+}));
+
+export const entityAEntityBRelations = relations(entityAEntityB, ({ one }) => ({
+  entityA: one(entityA, {
+    fields: [entityAEntityB.entityAId],
+    references: [entityA.id],
+  }),
+  entityB: one(entityB, {
+    fields: [entityAEntityB.entityBId],
+    references: [entityB.id],
+  }),
+}));
+```
+
+## 🧪 Best Practices
+
+### Column Types
+
+1. Always use UUIDs for primary keys:
+   ```typescript
+   id: uuid("id").primaryKey().defaultRandom(),
+   ```
+
+2. Use appropriate column types:
+   - `varchar` - For short text with known max length
+   - `text` - For longer text content
+   - `integer` - For whole numbers
+   - `boolean` - For true/false values
+   - `timestamp` - For date/time values
+   - `jsonb` - For structured JSON data
+
+3. Always include validation constraints:
+   ```typescript
+   email: varchar("email", { length: 255 }).notNull().unique(),
+   ```
+
+### Naming Conventions
+
+1. Table names: Use plural nouns in snake_case for database tables
+   ```typescript
+   export const userProfiles = pgTable("user_profiles", {...});
+   ```
+
+2. Column names: Use camelCase in TypeScript, snake_case in database
+   ```typescript
+   createdAt: timestamp("created_at").notNull().defaultNow(),
+   ```
+
+3. Foreign keys: Use the pattern `entityNameId` for foreign key columns
+   ```typescript
+   userId: uuid("user_id").notNull(),
+   ```
+
+4. Foreign key constraints: Use descriptive names with the pattern `table_column_fk`
+   ```typescript
+   name: "posts_author_id_fk"
+   ```
+
+### Timestamps
+
+Always include these timestamp fields on every table:
+
+```typescript
+createdAt: timestamp("created_at").notNull().defaultNow(),
+updatedAt: timestamp("updated_at")
+  .notNull()
+  .defaultNow()
+  .$onUpdate(() => new Date()),
+```
+
+## 🚀 Generating Migrations
+
+After creating or modifying schema files:
+
+1. Generate migration files:
+   ```bash
+   npm run db:generate
+   ```
+
+2. Review the generated migration files in `lib/db/migrations/`
+
+3. Apply migrations:
+   ```bash
+   npm run db:migrate
+   ```
+
+## 📝 Example: Complete Entity Schema
+
+Here's a complete example of a properly structured entity:
+
+```typescript
+// user-profile.table.ts
+import { pgTable, uuid, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { userRoleEnum } from "./user-role.enum";
+
+/**
+ * User profiles for application authentication and personalization
+ * Stores core user data and preferences
+ */
+export const userProfiles = pgTable("user_profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  bio: text("bio"),
+  role: userRoleEnum("role").notNull().default("user"),
+  isActive: boolean("is_active").notNull().default(true),
+  lastLoginAt: timestamp("last_login_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+```
