@@ -1,0 +1,292 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# API Request Handling Guidelines
+
+## Type Definitions
+
+1. Always define response types in `/lib/types` folder:
+   - Use suffix `.type.ts` for all type files
+   - Follow naming convention: `entity-name.type.ts`
+   - Place shared types in `/lib/types`
+   - Place feature-specific types in `/lib/types/features/{feature-name}`
+
+2. Always use the `ApiResponse<T>` wrapper for all API responses:
+
+```typescript
+// Good example
+import { ApiResponse } from "@/lib/types/api-response.type";
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+// Define the specific data type
+type GetUserResponse = ApiResponse<User>;
+
+// Bad example - not using ApiResponse wrapper
+type BadUserResponse = {
+  success: boolean;
+  data: User;
+  error?: string;
+};
+```
+
+## Client-Side API Requests
+
+1. Prefer direct API calls in components for simple requests:
+
+```typescript
+// Good example - direct fetch in component
+import { useState, useEffect } from "react";
+import { ApiResponse } from "@/lib/types/api-response.type";
+import { User } from "@/lib/types/user.type";
+
+function UserProfile({ userId }: { userId: string }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        const result: ApiResponse<User> = await response.json();
+        
+        if (result.success) {
+          setUser(result.data);
+        } else {
+          setError(result.error || "Failed to fetch user");
+        }
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Unknown error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUser();
+  }, [userId]);
+
+  // Component rendering logic
+}
+```
+
+2. Create custom hooks for reusable or complex data fetching:
+
+```typescript
+// Good example - custom hook for reusable fetching logic
+import { useState, useEffect } from "react";
+import { ApiResponse } from "@/lib/types/api-response.type";
+import { User } from "@/lib/types/user.type";
+
+export function useUser(id: string) {
+  const [data, setData] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/users/${id}`);
+        const result: ApiResponse<User> = await response.json();
+        
+        if (result.success) {
+          setData(result.data);
+          setError(null);
+        } else {
+          setError(result.error || "Failed to fetch user");
+          setData(null);
+        }
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Unknown error occurred");
+        setData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [id]);
+
+  return { data, isLoading, error };
+}
+
+// Usage in component
+function UserProfile({ userId }: { userId: string }) {
+  const { data: user, isLoading, error } = useUser(userId);
+  
+  // Component rendering logic
+}
+```
+
+## Server-Side API Routes
+
+1. Structure API routes in `/app/api` folder using Next.js App Router:
+   - Follow RESTful conventions
+   - Use folder structure for route parameters: `/app/api/[entity]/[id]/route.ts`
+
+2. Keep simple logic directly in route handlers:
+
+```typescript
+// Good example - simple logic in route handler
+import { NextResponse } from "next/server";
+import { ApiResponse } from "@/lib/types/api-response.type";
+import { User } from "@/lib/types/user.type";
+import { db } from "@/lib/db";
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Simple database query directly in the route handler
+    const user = await db.users.findUnique({
+      where: { id: params.id }
+    });
+    
+    if (!user) {
+      return NextResponse.json({
+        success: false,
+        data: {} as User,
+        error: "User not found"
+      } as ApiResponse<User>, { status: 404 });
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: user
+    } as ApiResponse<User>);
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      data: {} as User,
+      error: error instanceof Error ? error.message : "Failed to fetch user"
+    } as ApiResponse<User>, { status: 500 });
+  }
+}
+```
+
+3. Move complex business logic to `/lib/api` services:
+
+```typescript
+// Good example - complex logic in service
+// /lib/api/users.api.ts
+import { db } from "@/lib/db";
+import { User } from "@/lib/types/user.type";
+import { ApiResponse } from "@/lib/types/api-response.type";
+
+export async function getUserWithRelations(id: string): Promise<ApiResponse<User>> {
+  try {
+    // Complex query with relations, permissions, etc.
+    const user = await db.users.findUnique({
+      where: { id },
+      include: {
+        posts: true,
+        comments: true,
+        profile: true
+      }
+    });
+    
+    if (!user) {
+      return {
+        success: false,
+        data: {} as User,
+        error: "User not found"
+      };
+    }
+    
+    // Additional business logic, data transformation, etc.
+    const enhancedUser = {
+      ...user,
+      isAdmin: checkUserPermissions(user),
+      formattedJoinDate: formatDate(user.createdAt)
+    };
+    
+    return {
+      success: true,
+      data: enhancedUser
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: {} as User,
+      error: error instanceof Error ? error.message : "Failed to fetch user"
+    };
+  }
+}
+
+// Usage in route handler
+// /app/api/users/[id]/route.ts
+import { NextResponse } from "next/server";
+import { getUserWithRelations } from "@/lib/api/users.api";
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const result = await getUserWithRelations(params.id);
+  return NextResponse.json(result, { 
+    status: result.success ? 200 : result.error === "User not found" ? 404 : 500 
+  });
+}
+```
+
+## Error Handling
+
+1. Always handle both network and API errors:
+   - Network errors (fetch failures)
+   - API errors (non-200 responses)
+   - Validation errors
+
+2. Provide meaningful error messages:
+
+```typescript
+// Good example
+try {
+  const response = await fetch(`/api/users/${id}`);
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    return {
+      success: false,
+      data: {} as T,
+      error: errorData.message || `API error: ${response.status}`
+    };
+  }
+  
+  const data = await response.json();
+  return data;
+} catch (error) {
+  return {
+    success: false,
+    data: {} as T,
+    error: error instanceof Error ? error.message : "Unknown error occurred"
+  };
+}
+
+// Bad example
+if (!response.ok) {
+  throw new Error("Failed");
+}
+```
+
+## Response Consistency
+
+1. Always return responses in the `ApiResponse<T>` format:
+   - Set `success` boolean flag
+   - Include properly typed `data` property
+   - Include `error` string when applicable
+   - Optionally include `message` for additional context
+
+2. Use consistent HTTP status codes:
+   - 200: Successful requests
+   - 400: Bad request (client error)
+   - 401/403: Authentication/authorization errors
+   - 404: Resource not found
+   - 500: Server errors
