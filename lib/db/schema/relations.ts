@@ -4,6 +4,18 @@ import { authors } from "./author.table";
 import { blogPosts } from "./blog-post.table";
 import { tags } from "./tag.table";
 import { blogPostsTags } from "./blog-post-tag.table";
+import { services } from "./service.table";
+import { serviceFeatures } from "./service-feature.table";
+import { serviceBenefits } from "./service-benefit.table";
+import { serviceProcessSteps } from "./service-process-step.table";
+import { servicePricingTiers } from "./service-pricing-tier.table";
+import { servicePricingFeatures } from "./service-pricing-feature.table";
+import { serviceTechnologies } from "./service-technology.table";
+import { serviceDeliverables } from "./service-deliverable.table";
+import { serviceGalleryImages } from "./service-gallery-image.table";
+import { serviceTestimonials } from "./service-testimonial.table";
+import { serviceFaqs } from "./service-faq.table";
+import { serviceRelated } from "./service-related.table";
 
 /**
  * Database relations definitions
@@ -42,5 +54,132 @@ export const blogPostsTagsRelations = relations(blogPostsTags, ({ one }) => ({
   tag: one(tags, {
     fields: [blogPostsTags.tagId],
     references: [tags.id],
+  }),
+}));
+
+// Service Relations
+
+export const servicesRelations = relations(services, ({ many }) => ({
+  features: many(serviceFeatures),
+  benefits: many(serviceBenefits),
+  processSteps: many(serviceProcessSteps),
+  pricingTiers: many(servicePricingTiers),
+  technologies: many(serviceTechnologies),
+  deliverables: many(serviceDeliverables),
+  galleryImages: many(serviceGalleryImages),
+  testimonials: many(serviceTestimonials),
+  faqs: many(serviceFaqs),
+  relatedServices: many(serviceRelated, { relationName: "serviceToRelated" }),
+  parentServices: many(serviceRelated, { relationName: "relatedToService" }),
+}));
+
+export const serviceFeaturesRelations = relations(
+  serviceFeatures,
+  ({ one }) => ({
+    service: one(services, {
+      fields: [serviceFeatures.serviceId],
+      references: [services.id],
+    }),
+  })
+);
+
+export const serviceBenefitsRelations = relations(
+  serviceBenefits,
+  ({ one }) => ({
+    service: one(services, {
+      fields: [serviceBenefits.serviceId],
+      references: [services.id],
+    }),
+  })
+);
+
+export const serviceProcessStepsRelations = relations(
+  serviceProcessSteps,
+  ({ one }) => ({
+    service: one(services, {
+      fields: [serviceProcessSteps.serviceId],
+      references: [services.id],
+    }),
+  })
+);
+
+export const servicePricingTiersRelations = relations(
+  servicePricingTiers,
+  ({ one, many }) => ({
+    service: one(services, {
+      fields: [servicePricingTiers.serviceId],
+      references: [services.id],
+    }),
+    features: many(servicePricingFeatures),
+  })
+);
+
+export const servicePricingFeaturesRelations = relations(
+  servicePricingFeatures,
+  ({ one }) => ({
+    pricingTier: one(servicePricingTiers, {
+      fields: [servicePricingFeatures.pricingTierId],
+      references: [servicePricingTiers.id],
+    }),
+  })
+);
+
+export const serviceTechnologiesRelations = relations(
+  serviceTechnologies,
+  ({ one }) => ({
+    service: one(services, {
+      fields: [serviceTechnologies.serviceId],
+      references: [services.id],
+    }),
+  })
+);
+
+export const serviceDeliverablesRelations = relations(
+  serviceDeliverables,
+  ({ one }) => ({
+    service: one(services, {
+      fields: [serviceDeliverables.serviceId],
+      references: [services.id],
+    }),
+  })
+);
+
+export const serviceGalleryImagesRelations = relations(
+  serviceGalleryImages,
+  ({ one }) => ({
+    service: one(services, {
+      fields: [serviceGalleryImages.serviceId],
+      references: [services.id],
+    }),
+  })
+);
+
+export const serviceTestimonialsRelations = relations(
+  serviceTestimonials,
+  ({ one }) => ({
+    service: one(services, {
+      fields: [serviceTestimonials.serviceId],
+      references: [services.id],
+    }),
+  })
+);
+
+export const serviceFaqsRelations = relations(serviceFaqs, ({ one }) => ({
+  service: one(services, {
+    fields: [serviceFaqs.serviceId],
+    references: [services.id],
+  }),
+}));
+
+export const serviceRelatedRelations = relations(serviceRelated, ({ one }) => ({
+  service: one(services, {
+    fields: [serviceRelated.serviceId],
+    references: [services.id],
+    relationName: "serviceToRelated",
+  }),
+  relatedService: one(services, {
+    fields: [serviceRelated.relatedServiceId],
+    references: [services.id],
+    relationName: "relatedToService",
   }),
 }));

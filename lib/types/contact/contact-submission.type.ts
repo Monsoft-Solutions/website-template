@@ -1,4 +1,4 @@
-import { contactSubmissions } from "./contact-submission.table";
+import { contactSubmissions } from "@/lib/db/schema/contact-submission.table";
 
 /**
  * TypeScript types for ContactSubmission entity

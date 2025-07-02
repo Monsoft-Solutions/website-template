@@ -6,7 +6,7 @@ import {
   timestamp,
   foreignKey,
 } from "drizzle-orm/pg-core";
-import { postStatusEnum } from "./post-status.enum";
+import { postStatusEnum } from "@/lib/types/enums/post-status.enum";
 import { authors } from "./author.table";
 import { categories } from "./category.table";
 

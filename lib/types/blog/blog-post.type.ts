@@ -1,4 +1,4 @@
-import { blogPosts } from "./blog-post.table";
+import { blogPosts } from "@/lib/db/schema/blog-post.table";
 
 /**
  * TypeScript types for BlogPost entity

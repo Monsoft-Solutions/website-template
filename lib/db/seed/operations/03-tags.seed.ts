@@ -1,5 +1,6 @@
 import { db } from "../../index";
-import { tags, type NewTag } from "../../schema/index";
+import { tags } from "../../schema/index";
+import type { NewTag } from "@/lib/types/blog";
 import type { SeedOperation } from "../types/seed-config.type";
 
 /**

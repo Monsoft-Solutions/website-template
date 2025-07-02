@@ -1,4 +1,4 @@
-import { tags } from "./tag.table";
+import { tags } from "@/lib/db/schema/tag.table";
 
 /**
  * TypeScript types for Tag entity

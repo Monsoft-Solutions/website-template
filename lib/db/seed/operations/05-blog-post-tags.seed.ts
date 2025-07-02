@@ -1,10 +1,6 @@
 import { db } from "../../index";
-import {
-  blogPostsTags,
-  blogPosts,
-  tags,
-  type NewBlogPostTag,
-} from "../../schema/index";
+import { blogPostsTags, blogPosts, tags } from "../../schema/index";
+import type { NewBlogPostTag } from "@/lib/types/blog";
 import type { SeedOperation } from "../types/seed-config.type";
 
 /**

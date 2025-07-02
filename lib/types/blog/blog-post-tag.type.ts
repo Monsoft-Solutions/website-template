@@ -1,4 +1,4 @@
-import { blogPostsTags } from "./blog-post-tag.table";
+import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 
 /**
  * TypeScript types for BlogPostTag junction entity

@@ -1,4 +1,4 @@
-import { categories } from "./category.table";
+import { categories } from "@/lib/db/schema/category.table";
 
 /**
  * TypeScript types for Category entity

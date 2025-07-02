@@ -1,5 +1,6 @@
 import { db } from "../../index";
-import { categories, type NewCategory } from "../../schema/index";
+import { categories } from "../../schema/index";
+import type { NewCategory } from "@/lib/types/blog";
 import type { SeedOperation } from "../types/seed-config.type";
 
 /**

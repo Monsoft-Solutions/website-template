@@ -1,5 +1,6 @@
 import { db } from "../../index";
-import { authors, type NewAuthor } from "../../schema/index";
+import { authors } from "../../schema/index";
+import type { NewAuthor } from "@/lib/types/blog";
 import type { SeedOperation } from "../types/seed-config.type";
 
 /**

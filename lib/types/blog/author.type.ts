@@ -1,4 +1,4 @@
-import { authors } from "./author.table";
+import { authors } from "@/lib/db/schema/author.table";
 
 /**
  * TypeScript types for Author entity

@@ -6,7 +6,7 @@ import {
   timestamp,
   inet,
 } from "drizzle-orm/pg-core";
-import { submissionStatusEnum } from "./submission-status.enum";
+import { submissionStatusEnum } from "@/lib/types/enums/submission-status.enum";
 
 /**
  * Contact form submissions table for storing user inquiries
