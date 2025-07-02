@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Markdown } from "@/components/ui/markdown";
 import { generateSeoMetadata } from "@/lib/config/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 // Import types for API responses
@@ -288,10 +289,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Main Content */}
               <div className="lg:col-span-3">
                 <div className="prose prose-lg max-w-none">
-                  <div
-                    dangerouslySetInnerHTML={{ __html: post.content }}
-                    className="prose prose-gray dark:prose-invert max-w-none"
-                  />
+                  <Markdown content={post.content} />
                 </div>
 
                 {/* Article Footer */}
