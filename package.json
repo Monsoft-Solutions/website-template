@@ -12,7 +12,10 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx lib/db/seed/index.ts",
-    "sitemap:notify": "env-cmd tsx scripts/update-google-index.ts"
+    "sitemap:notify": "env-cmd tsx scripts/update-google-index.ts",
+    "pre-commit": "tsx scripts/pre-commit-checks.ts",
+    "check": "tsx scripts/pre-commit-checks.ts",
+    "git:setup-hooks": "tsx scripts/setup-git-hooks.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
