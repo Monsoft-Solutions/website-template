@@ -6,8 +6,8 @@ declare const process: {
   exit: (code?: number) => never;
 };
 
-// Load environment variables from .env.local (Next.js convention)
-config({ path: ".env.local" });
+// Load environment variables from .env (Next.js convention)
+config({ path: ".env" });
 
 /**
  * Environment variable schema definition
@@ -93,7 +93,7 @@ const validateEnv = (): EnvSchema => {
     console.error("❌ Environment validation failed:");
     errors.forEach((error) => console.error(`  • ${error}`));
     console.error(
-      "\n💡 Please check your .env.local file and ensure all required variables are set."
+      "\n💡 Please check your .env file and ensure all required variables are set."
     );
     console.error("📄 Refer to .env.example for the expected format.");
     process.exit(1);

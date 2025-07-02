@@ -163,7 +163,7 @@ site-wave-website/
 │   └── images/
 ├── styles/
 │   └── globals.css
-└── .env.local                  # Environment variables
+└── .env                  # Environment variables
 ```
 
 ## Implementation Steps
@@ -305,7 +305,7 @@ site-wave-website/
 
 ## Configuration Files
 
-### Environment Variables (.env.local)
+### Environment Variables (.env)
 
 ```env
 # Database

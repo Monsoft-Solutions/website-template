@@ -7,11 +7,11 @@ This project uses a centralized environment configuration system with TypeScript
 1. **Copy the example file:**
 
    ```bash
-   cp env.example .env.local
+   cp env.example .env
    ```
 
 2. **Fill in your values:**
-   Edit `.env.local` with your actual configuration values.
+   Edit `.env` with your actual configuration values.
 
 3. **Import the env in your code:**
 
@@ -38,7 +38,7 @@ This project uses a centralized environment configuration system with TypeScript
 
 ## Required Variables
 
-The following environment variables are required and must be set in your `.env.local`:
+The following environment variables are required and must be set in your `.env`:
 
 - `DATABASE_URL` - PostgreSQL connection string
 - `NODE_ENV` - Application environment (development/production/test)
@@ -97,7 +97,7 @@ Optional variables for additional features:
 
 ## Best Practices
 
-- **Never commit `.env.local`** to version control
+- **Never commit `.env`** to version control
 - **Always use `env.VARIABLE_NAME`** instead of `process.env.VARIABLE_NAME`
 - **Add validation** for new environment variables
 - **Document new variables** in `env.example`
@@ -107,7 +107,7 @@ Optional variables for additional features:
 
 If you see validation errors:
 
-1. Check that all required variables are set in `.env.local`
+1. Check that all required variables are set in `.env`
 2. Verify the format of URL and numeric variables
 3. Ensure `NODE_ENV` is one of: development, production, test
 4. Refer to `env.example` for correct format examples

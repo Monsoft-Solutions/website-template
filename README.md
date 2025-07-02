@@ -91,10 +91,10 @@ bun install
 Copy the example environment file and update with your values:
 
 ```bash
-cp env.example .env.local
+cp env.example .env
 ```
 
-Update the `.env.local` file with your configuration:
+Update the `.env` file with your configuration:
 
 ```env
 # Database
@@ -320,7 +320,7 @@ The template can be deployed to any platform that supports Next.js:
 **Database Connection Errors**
 
 - Ensure PostgreSQL is running
-- Check DATABASE_URL in `.env.local`
+- Check DATABASE_URL in `.env`
 - Verify database credentials
 
 **Build Errors**

@@ -25,13 +25,13 @@ lib/db/
 
 ## 🔧 Environment Setup
 
-1. **Create Environment File**: Copy `.env.example` to `.env.local` and configure your database URL:
+1. **Create Environment File**: Copy `.env.example` to `.env` and configure your database URL:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-2. **Configure Database URL**: Update your `.env.local` file with your PostgreSQL connection string:
+2. **Configure Database URL**: Update your `.env` file with your PostgreSQL connection string:
 
 ```env
 DATABASE_URL=postgresql://username:password@hostname:port/database_name
@@ -228,7 +228,7 @@ const postsWithDetails = await db
 
 ## 🔐 Security Considerations
 
-1. **Environment Variables**: Never commit `.env.local` to version control
+1. **Environment Variables**: Never commit `.env` to version control
 2. **Database Credentials**: Use strong passwords and rotate regularly
 3. **Connection Pooling**: Configure appropriate connection limits
 4. **SSL**: Always use SSL in production (`?ssl=true` in connection string)
