@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBlogPostBySlug } from "@/lib/api/blog.service";
+import type { BlogPostWithRelations } from "@/lib/types";
+import type { ApiResponse } from "@/lib/types/api-response.type";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -14,7 +16,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (!slug) {
       return NextResponse.json(
-        { error: "Slug parameter is required" },
+        {
+          success: false,
+          data: {} as BlogPostWithRelations,
+          error: "Slug parameter is required",
+        } as ApiResponse<BlogPostWithRelations>,
         { status: 400 }
       );
     }
@@ -24,7 +30,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (!post) {
       return NextResponse.json(
-        { error: "Blog post not found" },
+        {
+          success: false,
+          data: {} as BlogPostWithRelations,
+          error: "Blog post not found",
+        } as ApiResponse<BlogPostWithRelations>,
         { status: 404 }
       );
     }
@@ -32,14 +42,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({
       success: true,
       data: post,
-    });
+    } as ApiResponse<BlogPostWithRelations>);
   } catch (error) {
     console.error("Error fetching blog post:", error);
     return NextResponse.json(
       {
-        error: "Internal server error",
+        success: false,
+        data: {} as BlogPostWithRelations,
+        error: error instanceof Error ? error.message : "Internal server error",
         message: "Failed to fetch blog post",
-      },
+      } as ApiResponse<BlogPostWithRelations>,
       { status: 500 }
     );
   }

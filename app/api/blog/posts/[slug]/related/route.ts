@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/api/blog.service";
+import type { BlogPostWithRelations } from "@/lib/types";
+import type { ApiResponse } from "@/lib/types/api-response.type";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -19,7 +21,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Validate limit parameter
     if (limit < 1 || limit > 10) {
       return NextResponse.json(
-        { error: "Invalid limit. Must be between 1 and 10" },
+        {
+          success: false,
+          data: [] as BlogPostWithRelations[],
+          error: "Invalid limit. Must be between 1 and 10",
+        } as ApiResponse<BlogPostWithRelations[]>,
         { status: 400 }
       );
     }
@@ -29,7 +35,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (!currentPost) {
       return NextResponse.json(
-        { error: "Blog post not found" },
+        {
+          success: false,
+          data: [] as BlogPostWithRelations[],
+          error: "Blog post not found",
+        } as ApiResponse<BlogPostWithRelations[]>,
         { status: 404 }
       );
     }
@@ -40,14 +50,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({
       success: true,
       data: relatedPosts,
-    });
+    } as ApiResponse<BlogPostWithRelations[]>);
   } catch (error) {
     console.error("Error fetching related blog posts:", error);
     return NextResponse.json(
       {
-        error: "Internal server error",
+        success: false,
+        data: [] as BlogPostWithRelations[],
+        error: error instanceof Error ? error.message : "Internal server error",
         message: "Failed to fetch related blog posts",
-      },
+      } as ApiResponse<BlogPostWithRelations[]>,
       { status: 500 }
     );
   }

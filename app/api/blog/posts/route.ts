@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBlogPosts } from "@/lib/api/blog.service";
-import type { BlogListOptions } from "@/lib/types";
+import type { BlogListOptions, BlogListResponse } from "@/lib/types";
+import type { ApiResponse } from "@/lib/types/api-response.type";
 
 /**
  * GET endpoint - Get blog posts with pagination and filtering
@@ -24,14 +25,22 @@ export async function GET(request: NextRequest) {
     // Validate pagination parameters
     if (page < 1) {
       return NextResponse.json(
-        { error: "Invalid page number" },
+        {
+          success: false,
+          data: {} as BlogListResponse,
+          error: "Invalid page number",
+        } as ApiResponse<BlogListResponse>,
         { status: 400 }
       );
     }
 
     if (limit < 1 || limit > 100) {
       return NextResponse.json(
-        { error: "Invalid limit. Must be between 1 and 100" },
+        {
+          success: false,
+          data: {} as BlogListResponse,
+          error: "Invalid limit. Must be between 1 and 100",
+        } as ApiResponse<BlogListResponse>,
         { status: 400 }
       );
     }
@@ -51,14 +60,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result,
-    });
+    } as ApiResponse<BlogListResponse>);
   } catch (error) {
     console.error("Error fetching blog posts:", error);
     return NextResponse.json(
       {
-        error: "Internal server error",
+        success: false,
+        data: {} as BlogListResponse,
+        error: error instanceof Error ? error.message : "Internal server error",
         message: "Failed to fetch blog posts",
-      },
+      } as ApiResponse<BlogListResponse>,
       { status: 500 }
     );
   }
@@ -68,5 +79,12 @@ export async function GET(request: NextRequest) {
  * POST endpoint - Method not allowed
  */
 export async function POST() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+  return NextResponse.json(
+    {
+      success: false,
+      data: {} as BlogListResponse,
+      error: "Method not allowed",
+    } as ApiResponse<BlogListResponse>,
+    { status: 405 }
+  );
 }
