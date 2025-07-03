@@ -29,7 +29,7 @@ interface CultureImage {
 const cultureImages: CultureImage[] = [
   {
     id: 1,
-    src: "/images/culture/office-space.jpg",
+    src: "https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80",
     alt: "Modern office workspace",
     title: "Our Creative Workspace",
     description: "Designed for collaboration, focus, and inspiration",
@@ -39,7 +39,7 @@ const cultureImages: CultureImage[] = [
   },
   {
     id: 2,
-    src: "/images/culture/team-meeting.jpg",
+    src: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1932&q=80",
     alt: "Team brainstorming session",
     title: "Innovation Sessions",
     description: "Where great ideas come to life",
@@ -49,7 +49,7 @@ const cultureImages: CultureImage[] = [
   },
   {
     id: 3,
-    src: "/images/culture/coffee-chat.jpg",
+    src: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     alt: "Coffee break conversations",
     title: "Coffee & Code",
     description: "The best ideas happen over great coffee",
@@ -58,7 +58,7 @@ const cultureImages: CultureImage[] = [
   },
   {
     id: 4,
-    src: "/images/culture/team-retreat.jpg",
+    src: "https://images.unsplash.com/photo-1515169067868-5387ec356754?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     alt: "Annual team retreat",
     title: "Annual Retreat",
     description: "Building bonds beyond the office",
@@ -69,7 +69,7 @@ const cultureImages: CultureImage[] = [
   },
   {
     id: 5,
-    src: "/images/culture/game-room.jpg",
+    src: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     alt: "Office game room",
     title: "Unwind Zone",
     description: "Work hard, play harder",
@@ -78,7 +78,7 @@ const cultureImages: CultureImage[] = [
   },
   {
     id: 6,
-    src: "/images/culture/collaboration.jpg",
+    src: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80",
     alt: "Cross-team collaboration",
     title: "Collaboration First",
     description: "Breaking down silos, building up solutions",
@@ -87,7 +87,7 @@ const cultureImages: CultureImage[] = [
   },
   {
     id: 7,
-    src: "/images/culture/learning-session.jpg",
+    src: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     alt: "Team learning workshop",
     title: "Continuous Learning",
     description: "Growing together, one skill at a time",
@@ -97,7 +97,7 @@ const cultureImages: CultureImage[] = [
   },
   {
     id: 8,
-    src: "/images/culture/celebration.jpg",
+    src: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80",
     alt: "Team celebration",
     title: "Celebrating Wins",
     description: "Every milestone deserves recognition",

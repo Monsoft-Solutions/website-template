@@ -38,7 +38,8 @@ const blogPosts: BlogPost[] = [
     author: "John Developer",
     publishedAt: "2024-01-15",
     readingTime: 8,
-    image: "/images/blog/nextjs-15.jpg",
+    image:
+      "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     slug: "building-modern-web-apps-nextjs-15",
     featured: true,
   },
@@ -51,7 +52,8 @@ const blogPosts: BlogPost[] = [
     author: "Sarah Engineer",
     publishedAt: "2024-01-12",
     readingTime: 12,
-    image: "/images/blog/typescript-best-practices.jpg",
+    image:
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     slug: "typescript-best-practices-large-applications",
   },
   {
@@ -63,7 +65,8 @@ const blogPosts: BlogPost[] = [
     author: "Mike Marketing",
     publishedAt: "2024-01-10",
     readingTime: 6,
-    image: "/images/blog/react-seo-optimization.jpg",
+    image:
+      "https://images.unsplash.com/photo-1562577309-2592ab84b1bc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80",
     slug: "optimizing-seo-react-applications",
   },
 ];

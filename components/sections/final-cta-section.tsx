@@ -174,7 +174,7 @@ export function FinalCtaSection() {
               <div className="relative">
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border bg-card">
                   <Image
-                    src="/images/cta-mockup.png"
+                    src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2015&q=80"
                     alt="Website Template Preview"
                     width={600}
                     height={400}

@@ -29,7 +29,7 @@ const technologies: Technology[] = [
     name: "Next.js",
     description:
       "The React framework for production with App Router and Server Components",
-    logo: "/images/tech/nextjs.svg",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg",
     category: "Framework",
     link: "https://nextjs.org/",
     version: "15.0",
@@ -39,7 +39,7 @@ const technologies: Technology[] = [
     name: "TypeScript",
     description:
       "Static type checking for JavaScript with enhanced developer experience",
-    logo: "/images/tech/typescript.svg",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg",
     category: "Language",
     link: "https://www.typescriptlang.org/",
     version: "5.0+",
@@ -48,7 +48,7 @@ const technologies: Technology[] = [
   {
     name: "Tailwind CSS",
     description: "Utility-first CSS framework for rapid UI development",
-    logo: "/images/tech/tailwind.svg",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg",
     category: "Styling",
     link: "https://tailwindcss.com/",
     version: "3.4",
@@ -58,7 +58,7 @@ const technologies: Technology[] = [
     name: "PostgreSQL",
     description:
       "Advanced open-source relational database with excellent performance",
-    logo: "/images/tech/postgresql.svg",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg",
     category: "Database",
     link: "https://www.postgresql.org/",
     features: ["ACID Compliance", "JSON Support", "Extensible"],
@@ -66,7 +66,7 @@ const technologies: Technology[] = [
   {
     name: "Drizzle ORM",
     description: "TypeScript ORM with zero-runtime overhead and excellent DX",
-    logo: "/images/tech/drizzle.svg",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg",
     category: "ORM",
     link: "https://orm.drizzle.team/",
     features: ["Type Safety", "Zero Overhead", "SQL-like Syntax"],
@@ -74,7 +74,7 @@ const technologies: Technology[] = [
   {
     name: "Shadcn/ui",
     description: "Copy & paste components built on Radix UI and Tailwind CSS",
-    logo: "/images/tech/shadcn.svg",
+    logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
     category: "Components",
     link: "https://ui.shadcn.com/",
     features: ["Radix UI", "Accessible", "Customizable"],

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trackEvent } from "@/lib/utils/analytics";
@@ -13,7 +12,12 @@ import {
   Star,
   Download,
   TrendingUp,
+  Sparkles,
+  Zap,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+import CountUp from "react-countup";
 
 interface Stat {
   label: string;
@@ -93,64 +97,115 @@ const stats: Stat[] = [
   },
 ];
 
-interface AnimatedCounterProps {
-  endValue: number;
-  duration?: number;
-  prefix?: string;
-  suffix?: string;
-}
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+};
 
-function AnimatedCounter({
-  endValue,
-  duration = 2000,
-  prefix = "",
-  suffix = "",
-}: AnimatedCounterProps) {
-  const [currentValue, setCurrentValue] = useState(0);
+const statCardVariants = {
+  hidden: {
+    opacity: 0,
+    y: 60,
+    scale: 0.8,
+    rotateX: -15,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    rotateX: 0,
+    transition: {
+      duration: 0.8,
+    },
+  },
+};
 
-  useEffect(() => {
-    let startTime: number;
-    let animationFrame: number;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = (timestamp - startTime) / duration;
-
-      if (progress < 1) {
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        setCurrentValue(endValue * easeOut);
-        animationFrame = requestAnimationFrame(animate);
-      } else {
-        setCurrentValue(endValue);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-    };
-  }, [endValue, duration]);
-
-  const formatValue = (value: number) => {
-    if (value >= 1000) {
-      return (value / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-    }
-    return Math.round(value).toString();
-  };
+// Floating number particles
+const FloatingNumber = ({
+  number,
+  delay,
+  index = 0,
+}: {
+  number: string;
+  delay: number;
+  index?: number;
+}) => {
+  const xOffset = (index % 4) * 100 - 150;
+  const yOffset = Math.floor(index / 4) * 80 - 40;
 
   return (
-    <span>
-      {prefix}
-      {formatValue(currentValue)}
-      {suffix}
-    </span>
+    <motion.div
+      className="absolute text-primary/20 font-bold text-sm select-none pointer-events-none"
+      initial={{
+        opacity: 0,
+        scale: 0,
+        x: xOffset,
+        y: yOffset,
+      }}
+      animate={{
+        opacity: [0, 0.6, 0],
+        scale: [0, 1.2, 0],
+        y: [yOffset, yOffset - 80],
+        rotate: [0, 180],
+        x: [xOffset, xOffset + 30, xOffset - 30, xOffset],
+      }}
+      transition={{
+        duration: 4,
+        delay: delay,
+        repeat: Infinity,
+        repeatDelay: 6,
+      }}
+    >
+      {number}
+    </motion.div>
   );
-}
+};
+
+// Enhanced floating particles
+const FloatingParticle = ({
+  delay = 0,
+  duration = 20,
+  className = "",
+}: {
+  delay?: number;
+  duration?: number;
+  className?: string;
+}) => (
+  <motion.div
+    className={`absolute w-3 h-3 bg-gradient-to-r from-primary/30 to-accent/30 rounded-full ${className}`}
+    initial={{
+      opacity: 0,
+      scale: 0,
+    }}
+    animate={{
+      opacity: [0, 0.8, 0],
+      scale: [0, 1, 0],
+      rotate: 360,
+      x: [0, 150, -150, 0],
+      y: [0, -200, 200, 0],
+    }}
+    transition={{
+      duration: duration,
+      repeat: Infinity,
+      delay: delay,
+      ease: "linear",
+    }}
+  />
+);
 
 export function StatsSection() {
+  const [ref, inView] = useInView({
+    threshold: 0.2,
+    triggerOnce: true,
+  });
+
   const handleStatClick = (statLabel: string) => {
     trackEvent({
       action: "stat_explore",
@@ -160,156 +215,358 @@ export function StatsSection() {
   };
 
   return (
-    <section className="py-24 relative overflow-hidden">
-      {/* Background with animated gradient */}
+    <section className="py-24 relative overflow-hidden" ref={ref}>
+      {/* Enhanced background with animated gradient and particles */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
       <div className="absolute inset-0 bg-grid-slate-100 [mask-image:radial-gradient(ellipse_at_center,white,transparent)] dark:bg-grid-slate-700/25" />
 
-      <div className="container relative">
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(8)].map((_, i) => (
+          <FloatingParticle
+            key={i}
+            delay={i * 2.5}
+            duration={25 + i * 3}
+            className={`${
+              i % 4 === 0
+                ? "top-1/4 left-1/4"
+                : i % 4 === 1
+                ? "top-1/4 right-1/4"
+                : i % 4 === 2
+                ? "top-3/4 left-1/4"
+                : "top-3/4 right-1/4"
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Animated background orbs */}
+      <motion.div
+        className="absolute top-1/3 left-1/6 w-80 h-80 bg-primary/10 rounded-full blur-3xl"
+        animate={{
+          scale: [1, 1.4, 1],
+          x: [0, 100, 0],
+          rotate: [0, 180, 360],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+      <motion.div
+        className="absolute bottom-1/3 right-1/6 w-80 h-80 bg-accent/10 rounded-full blur-3xl"
+        animate={{
+          scale: [1.4, 1, 1.4],
+          x: [0, -100, 0],
+          rotate: [360, 180, 0],
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+
+      <div className="container relative z-10">
         <div className="mx-auto max-w-7xl">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <Badge variant="outline" className="mb-4">
-              <TrendingUp className="w-3 h-3 mr-2" />
-              Performance & Growth
-            </Badge>
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+          {/* Enhanced Section Header */}
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 50 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+            transition={{ duration: 0.8 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={
+                inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Badge
+                variant="outline"
+                className="mb-4 px-4 py-2 bg-background/80 backdrop-blur-sm"
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                >
+                  <TrendingUp className="w-4 h-4 mr-2 text-primary" />
+                </motion.div>
+                Performance & Growth
+              </Badge>
+            </motion.div>
+
+            <motion.h2
+              className="text-3xl font-bold tracking-tight sm:text-4xl mb-4"
+              initial={{ opacity: 0, y: 30 }}
+              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+            >
               Numbers That{" "}
-              <span className="text-primary">Speak for Themselves</span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                Speak for Themselves
+              </span>
+            </motion.h2>
+
+            <motion.p
+              className="text-xl text-muted-foreground max-w-3xl mx-auto"
+              initial={{ opacity: 0, y: 30 }}
+              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
               Real metrics from our production-ready template, backed by
               community adoption and performance benchmarks.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+          {/* Enhanced Stats Grid */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
+            variants={containerVariants}
+            initial="hidden"
+            animate={inView ? "visible" : "hidden"}
+          >
             {stats.map((stat, index) => {
               const IconComponent = stat.icon;
               return (
-                <Card
+                <motion.div
                   key={stat.label}
-                  className="group relative overflow-hidden border-0 bg-card/50 backdrop-blur-sm hover:bg-card hover:shadow-lg transition-all duration-300 cursor-pointer"
-                  onClick={() => handleStatClick(stat.label)}
-                  style={{
-                    animationDelay: `${index * 100}ms`,
+                  variants={statCardVariants}
+                  whileHover={{
+                    y: -15,
+                    scale: 1.05,
+                    rotateY: 10,
+                    rotateX: 5,
                   }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{ transformStyle: "preserve-3d" }}
                 >
-                  {/* Hover Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <CardContent className="p-6 text-center relative">
-                    {/* Icon */}
-                    <div className="flex justify-center mb-4">
-                      <div className="w-12 h-12 rounded-lg bg-muted/50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <IconComponent className={`w-6 h-6 ${stat.color}`} />
-                      </div>
+                  <Card
+                    className="group relative overflow-hidden border-0 bg-card/50 backdrop-blur-sm hover:bg-card hover:shadow-2xl transition-all duration-500 cursor-pointer h-full"
+                    onClick={() => handleStatClick(stat.label)}
+                  >
+                    {/* Floating numbers background */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                      {[
+                        stat.value.toString(),
+                        stat.suffix,
+                        stat.prefix || "",
+                      ].map((num, i) => (
+                        <FloatingNumber
+                          key={i}
+                          number={num}
+                          delay={index * 0.5 + i * 0.2}
+                          index={i}
+                        />
+                      ))}
                     </div>
 
-                    {/* Animated Value */}
-                    <div className="text-3xl font-bold mb-2 group-hover:text-primary transition-colors">
-                      <AnimatedCounter
-                        endValue={stat.value}
-                        prefix={stat.prefix}
-                        suffix={stat.suffix}
-                        duration={2000 + index * 200}
-                      />
-                    </div>
+                    {/* Enhanced hover gradient */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      animate={{ rotate: [0, 2, -2, 0] }}
+                      transition={{ duration: 8, repeat: Infinity }}
+                    />
 
-                    {/* Label */}
-                    <div className="text-sm font-medium mb-1">{stat.label}</div>
+                    {/* Sparkle effect */}
+                    <motion.div
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      animate={{
+                        rotate: 360,
+                        scale: [1, 1.3, 1],
+                      }}
+                      transition={{
+                        rotate: {
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "linear",
+                        },
+                        scale: { duration: 2, repeat: Infinity },
+                      }}
+                    >
+                      <Sparkles className="w-5 h-5 text-primary" />
+                    </motion.div>
 
-                    {/* Description */}
-                    <div className="text-xs text-muted-foreground">
-                      {stat.description}
-                    </div>
-                  </CardContent>
-                </Card>
+                    <CardContent className="relative p-6 text-center">
+                      {/* Animated icon */}
+                      <motion.div
+                        className="mb-4"
+                        whileHover={{
+                          scale: 1.3,
+                          rotate: 15,
+                        }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <motion.div
+                          animate={{
+                            rotate: [0, 5, -5, 0],
+                            scale: [1, 1.05, 1],
+                          }}
+                          transition={{
+                            duration: 4,
+                            repeat: Infinity,
+                            delay: index * 0.2,
+                          }}
+                        >
+                          <IconComponent
+                            className={`h-8 w-8 ${stat.color} mx-auto`}
+                          />
+                        </motion.div>
+                      </motion.div>
+
+                      {/* Enhanced animated counter */}
+                      <motion.div
+                        className="mb-2"
+                        initial={{ scale: 0 }}
+                        animate={inView ? { scale: 1 } : { scale: 0 }}
+                        transition={{ duration: 0.8, delay: index * 0.1 }}
+                      >
+                        <div className="text-3xl md:text-4xl font-bold text-primary group-hover:text-accent transition-colors duration-300">
+                          {stat.prefix && (
+                            <span className="text-2xl opacity-80">
+                              {stat.prefix}
+                            </span>
+                          )}
+                          {inView && (
+                            <CountUp
+                              end={stat.value}
+                              duration={2.5}
+                              delay={index * 0.2}
+                              decimals={stat.value < 1 ? 1 : 0}
+                              preserveValue
+                            />
+                          )}
+                          <span className="text-2xl opacity-80">
+                            {stat.suffix}
+                          </span>
+                        </div>
+                      </motion.div>
+
+                      {/* Enhanced label and description */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={
+                          inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+                        }
+                        transition={{ duration: 0.6, delay: index * 0.1 + 0.5 }}
+                      >
+                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-300 mb-1">
+                          {stat.label}
+                        </h3>
+                        <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+                          {stat.description}
+                        </p>
+                      </motion.div>
+
+                      {/* Progress indicator */}
+                      <motion.div
+                        className="mt-4 h-1 bg-border rounded-full overflow-hidden"
+                        initial={{ scaleX: 0 }}
+                        animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
+                        transition={{ duration: 1, delay: index * 0.1 + 1 }}
+                      >
+                        <motion.div
+                          className={`h-full bg-gradient-to-r from-primary to-accent`}
+                          initial={{ x: "-100%" }}
+                          animate={inView ? { x: "0%" } : { x: "-100%" }}
+                          transition={{
+                            duration: 1.5,
+                            delay: index * 0.1 + 1.2,
+                          }}
+                        />
+                      </motion.div>
+                    </CardContent>
+
+                    {/* Animated border effect */}
+                    <motion.div
+                      className="absolute inset-0 border-2 border-primary/0 group-hover:border-primary/30 rounded-lg transition-colors duration-300"
+                      whileHover={{
+                        boxShadow: [
+                          "0 0 20px rgba(var(--primary), 0.3)",
+                          "0 0 40px rgba(var(--primary), 0.1)",
+                          "0 0 20px rgba(var(--primary), 0.3)",
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </Card>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
 
-          {/* Performance Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            <Card className="border-0 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Gauge className="w-8 h-8 text-green-600 dark:text-green-400" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Core Web Vitals</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Excellent scores across all Google Core Web Vitals metrics
+          {/* Enhanced bottom section */}
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 50 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+          >
+            <motion.div
+              className="relative inline-block"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 blur-xl rounded-3xl"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.7, 0.3],
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+              />
+
+              <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-8">
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="mb-6"
+                >
+                  <Zap className="w-16 h-16 text-primary mx-auto" />
+                </motion.div>
+
+                <h3 className="text-3xl font-bold text-foreground mb-4">
+                  Impressive Performance
+                </h3>
+
+                <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
+                  These metrics demonstrate our commitment to delivering
+                  high-quality, performant solutions that drive real results.
                 </p>
-                <div className="grid grid-cols-3 gap-4 text-xs">
-                  <div>
-                    <div className="font-bold text-green-600">1.2s</div>
-                    <div className="text-muted-foreground">LCP</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-green-600">8ms</div>
-                    <div className="text-muted-foreground">FID</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-green-600">0.1</div>
-                    <div className="text-muted-foreground">CLS</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="border-0 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">SEO Ready</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Perfect SEO scores with automatic optimization features
-                </p>
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <div className="font-bold text-blue-600">100/100</div>
-                    <div className="text-muted-foreground">SEO Score</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-blue-600">A+</div>
-                    <div className="text-muted-foreground">Accessibility</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Bundle Size</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Optimized bundle with code splitting and tree shaking
-                </p>
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <div className="font-bold text-purple-600">45kb</div>
-                    <div className="text-muted-foreground">Initial JS</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-purple-600">12kb</div>
-                    <div className="text-muted-foreground">CSS</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Bottom Message */}
-          <div className="text-center">
-            <p className="text-muted-foreground">
-              These metrics are from real production deployments. Your results
-              may vary based on content and hosting configuration.
-            </p>
-          </div>
+                <motion.div
+                  className="flex flex-wrap justify-center gap-6 text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={inView ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{ duration: 0.8, delay: 1.5 }}
+                >
+                  {[
+                    "✨ Production Ready",
+                    "🚀 Optimized Performance",
+                    "📈 Growing Community",
+                    "🔧 Continuous Updates",
+                  ].map((feature, index) => (
+                    <motion.div
+                      key={feature}
+                      className="px-4 py-2 bg-background/50 backdrop-blur-sm rounded-full border border-border/50"
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={
+                        inView
+                          ? { scale: 1, rotate: 0 }
+                          : { scale: 0, rotate: -180 }
+                      }
+                      transition={{ duration: 0.6, delay: 1.7 + index * 0.1 }}
+                      whileHover={{ scale: 1.1, y: -2 }}
+                    >
+                      {feature}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </section>
