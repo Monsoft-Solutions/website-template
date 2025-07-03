@@ -10,7 +10,7 @@ import { LoadingSpinner } from "@/components/layout/Loading";
 import {
   contactFormSchema,
   type ContactFormData,
-} from "@/lib/utils/validation";
+} from "@/lib/utils/contact-form-validation";
 import { ContactFormResponse } from "@/lib/types/contact-submission.type";
 import { analytics } from "@/lib/utils/analytics";
 

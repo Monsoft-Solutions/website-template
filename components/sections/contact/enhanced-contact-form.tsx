@@ -11,9 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { FormField } from "@/components/forms/FormField";
 import { LoadingSpinner } from "@/components/layout/Loading";
 import {
-  contactFormSchema,
-  type ContactFormData,
-} from "@/lib/utils/validation";
+  enhancedContactFormSchema,
+  type EnhancedContactFormData,
+} from "@/lib/utils/contact-form-validation";
 import { ContactFormResponse } from "@/lib/types/contact-submission.type";
 import { analytics } from "@/lib/utils/analytics";
 import {
@@ -95,13 +95,6 @@ const timelineOptions = [
   { id: "flexible", label: "Flexible", icon: "🕰️" },
 ];
 
-interface ExtendedContactFormData extends ContactFormData {
-  projectType?: string;
-  budget?: string;
-  timeline?: string;
-  company?: string;
-}
-
 export function EnhancedContactForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,8 +103,8 @@ export function EnhancedContactForm() {
   const [selectedBudget, setSelectedBudget] = useState<string>("");
   const [selectedTimeline, setSelectedTimeline] = useState<string>("");
 
-  const form = useForm<ExtendedContactFormData>({
-    resolver: zodResolver(contactFormSchema),
+  const form = useForm<EnhancedContactFormData>({
+    resolver: zodResolver(enhancedContactFormSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -147,7 +140,7 @@ export function EnhancedContactForm() {
     }
   };
 
-  const onSubmit = async (data: ExtendedContactFormData) => {
+  const onSubmit = async (data: EnhancedContactFormData) => {
     setIsSubmitting(true);
     analytics.trackContact.formSubmit();
 

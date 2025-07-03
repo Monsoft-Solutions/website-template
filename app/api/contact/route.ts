@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { contactSubmissions } from "@/lib/db/schema/contact-submission.table";
-import { contactFormSchema } from "@/lib/utils/validation";
+import {
+  contactFormSchema,
+  enhancedContactFormSchema,
+  type EnhancedContactFormData,
+} from "@/lib/utils/contact-form-validation";
 import { ApiResponse } from "@/lib/types/api-response.type";
 import { ContactSubmissionResponse } from "@/lib/types/contact-submission.type";
 
@@ -108,7 +112,15 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
-    const validationResult = contactFormSchema.safeParse(body);
+
+    // Try enhanced schema first, fallback to basic schema for backward compatibility
+    let validationResult = enhancedContactFormSchema.safeParse(body);
+    let isEnhanced = true;
+
+    if (!validationResult.success) {
+      validationResult = contactFormSchema.safeParse(body);
+      isEnhanced = false;
+    }
 
     if (!validationResult.success) {
       const response: ApiResponse<ContactSubmissionResponse> = {
@@ -121,6 +133,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, email, subject, message } = validationResult.data;
+
+    // Extract enhanced fields if available
+    const enhancedData = isEnhanced
+      ? (validationResult.data as EnhancedContactFormData)
+      : null;
+    const company = enhancedData?.company || null;
+    const projectType = enhancedData?.projectType || null;
+    const budget = enhancedData?.budget || null;
+    const timeline = enhancedData?.timeline || null;
 
     // Spam detection
     if (detectSpam({ name, email, message })) {
@@ -150,6 +171,10 @@ export async function POST(request: NextRequest) {
         email,
         subject: subject || null,
         message,
+        company,
+        projectType,
+        budget,
+        timeline,
         ipAddress: clientIp !== "unknown" ? clientIp : null,
         userAgent,
         status: "new",

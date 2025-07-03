@@ -1,5 +1,5 @@
 export * from "./cn";
-export * from "./validation";
+export * from "./contact-form-validation";
 export * from "./performance.util";
 export * from "./cache.util";
 

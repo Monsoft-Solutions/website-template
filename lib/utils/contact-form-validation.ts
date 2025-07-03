@@ -31,6 +31,28 @@ export const phoneSchema = z
 
 export const urlSchema = z.string().url(validationMessages.url).optional();
 
+// Project type validation
+export const projectTypeSchema = z
+  .enum([
+    "web-development",
+    "mobile-app",
+    "ui-ux-design",
+    "consulting",
+    "maintenance",
+    "other",
+  ])
+  .optional();
+
+// Budget range validation
+export const budgetRangeSchema = z
+  .enum(["under-10k", "10k-25k", "25k-50k", "50k-100k", "100k+", "not-sure"])
+  .optional();
+
+// Timeline validation
+export const timelineSchema = z
+  .enum(["asap", "1-2-months", "3-6-months", "6-12-months", "flexible"])
+  .optional();
+
 // Contact form schema
 export const contactFormSchema = z.object({
   name: nameSchema,
@@ -41,6 +63,17 @@ export const contactFormSchema = z.object({
     .min(1, validationMessages.required("Message"))
     .min(10, validationMessages.min("Message", 10))
     .max(1000, validationMessages.max("Message", 1000)),
+});
+
+// Enhanced contact form schema with additional project details
+export const enhancedContactFormSchema = contactFormSchema.extend({
+  company: z
+    .string()
+    .max(255, validationMessages.max("Company", 255))
+    .optional(),
+  projectType: projectTypeSchema,
+  budget: budgetRangeSchema,
+  timeline: timelineSchema,
 });
 
 // Blog comment schema
@@ -61,5 +94,6 @@ export const newsletterSchema = z.object({
 
 // Type exports
 export type ContactFormData = z.infer<typeof contactFormSchema>;
+export type EnhancedContactFormData = z.infer<typeof enhancedContactFormSchema>;
 export type BlogCommentData = z.infer<typeof blogCommentSchema>;
 export type NewsletterData = z.infer<typeof newsletterSchema>;
