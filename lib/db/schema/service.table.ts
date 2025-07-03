@@ -1,5 +1,5 @@
 import { pgTable, uuid, varchar, text, timestamp } from "drizzle-orm/pg-core";
-import { serviceCategoryEnum } from "@/lib/types/enums/service-category.enum";
+import { serviceCategoryEnum } from "./enums";
 
 /**
  * Services table for storing service offerings

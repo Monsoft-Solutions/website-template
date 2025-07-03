@@ -26,3 +26,6 @@ export * from "./service-related.table";
 
 // Relations
 export * from "./relations";
+
+// enums
+export * from "./enums";
