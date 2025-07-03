@@ -46,14 +46,37 @@ export function useServices() {
  */
 export function useService(slug: string) {
   const [data, setData] = useState<ServiceWithRelations | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Don't fetch if slug is empty, undefined, or invalid
+    if (!slug || slug.trim() === "" || slug === "undefined" || slug === "null") {
+      if (process.env.NODE_ENV === "development") {
+        console.log("useService: Skipping fetch - invalid slug:", slug);
+      }
+      setIsLoading(false);
+      setData(null);
+      setError(null);
+      return;
+    }
+
     async function fetchService() {
       setIsLoading(true);
+      setError(null);
+      
       try {
-        const response = await fetch(`/api/services/${slug}`);
+        // Ensure we're always hitting the specific service endpoint
+        const url = `/api/services/${encodeURIComponent(slug.trim())}`;
+        if (process.env.NODE_ENV === "development") {
+          console.log("useService: Fetching from URL:", url);
+        }
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result: ApiResponse<ServiceWithRelations | null> =
           await response.json();
 

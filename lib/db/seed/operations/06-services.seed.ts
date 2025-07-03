@@ -153,18 +153,20 @@ const servicesData = [
     ],
     timeline: "6-12 weeks",
     category: "Development" as const,
-    featuredImage: "/images/services/web-development.jpg",
+    featuredImage:
+      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=600&fit=crop&crop=center",
     gallery: [
-      "/images/services/web-dev-1.jpg",
-      "/images/services/web-dev-2.jpg",
-      "/images/services/web-dev-3.jpg",
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&h=600&fit=crop&crop=center",
     ],
     testimonial: {
       quote:
         "The web development team delivered exactly what we needed. Our new website has increased our leads by 150% and the user experience is fantastic.",
       author: "Sarah Johnson",
       company: "TechStart Inc.",
-      avatar: "/images/testimonials/sarah-johnson.jpg",
+      avatar:
+        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
     },
     faq: [
       {
@@ -316,13 +318,15 @@ const servicesData = [
     ],
     timeline: "12-20 weeks",
     category: "Development" as const,
-    featuredImage: "/images/services/mobile-app-development.jpg",
+    featuredImage:
+      "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&h=600&fit=crop&crop=center",
     testimonial: {
       quote:
         "Our mobile app has been a game-changer for our business. The team delivered a beautiful, functional app that our users love.",
       author: "Mike Chen",
       company: "FitLife App",
-      avatar: "/images/testimonials/mike-chen.jpg",
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
     },
     faq: [
       {
@@ -466,13 +470,15 @@ const servicesData = [
     ],
     timeline: "8-12 weeks",
     category: "Design" as const,
-    featuredImage: "/images/services/ui-ux-design.jpg",
+    featuredImage:
+      "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&h=600&fit=crop&crop=center",
     testimonial: {
       quote:
         "The UX design process completely transformed our product. User engagement increased by 200% after implementing their recommendations.",
       author: "Emily Rodriguez",
       company: "DataFlow Solutions",
-      avatar: "/images/testimonials/emily-rodriguez.jpg",
+      avatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
     },
     faq: [
       {
@@ -612,13 +618,15 @@ const servicesData = [
     ],
     timeline: "8-16 weeks",
     category: "Consulting" as const,
-    featuredImage: "/images/services/digital-consulting.jpg",
+    featuredImage:
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop&crop=center",
     testimonial: {
       quote:
         "Their digital strategy helped us increase efficiency by 40% and reduce costs by 25%. The roadmap was clear and actionable.",
       author: "David Park",
       company: "Manufacturing Plus",
-      avatar: "/images/testimonials/david-park.jpg",
+      avatar:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
     },
     faq: [
       {
@@ -766,13 +774,15 @@ const servicesData = [
     ],
     timeline: "8-20 weeks",
     category: "Development" as const,
-    featuredImage: "/images/services/cloud-solutions.jpg",
+    featuredImage:
+      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop&crop=center",
     testimonial: {
       quote:
         "The cloud migration reduced our infrastructure costs by 30% while improving performance. The process was smooth and well-managed.",
       author: "Lisa Thompson",
       company: "HealthTech Corp",
-      avatar: "/images/testimonials/lisa-thompson.jpg",
+      avatar:
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
     },
     faq: [
       {
