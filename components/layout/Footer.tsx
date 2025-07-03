@@ -9,8 +9,8 @@ const footerLinks = {
     { href: "/contact", label: "Contact" },
   ],
   resources: [
-    { href: "/privacy", label: "Privacy Policy" },
-    { href: "/terms", label: "Terms of Service" },
+    { href: "/privacy-policy", label: "Privacy Policy" },
+    { href: "/terms-of-service", label: "Terms of Service" },
     { href: "/sitemap.xml", label: "Sitemap" },
   ],
 };
