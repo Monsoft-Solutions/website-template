@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -12,9 +12,11 @@ import {
   type ContactFormData,
 } from "@/lib/utils/validation";
 import { ContactFormResponse } from "@/lib/types/contact-submission.type";
+import { analytics } from "@/lib/utils/analytics";
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasStartedForm, setHasStartedForm] = useState(false);
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
@@ -26,8 +28,22 @@ export function ContactForm() {
     },
   });
 
+  // Track form start when user first interacts with any field
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      if (!hasStartedForm) {
+        analytics.trackContact.formStart();
+        setHasStartedForm(true);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, hasStartedForm]);
+
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
+
+    // Track form submission attempt
+    analytics.trackContact.formSubmit();
 
     try {
       const response = await fetch("/api/contact", {
@@ -65,9 +81,20 @@ export function ContactForm() {
           result.message || "We'll get back to you as soon as possible.",
       });
 
+      // Track successful form completion
+      analytics.trackContact.formComplete();
+
       form.reset();
     } catch (error) {
       console.error("Contact form error:", error);
+
+      // Track form submission error
+      analytics.trackError(
+        "contact_form_error",
+        error instanceof Error ? error.message : "Unknown error",
+        "ContactForm"
+      );
+
       toast.error("Failed to send message", {
         description:
           error instanceof Error ? error.message : "Please try again later.",

@@ -22,6 +22,7 @@
 - ✅ **Database Integration** - PostgreSQL with Drizzle ORM for type-safe database operations
 - ✅ **Contact Forms** - Validated contact forms with spam protection
 - ✅ **SEO Optimized** - Advanced SEO with dynamic sitemaps, Google Search Console integration, and structured data
+- ✅ **Analytics Integration** - Google Analytics 4 with comprehensive event tracking and performance monitoring
 - ✅ **Responsive Design** - Mobile-first approach with beautiful UI components
 - ✅ **Dark Mode Support** - Built-in theme switching with next-themes
 - ✅ **Type Safety** - End-to-end TypeScript with Zod validation
@@ -36,6 +37,17 @@
 - 🔗 Related posts suggestions
 - 📊 Reading time calculation
 - 🎨 Markdown support with syntax highlighting
+
+### Analytics Features
+
+- 📊 **Google Analytics 4** - Official Next.js third-parties integration for optimal performance
+- 📈 **Event Tracking** - Comprehensive tracking for blog posts, contact forms, downloads, and user interactions
+- ⚡ **Performance Monitoring** - Automatic Core Web Vitals tracking (LCP, FID, CLS)
+- 🎯 **Conversion Tracking** - Track form submissions, email signups, and custom business events
+- 🔍 **User Behavior** - Reading time tracking, scroll depth, and engagement metrics
+- 📱 **Real User Monitoring** - Page load performance and resource timing analysis
+- 🚨 **Error Tracking** - Automatic error reporting and performance issue detection
+- 🔗 **Social Sharing** - Track social media shares and external link clicks
 
 ### Technical Features
 
@@ -64,6 +76,7 @@
 - **Database:** [PostgreSQL](https://www.postgresql.org/)
 - **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
 - **Forms:** [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
+- **Analytics:** [Next.js Third Parties](https://nextjs.org/docs/app/guides/third-party-libraries) (Google Analytics 4)
 - **Markdown:** [React Markdown](https://github.com/remarkjs/react-markdown) + [Gray Matter](https://github.com/jonschlinkert/gray-matter)
 - **Icons:** [Lucide React](https://lucide.dev/)
 - **Date Handling:** [date-fns](https://date-fns.org/)
@@ -126,7 +139,7 @@ GOOGLE_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
 GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
 
 # Analytics (Optional)
-NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
 ```
 
 ### 4. Set up the database
@@ -178,7 +191,9 @@ site-wave-website/
 │   └── robots.ts              # Dynamic robots.txt
 │
 ├── components/                 # React components
-│   ├── forms/                 # Form components
+│   ├── analytics/             # Analytics components and tracking
+│   ├── blog/                  # Blog-specific components with analytics
+│   ├── forms/                 # Form components with analytics tracking
 │   ├── layout/                # Layout components (Header, Footer, etc.)
 │   ├── seo/                   # SEO components
 │   └── ui/                    # shadcn/ui components
@@ -192,6 +207,7 @@ site-wave-website/
 │   │   └── seed/              # Database seeders
 │   ├── types/                 # TypeScript type definitions
 │   └── utils/                 # Utility functions
+│       └── analytics.ts       # Google Analytics tracking utilities
 │
 ├── public/                    # Static assets
 │   └── images/               # Images
@@ -344,6 +360,84 @@ This will:
 - **Robots.txt**: Automatically generated with sitemap reference
 - **Canonical URLs**: Proper canonical tags to avoid duplicate content
 
+## 📊 Analytics Configuration
+
+### Google Analytics 4 Setup
+
+The website includes comprehensive Google Analytics 4 integration using Next.js third-parties for optimal performance.
+
+#### Quick Setup
+
+1. **Get Google Analytics ID**:
+
+   - Create a GA4 property at [analytics.google.com](https://analytics.google.com)
+   - Copy your Measurement ID (starts with `G-`)
+
+2. **Add to Environment Variables**:
+
+   ```env
+   NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
+   ```
+
+3. **Analytics works automatically** - no additional configuration needed!
+
+#### Features Included
+
+- **🎯 Event Tracking**: Automatic tracking for:
+
+  - Page views and navigation
+  - Blog post interactions (views, reading completion, social shares)
+  - Contact form events (start, submit, complete)
+  - Downloads and external link clicks
+  - Search queries and email signups
+
+- **⚡ Performance Monitoring**: Real-time tracking of:
+
+  - Core Web Vitals (LCP, FID, CLS)
+  - Page load performance
+  - Resource loading times
+  - Error reporting
+
+- **🔍 User Behavior Analytics**:
+  - Reading time tracking for blog posts
+  - Social sharing metrics
+  - Conversion funnel analysis
+  - Custom business events
+
+#### Usage Examples
+
+```typescript
+import { analytics } from "@/lib/utils/analytics";
+
+// Track custom events
+analytics.trackBlogPost.view("My Post Title", "Technology");
+analytics.trackContact.formComplete();
+analytics.trackDownload("whitepaper.pdf", "PDF");
+
+// Track performance
+analytics.trackPerformance("api_call", 250, "ms");
+
+// Track errors
+analytics.trackError("api_error", "Failed to fetch", "HomePage");
+```
+
+#### Testing Analytics
+
+Open your browser console and run:
+
+```javascript
+testAnalytics();
+```
+
+This will verify all tracking functions are working correctly.
+
+#### Analytics Documentation
+
+For detailed implementation guide, see:
+
+- [Analytics Implementation Guide](docs/analytics-implementation.md)
+- [Next.js Third Parties Documentation](https://nextjs.org/docs/app/guides/third-party-libraries#google-third-parties)
+
 ## 🧪 Development Guidelines
 
 ### Code Style
@@ -389,6 +483,14 @@ This will:
 - Check for typos in variable names
 - Restart dev server after changes
 
+**Analytics Issues**
+
+- Verify `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` is set correctly
+- Ensure Measurement ID starts with `G-`
+- Check browser Network tab for GA4 requests
+- Use GA4 DebugView for real-time testing
+- Run `testAnalytics()` in browser console to verify setup
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow these steps:
@@ -414,6 +516,7 @@ This project is open source and available under the [Apache License 2.0](LICENSE
 ## 🙏 Acknowledgments
 
 - [Next.js](https://nextjs.org/) for the amazing framework
+- [Next.js Third Parties](https://nextjs.org/docs/app/guides/third-party-libraries) for seamless Google Analytics integration
 - [shadcn/ui](https://ui.shadcn.com/) for the beautiful components
 - [Drizzle ORM](https://orm.drizzle.team/) for the type-safe database toolkit
 - [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework

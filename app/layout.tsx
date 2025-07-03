@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { AnalyticsInitializer } from "@/components/analytics/AnalyticsInitializer";
 import { defaultMetadata } from "@/lib/config/seo";
 import { siteConfig } from "@/lib/config/site";
 
@@ -44,6 +46,10 @@ export default function RootLayout({
           <Footer />
         </div>
         <Toaster position="bottom-right" />
+        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
+        )}
+        <AnalyticsInitializer />
       </body>
     </html>
   );
