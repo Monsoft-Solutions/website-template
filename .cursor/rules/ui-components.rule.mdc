@@ -113,6 +113,395 @@ import Image from 'next/image';
 />
 ```
 
+## Animation Libraries and Dependencies
+
+The project includes several animation libraries for creating engaging user experiences:
+
+### Core Animation Libraries
+- **framer-motion** - Primary animation library for React components with declarative API
+- **@react-spring/web** - Physics-based spring animations for smooth interactions
+- **react-intersection-observer** - Scroll-triggered animations with viewport detection
+- **react-countup** - Animated number counters for statistics and metrics
+- **react-type-animation** - Typewriter and text animation effects
+- **gsap** - Advanced timeline-based animations for complex sequences
+- **lottie-react** - Lottie animation support for After Effects exports
+
+### Installing Animation Dependencies
+
+```sh
+npm install framer-motion @react-spring/web react-intersection-observer react-countup react-type-animation gsap lottie-react
+npm install --save-dev @types/react
+```
+
+## Animation Patterns and Best Practices
+
+### Framer Motion Patterns
+
+#### Basic Motion Components
+```tsx
+import { motion } from "framer-motion";
+
+// Basic animated element
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+>
+  Content
+</motion.div>
+
+// Hover interactions
+<motion.button
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  transition={{ duration: 0.2 }}
+>
+  Interactive Button
+</motion.button>
+```
+
+#### Staggered Animations
+```tsx
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 100 },
+  },
+};
+
+<motion.div variants={containerVariants} initial="hidden" animate="visible">
+  {items.map((item, index) => (
+    <motion.div key={index} variants={itemVariants}>
+      {item}
+    </motion.div>
+  ))}
+</motion.div>
+```
+
+#### Scroll-Triggered Animations
+```tsx
+import { useScroll, useTransform } from "framer-motion";
+import { useInView } from "react-intersection-observer";
+
+const [ref, inView] = useInView({
+  threshold: 0.3,
+  triggerOnce: true,
+});
+
+const { scrollY } = useScroll();
+const y = useTransform(scrollY, [0, 300], [0, 100]);
+
+<motion.div
+  ref={ref}
+  initial={{ opacity: 0 }}
+  animate={inView ? { opacity: 1 } : { opacity: 0 }}
+  style={{ y }}
+>
+  Scroll-triggered content
+</motion.div>
+```
+
+#### Parallax Effects
+```tsx
+import { useScroll, useTransform, useSpring } from "framer-motion";
+
+const { scrollYProgress } = useScroll();
+const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -50]);
+const springY = useSpring(backgroundY, { stiffness: 100, damping: 30 });
+
+<motion.div style={{ y: springY }}>
+  Parallax background element
+</motion.div>
+```
+
+### Interactive Hover States
+
+```tsx
+const [isHovered, setIsHovered] = useState(false);
+
+<motion.div
+  onHoverStart={() => setIsHovered(true)}
+  onHoverEnd={() => setIsHovered(false)}
+  animate={isHovered ? { scale: 1.05 } : { scale: 1 }}
+  transition={{ duration: 0.3 }}
+>
+  <motion.div
+    animate={isHovered ? { rotate: [0, -5, 5, 0] } : {}}
+    transition={{ duration: 0.5 }}
+  >
+    Hover me for interaction
+  </motion.div>
+</motion.div>
+```
+
+### Counter Animations
+
+```tsx
+import CountUp from "react-countup";
+import { useInView } from "react-intersection-observer";
+
+const [ref, inView] = useInView({ triggerOnce: true });
+
+<div ref={ref}>
+  {inView && (
+    <CountUp
+      end={1000}
+      duration={2.5}
+      delay={0.5}
+      preserveValue
+      suffix="+"
+    />
+  )}
+</div>
+```
+
+### Typewriter Effects
+
+```tsx
+import { TypeAnimation } from "react-type-animation";
+
+<TypeAnimation
+  sequence={[
+    'Creating Digital Experiences',
+    2000,
+    'Building Modern Websites',
+    2000,
+    'Designing User Interfaces',
+    2000,
+  ]}
+  wrapper="h1"
+  speed={50}
+  style={{ fontSize: '2rem' }}
+  repeat={Infinity}
+/>
+```
+
+### Particle Systems
+
+```tsx
+const FloatingParticle = ({ delay, duration, x, y, oscillation }: {
+  delay: number;
+  duration: number;
+  x: number;
+  y: number;
+  oscillation: number;
+}) => (
+  <motion.div
+    className="absolute w-2 h-2 bg-primary/30 rounded-full"
+    initial={{ opacity: 0, x, y, scale: 0 }}
+    animate={{
+      opacity: [0, 1, 0],
+      y: y - 200,
+      x: [x, x + oscillation, x - oscillation, x],
+      scale: [0, 1, 0],
+      rotate: 360,
+    }}
+    transition={{
+      duration,
+      repeat: Infinity,
+      delay,
+      ease: "easeInOut",
+    }}
+  />
+);
+```
+
+### Custom CSS Animations
+
+Add reusable animations to `app/globals.css`:
+
+```css
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-gradient {
+  animation: gradient 15s ease infinite;
+  background-size: 400% 400%;
+}
+```
+
+## SSR and Hydration Considerations
+
+### Avoiding Hydration Mismatches
+
+**❌ Don't use random values directly in render:**
+```tsx
+// This causes hydration errors
+<motion.div initial={{ x: Math.random() * 100 }}>
+```
+
+**✅ Use deterministic values or client-side generation:**
+```tsx
+const [particles, setParticles] = useState<ParticleType[]>([]);
+const [isClient, setIsClient] = useState(false);
+
+useEffect(() => {
+  setIsClient(true);
+  // Generate particles only on client
+  const newParticles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: (window.innerWidth / 20) * i,
+    y: window.innerHeight + (i % 4) * 25,
+    duration: 15 + (i % 5) * 2, // Deterministic pattern
+  }));
+  setParticles(newParticles);
+}, []);
+
+// Render only after hydration
+{isClient && particles.map(particle => (
+  <FloatingParticle key={particle.id} {...particle} />
+))}
+```
+
+### Client-Side Only Components
+
+For components that must run only on the client:
+
+```tsx
+import dynamic from 'next/dynamic';
+
+const ClientOnlyParticles = dynamic(() => import('./ParticleSystem'), {
+  ssr: false,
+  loading: () => <div>Loading particles...</div>
+});
+```
+
+## Performance Optimization
+
+### Animation Performance Guidelines
+
+1. **Use CSS transforms and opacity for smooth 60fps animations**
+2. **Limit concurrent animations to avoid performance issues**
+3. **Use `will-change` CSS property sparingly and remove after animation**
+4. **Prefer `transform` over changing `top/left/width/height`**
+5. **Use `useSpring` for physics-based animations that feel natural**
+
+### Optimized Animation Examples
+
+```tsx
+// Good: Uses transforms
+<motion.div
+  whileHover={{ scale: 1.05, rotateY: 5 }}
+  transition={{ duration: 0.3 }}
+/>
+
+// Good: Spring physics
+const springConfig = { stiffness: 100, damping: 30 };
+const y = useSpring(scrollY, springConfig);
+
+// Good: Limited particle count
+const PARTICLE_COUNT = 20; // Reasonable for performance
+```
+
+### Reduce Motion Preference
+
+Always respect user preferences for reduced motion:
+
+```tsx
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+<motion.div
+  animate={prefersReducedMotion ? {} : { scale: [1, 1.1, 1] }}
+  transition={{ duration: prefersReducedMotion ? 0 : 2 }}
+>
+  Respects motion preferences
+</motion.div>
+```
+
+## Animation Accessibility
+
+### Motion Sensitivity
+
+```tsx
+import { useReducedMotion } from "framer-motion";
+
+const shouldReduceMotion = useReducedMotion();
+
+<motion.div
+  animate={shouldReduceMotion ? {} : { y: [0, -10, 0] }}
+  transition={{ duration: shouldReduceMotion ? 0 : 2 }}
+>
+  Content
+</motion.div>
+```
+
+### Focus Management
+
+Ensure animations don't interfere with keyboard navigation:
+
+```tsx
+<motion.button
+  whileFocus={{ scale: 1.05 }}
+  className="focus:outline-none focus:ring-2 focus:ring-primary"
+>
+  Accessible animated button
+</motion.button>
+```
+
+### Screen Reader Considerations
+
+Use `aria-live` regions for dynamic content changes:
+
+```tsx
+<div aria-live="polite">
+  <CountUp end={count} />
+</div>
+```
+
+## Animation Testing Guidelines
+
+### Visual Regression Testing
+- Test animations at different viewport sizes
+- Verify animations work with reduced motion settings
+- Check performance with DevTools during animations
+
+### Component Testing
+```tsx
+import { render, screen } from '@testing-library/react';
+import { MotionConfig } from 'framer-motion';
+
+// Disable animations in tests
+const TestWrapper = ({ children }) => (
+  <MotionConfig reducedMotion="always">
+    {children}
+  </MotionConfig>
+);
+
+test('component renders without animation issues', () => {
+  render(<AnimatedComponent />, { wrapper: TestWrapper });
+  expect(screen.getByText('Content')).toBeInTheDocument();
+});
+```
+
+### Performance Testing
+- Monitor frame rates during animations using browser DevTools
+- Test on lower-end devices for performance bottlenecks
+- Use React DevTools Profiler to identify expensive re-renders
+
 ## Form Handling Patterns
 
 Use our established form patterns with React Hook Form and Zod validation:
@@ -236,6 +625,8 @@ toast("Custom message", {
 - Ensure color contrast meets WCAG standards (minimum ratio of 4.5:1)
 - Make all functionality available via keyboard
 - Use our accessible form components that include built-in ARIA attributes
+- Respect user motion preferences with `prefers-reduced-motion`
+- Ensure animations don't interfere with screen readers
 
 ## Performance Considerations
 
@@ -243,10 +634,17 @@ toast("Custom message", {
 - Lazy load components below the fold using `next/dynamic` or React's `Suspense` and `lazy`
 - Optimize images with appropriate sizes and formats
 - Use our loading states to improve perceived performance
+- **Animation Performance**: Use transforms and opacity for smooth 60fps animations
+- **Limit concurrent animations** to avoid performance bottlenecks
+- **Monitor frame rates** during development using browser DevTools
+- **Use deterministic values** instead of random values to avoid hydration issues
 
 ## Testing Guidelines
 
 - Test visual appearance with Storybook and implement visual regression tests
 - Test form validation with various input scenarios
 - Ensure SEO metadata is properly generated for different page types
-- Test responsive behavior across different screen sizes 
+- Test responsive behavior across different screen sizes
+- **Animation Testing**: Verify animations work with reduced motion settings
+- **Performance Testing**: Monitor frame rates and test on lower-end devices
+- **Accessibility Testing**: Ensure animations don't interfere with keyboard navigation or screen readers
