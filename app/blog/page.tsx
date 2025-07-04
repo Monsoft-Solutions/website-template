@@ -1,22 +1,15 @@
 import { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { generateSeoMetadata } from "@/lib/config/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { BlogFilters } from "@/components/blog/BlogFilters";
+// Import new blog sections
+import { BlogHero } from "@/components/blog/sections/blog-hero";
+import { FeaturedArticles } from "@/components/blog/sections/featured-articles";
+import { CategoryHub } from "@/components/blog/sections/category-hub";
+import { ArticlesGrid } from "@/components/blog/sections/articles-grid";
+import { NewsletterCTA } from "@/components/blog/sections/newsletter-cta";
 // Import types for API responses
 import type { BlogPostWithRelations, BlogListResponse } from "@/lib/types";
-import { formatDate } from "@/lib/utils/date.util";
-import { Calendar, Clock, User, BookOpen, ArrowRight } from "lucide-react";
 
 interface BlogPageProps {
   searchParams: Promise<{
@@ -116,8 +109,49 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
     // Fallback data is already set above
   }
 
-  const featuredPost = blogPosts[0];
-  const otherPosts = blogPosts.slice(1);
+  // Transform data for our new components
+  const transformedPosts = blogPosts.map((post) => ({
+    id: post.id,
+    title: post.title,
+    excerpt: post.excerpt,
+    category: {
+      name: post.category.name,
+      slug: post.category.slug,
+    },
+    author: {
+      name: post.author.name,
+      avatar: post.author.avatarUrl || undefined,
+    },
+    publishedAt: (post.publishedAt || post.createdAt).toString(),
+    readingTime: post.readingTime,
+    featuredImage: post.featuredImage || undefined,
+    slug: post.slug,
+    featured:
+      blogPosts.indexOf(post) === 0 &&
+      currentPage === 1 &&
+      !currentSearch &&
+      currentCategory === "all",
+    trending: Math.random() > 0.7, // Random trending for demo
+    likes: Math.floor(Math.random() * 100) + 10,
+    comments: Math.floor(Math.random() * 50) + 2,
+  }));
+
+  const transformedCategories = categories.map((cat) => ({
+    name: cat.name,
+    slug: cat.slug,
+    count: cat.count,
+    description: getCategoryDescription(cat.name),
+    color: getCategoryColor(cat.name),
+    icon: getCategoryIcon(cat.name),
+    trending: Math.random() > 0.6,
+  }));
+
+  // Show different layouts based on filters
+  const isFiltered =
+    !!currentSearch || currentCategory !== "all" || currentPage > 1;
+  const showHero = !isFiltered;
+  const showFeatured = !isFiltered && transformedPosts.length > 0;
+  const showCategories = !isFiltered;
 
   return (
     <>
@@ -131,271 +165,142 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         }}
       />
 
-      <div className="flex flex-col gap-12 py-8">
-        {/* Header Section */}
-        <section className="container">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-              Our Blog
-            </h1>
-            <p className="mt-6 text-lg text-muted-foreground">
-              Discover insights, tutorials, and industry trends. Stay updated
-              with our latest articles on technology, design, and digital
-              innovation.
-            </p>
-            {(currentSearch || currentCategory !== "all") && (
-              <div className="mt-4 text-sm text-muted-foreground">
-                {blogData.totalPosts === 0
-                  ? "No results found"
-                  : `${blogData.totalPosts} ${
-                      blogData.totalPosts === 1 ? "result" : "results"
-                    } found`}
-              </div>
-            )}
-          </div>
-        </section>
+      <div className="min-h-screen">
+        {/* Hero Section - Only on main page */}
+        {showHero && (
+          <BlogHero
+            totalPosts={blogData.totalPosts}
+            totalAuthors={25}
+            totalReads={blogData.totalPosts * 347} // Estimated reads
+          />
+        )}
+
+        {/* Featured Articles - Only on main page */}
+        {showFeatured && <FeaturedArticles articles={transformedPosts} />}
+
+        {/* Category Hub - Only on main page */}
+        {showCategories && <CategoryHub categories={transformedCategories} />}
 
         {/* Search and Filter Section */}
-        <section className="container">
-          <div className="mx-auto max-w-6xl">
-            <BlogFilters
-              categories={categories}
-              currentCategory={currentCategory}
-              currentSearch={currentSearch}
-              currentPage={currentPage}
-              totalPages={blogData.totalPages}
-            />
-          </div>
-        </section>
-
-        {/* Featured Post Section */}
-        {featuredPost &&
-          currentPage === 1 &&
-          !currentSearch &&
-          currentCategory === "all" && (
-            <section className="container">
-              <div className="mx-auto max-w-6xl">
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold">Featured Article</h2>
-                  <p className="text-muted-foreground">
-                    Our latest and most popular content
-                  </p>
-                </div>
-                <Card className="overflow-hidden">
-                  <div className="grid md:grid-cols-2 gap-0">
-                    <div className="aspect-[4/3] md:aspect-auto relative">
-                      <Image
-                        src={
-                          featuredPost.featuredImage ||
-                          "/images/blog/placeholder.jpg"
-                        }
-                        alt={featuredPost.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="p-8 flex flex-col justify-center">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Badge variant="secondary">
-                          {featuredPost.category.name}
-                        </Badge>
-                        {featuredPost.tags.slice(0, 2).map((tag) => (
-                          <Badge key={tag.id} variant="outline" asChild>
-                            <Link href={`/blog/tag/${tag.slug}`}>
-                              {tag.name}
-                            </Link>
-                          </Badge>
-                        ))}
-                      </div>
-                      <h3 className="text-2xl font-bold mb-4 line-clamp-2">
-                        {featuredPost.title}
-                      </h3>
-                      <p className="text-muted-foreground mb-6 line-clamp-3">
-                        {featuredPost.excerpt}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
-                        <div className="flex items-center gap-1">
-                          <User className="size-3" />
-                          <span>{featuredPost.author.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="size-3" />
-                          <span>
-                            {formatDate(
-                              featuredPost.publishedAt || featuredPost.createdAt
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="size-3" />
-                          <span>{featuredPost.readingTime} min</span>
-                        </div>
-                      </div>
-                      <Button asChild>
-                        <Link href={`/blog/${featuredPost.slug}`}>
-                          Read More
-                          <ArrowRight className="ml-2 size-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </section>
-          )}
-
-        {/* Blog Posts Grid */}
-        <section className="container">
-          <div className="mx-auto max-w-6xl">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold">
-                {featuredPost &&
-                currentPage === 1 &&
-                !currentSearch &&
-                currentCategory === "all"
-                  ? "Recent Articles"
-                  : "Articles"}
-              </h2>
-              <p className="text-muted-foreground">
-                {currentSearch
-                  ? `Search results for "${currentSearch}"`
-                  : currentCategory !== "all"
-                  ? `Articles in ${
-                      categories.find((c) => c.slug === currentCategory)
-                        ?.name || currentCategory
-                    }`
-                  : "Explore our latest articles and insights"}
-              </p>
+        <section className="py-8 bg-muted/30">
+          <div className="container">
+            <div className="mx-auto max-w-6xl">
+              <BlogFilters
+                categories={categories}
+                currentCategory={currentCategory}
+                currentSearch={currentSearch}
+                currentPage={currentPage}
+                totalPages={blogData.totalPages}
+              />
             </div>
-
-            {(featuredPost &&
-            currentPage === 1 &&
-            !currentSearch &&
-            currentCategory === "all"
-              ? otherPosts
-              : blogPosts
-            ).length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {(featuredPost &&
-                currentPage === 1 &&
-                !currentSearch &&
-                currentCategory === "all"
-                  ? otherPosts
-                  : blogPosts
-                ).map((post) => (
-                  <Card
-                    key={post.id}
-                    className="overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    <div className="aspect-[4/3] relative">
-                      <Image
-                        src={
-                          post.featuredImage || "/images/blog/placeholder.jpg"
-                        }
-                        alt={post.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <CardHeader>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="text-xs" asChild>
-                          <Link href={`/blog/category/${post.category.slug}`}>
-                            {post.category.name}
-                          </Link>
-                        </Badge>
-                        {post.tags.slice(0, 2).map((tag) => (
-                          <Badge
-                            key={tag.id}
-                            variant="outline"
-                            className="text-xs"
-                            asChild
-                          >
-                            <Link href={`/blog/tag/${tag.slug}`}>
-                              {tag.name}
-                            </Link>
-                          </Badge>
-                        ))}
-                      </div>
-                      <CardTitle className="text-lg line-clamp-2">
-                        {post.title}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-3">
-                        {post.excerpt}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <User className="size-3" />
-                            <span className="text-xs">{post.author.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="size-3" />
-                            <span className="text-xs">
-                              {formatDate(post.publishedAt || post.createdAt)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="size-3" />
-                            <span className="text-xs">
-                              {post.readingTime} min
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <Button asChild className="w-full mt-4" variant="outline">
-                        <Link href={`/blog/${post.slug}`}>
-                          Read More
-                          <ArrowRight className="ml-2 size-4" />
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <BookOpen className="mx-auto size-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No articles found
-                </h3>
-                <p className="text-muted-foreground">
-                  {currentSearch || currentCategory !== "all"
-                    ? "Try adjusting your search or filters to find what you're looking for."
-                    : "Check back later for new articles and insights."}
-                </p>
-                {(currentSearch || currentCategory !== "all") && (
-                  <Button asChild className="mt-4" variant="outline">
-                    <Link href="/blog">View All Articles</Link>
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
         </section>
 
-        {/* Call to Action */}
-        <section className="container">
-          <div className="mx-auto max-w-4xl">
-            <Card className="border-dashed">
-              <CardContent className="p-6 text-center">
-                <h3 className="text-lg font-semibold mb-2">
-                  Stay Updated with Our Latest Content
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Subscribe to our newsletter to receive the latest articles,
-                  tutorials, and industry insights directly in your inbox.
-                </p>
-                <Button asChild>
-                  <Link href="/contact">Subscribe Now</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+        {/* Articles Grid */}
+        <ArticlesGrid
+          articles={transformedPosts}
+          title={getGridTitle(currentSearch, currentCategory, categories)}
+          description={getGridDescription(
+            currentSearch,
+            currentCategory,
+            blogData.totalPosts
+          )}
+          showHeader={isFiltered}
+          className={
+            isFiltered
+              ? "bg-background"
+              : "bg-gradient-to-br from-background via-muted/10 to-background"
+          }
+        />
+
+        {/* Newsletter CTA */}
+        <NewsletterCTA
+          subscriberCount={50000}
+          className="bg-gradient-to-br from-muted/20 via-background to-muted/20"
+        />
       </div>
     </>
   );
+}
+
+// Helper functions for category data
+function getCategoryDescription(name: string): string {
+  const descriptions: Record<string, string> = {
+    Development: "Code tutorials, frameworks, and best practices",
+    Design: "UI/UX, visual design, and creative workflows",
+    Performance: "Optimization, speed, and efficiency techniques",
+    Strategy: "Business insights and growth strategies",
+    Innovation: "Emerging tech and future trends",
+    "AI & ML": "Artificial intelligence and machine learning",
+    Technology: "Latest tech trends and innovations",
+    Tutorial: "Step-by-step guides and how-tos",
+    Opinion: "Thought leadership and industry perspectives",
+    News: "Industry news and updates",
+  };
+  return descriptions[name] || "Expert insights and valuable content";
+}
+
+function getCategoryColor(name: string): string {
+  const colors: Record<string, string> = {
+    Development: "from-blue-500 to-cyan-500",
+    Design: "from-purple-500 to-pink-500",
+    Performance: "from-green-500 to-emerald-500",
+    Strategy: "from-orange-500 to-red-500",
+    Innovation: "from-indigo-500 to-purple-500",
+    "AI & ML": "from-teal-500 to-blue-500",
+    Technology: "from-blue-600 to-indigo-600",
+    Tutorial: "from-green-600 to-teal-600",
+    Opinion: "from-purple-600 to-pink-600",
+    News: "from-red-500 to-orange-500",
+  };
+  return colors[name] || "from-gray-500 to-slate-500";
+}
+
+function getCategoryIcon(name: string): string {
+  const icons: Record<string, string> = {
+    Development: "code",
+    Design: "palette",
+    Performance: "zap",
+    Strategy: "target",
+    Innovation: "rocket",
+    "AI & ML": "brain",
+    Technology: "layers",
+    Tutorial: "code",
+    Opinion: "brain",
+    News: "zap",
+  };
+  return icons[name] || "code";
+}
+
+function getGridTitle(
+  currentSearch: string,
+  currentCategory: string,
+  categories: Array<{ name: string; slug: string; count: number }>
+): string {
+  if (currentSearch) {
+    return `Search Results`;
+  }
+  if (currentCategory !== "all") {
+    const category = categories.find((c) => c.slug === currentCategory);
+    return `${category?.name || currentCategory} Articles`;
+  }
+  return "Latest Articles";
+}
+
+function getGridDescription(
+  currentSearch: string,
+  currentCategory: string,
+  totalPosts: number
+): string {
+  if (currentSearch) {
+    return `${
+      totalPosts === 0
+        ? "No results"
+        : `${totalPosts} ${totalPosts === 1 ? "result" : "results"}`
+    } found for "${currentSearch}"`;
+  }
+  if (currentCategory !== "all") {
+    return `Explore our collection of expert articles and insights`;
+  }
+  return "Stay updated with our latest articles and insights";
 }
