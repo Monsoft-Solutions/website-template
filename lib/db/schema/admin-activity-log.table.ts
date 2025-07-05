@@ -6,7 +6,7 @@ import {
   text,
   jsonb,
 } from "drizzle-orm/pg-core";
-import { users } from "./user.table";
+import { user as users } from "./auth-schema";
 
 /**
  * Admin activity logs table
@@ -14,7 +14,7 @@ import { users } from "./user.table";
  */
 export const adminActivityLogs = pgTable("admin_activity_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   action: varchar("action", { length: 100 }).notNull(),

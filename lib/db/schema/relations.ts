@@ -16,9 +16,8 @@ import { serviceGalleryImages } from "./service-gallery-image.table";
 import { serviceTestimonials } from "./service-testimonial.table";
 import { serviceFaqs } from "./service-faq.table";
 import { serviceRelated } from "./service-related.table";
-import { users } from "./user.table";
-import { sessions } from "./session.table";
-import { accounts } from "./account.table";
+import { user as users } from "./auth-schema";
+import { session as sessions, account as accounts } from "./auth-schema";
 import { adminActivityLogs } from "./admin-activity-log.table";
 
 /**

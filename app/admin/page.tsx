@@ -130,6 +130,53 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
+        {/* User Registration Info */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              User Registration System
+            </CardTitle>
+            <CardDescription>
+              Invitation-only registration is now available for new users.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-700">
+                <strong>How it works:</strong>
+              </p>
+              <ul className="text-sm text-gray-600 space-y-1 ml-4">
+                <li>• Users must be added to the database by an admin first</li>
+                <li>
+                  • New users can complete their registration at:{" "}
+                  <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                    /auth/register
+                  </code>
+                </li>
+                <li>
+                  • They&apos;ll verify their email exists and then set their
+                  password
+                </li>
+                <li>• Users can then sign in normally</li>
+              </ul>
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const registrationUrl = `${window.location.origin}/auth/register`;
+                    navigator.clipboard.writeText(registrationUrl);
+                    alert("Registration URL copied to clipboard!");
+                  }}
+                >
+                  Copy Registration URL
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">

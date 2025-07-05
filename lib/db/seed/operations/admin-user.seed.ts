@@ -1,5 +1,5 @@
 import { db } from "../../index";
-import { users } from "../../schema/user.table";
+import { user as users } from "../../schema/auth-schema";
 import { UserRole } from "../../schema/auth-enums";
 import { SeedOperation } from "../types/seed-config.type";
 import { eq } from "drizzle-orm";
@@ -37,6 +37,7 @@ export const adminUserSeed: SeedOperation = {
     const [adminUser] = await db
       .insert(users)
       .values({
+        id: crypto.randomUUID(),
         email: adminEmail,
         name: adminName,
         role: UserRole.ADMIN,

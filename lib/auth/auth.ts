@@ -1,23 +1,40 @@
-import { betterAuth } from "better-auth";
+import { betterAuth, Session } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "../db";
-import { users } from "../db/schema/user.table";
-import { sessions } from "../db/schema/session.table";
-import { accounts } from "../db/schema/account.table";
-import { verificationTokens } from "../db/schema/verification-token.table";
+import { User, UserRole } from "../types/auth.type";
+import { user, session, account, verification } from "../db/schema/auth-schema";
 
 /**
  * Better Auth configuration with Drizzle adapter
  */
 export const auth = betterAuth({
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: true,
+        defaultValue: UserRole.USER,
+      },
+      bio: {
+        type: "string",
+        required: false,
+        defaultValue: "",
+      },
+      lang: {
+        type: "string",
+        required: false,
+        defaultValue: "en",
+      },
+    },
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
-      user: users,
-      session: sessions,
-      account: accounts,
-      verificationToken: verificationTokens,
+      user,
+      session,
+      account,
+      verification,
     },
   }),
 
@@ -62,14 +79,20 @@ export const auth = betterAuth({
   ],
 
   // Callbacks can be added later when needed
-  // callbacks: {
-  //   afterSignUp: async ({ user }) => {
-  //     console.log("User signed up:", user.email);
-  //     return user;
-  //   },
-  //   afterSignIn: async ({ user, session }) => {
-  //     console.log("User signed in:", user.email);
-  //     return { user, session };
-  //   },
-  // },
+  callbacks: {
+    afterSignUp: async ({ user }: { user: User }) => {
+      console.log("User signed up:", user.email);
+      return user;
+    },
+    afterSignIn: async ({
+      user,
+      session,
+    }: {
+      user: User;
+      session: Session;
+    }) => {
+      console.log("User signed in:", user.email);
+      return { user, session };
+    },
+  },
 });

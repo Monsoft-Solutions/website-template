@@ -25,10 +25,7 @@ export * from "./service-faq.table";
 export * from "./service-related.table";
 
 // Auth tables
-export * from "./user.table";
-export * from "./session.table";
-export * from "./account.table";
-export * from "./verification-token.table";
+export * from "./auth-schema";
 export * from "./admin-activity-log.table";
 
 // Relations

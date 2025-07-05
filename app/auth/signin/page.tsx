@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 /**
  * Sign-in page for admin authentication
@@ -107,6 +108,18 @@ export default function SignInPage() {
               )}
             </Button>
           </form>
+
+          <div className="mt-4 text-center text-sm">
+            <p className="text-gray-600">
+              New user?{" "}
+              <Link
+                href="/auth/register"
+                className="text-blue-600 hover:text-blue-500"
+              >
+                Complete your registration
+              </Link>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

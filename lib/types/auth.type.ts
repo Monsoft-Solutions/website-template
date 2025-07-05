@@ -1,8 +1,8 @@
 import { InferSelectModel, InferInsertModel } from "drizzle-orm";
-import { users } from "../db/schema/user.table";
-import { sessions } from "../db/schema/session.table";
-import { accounts } from "../db/schema/account.table";
-import { verificationTokens } from "../db/schema/verification-token.table";
+import { user as users } from "../db/schema/auth-schema";
+import { session as sessions } from "../db/schema/auth-schema";
+import { account as accounts } from "../db/schema/auth-schema";
+import { verification as verificationTokens } from "../db/schema/auth-schema";
 import { adminActivityLogs } from "../db/schema/admin-activity-log.table";
 import {
   UserRole,
