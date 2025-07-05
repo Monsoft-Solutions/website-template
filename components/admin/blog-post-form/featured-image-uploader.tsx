@@ -47,18 +47,28 @@ export function FeaturedImageUploader({
     setIsUploading(true);
 
     try {
-      // For now, we'll create a data URL
-      // In a real implementation, you'd upload to a file storage service
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        onChange(result);
-        toast.success("Image uploaded successfully");
-      };
-      reader.onerror = () => {
-        toast.error("Failed to read image file");
-      };
-      reader.readAsDataURL(file);
+      // Upload to the server using Vercel Blob
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Use the Vercel Blob URL directly
+        onChange(result.data.url);
+        toast.success(result.message || "Image uploaded successfully");
+      } else {
+        throw new Error(result.error || "Failed to upload image");
+      }
     } catch (error) {
       toast.error("Failed to upload image");
       console.error("Image upload error:", error);

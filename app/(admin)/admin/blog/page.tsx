@@ -356,9 +356,7 @@ export default function AdminBlogListPage() {
     {
       label: "Preview",
       onClick: (post: BlogPostWithRelations) => {
-        // Navigate to preview page (will be implemented in next phases)
-        console.log("Preview post:", post.id);
-        toast.info("Preview functionality coming in Phase 3.4");
+        router.push(`/admin/blog/${post.id}/preview`);
       },
     },
     {
