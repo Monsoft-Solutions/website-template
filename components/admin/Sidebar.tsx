@@ -46,8 +46,7 @@ const navItems: NavItem[] = [
     title: "Blog Posts",
     href: "/admin/blog",
     icon: FileText,
-    badge: "Phase 3",
-    comingSoon: true,
+    badge: "Phase 3 ✓",
   },
   {
     title: "Services",
