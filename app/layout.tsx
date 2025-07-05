@@ -2,13 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
-import { JsonLd } from "@/components/seo/JsonLd";
 import { AnalyticsInitializer } from "@/components/analytics/AnalyticsInitializer";
 import { defaultMetadata } from "@/lib/config/seo";
-import { siteConfig } from "@/lib/config/site";
 import { clientEnv } from "@/lib/env-client";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -33,19 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={inter.className}>
-        <JsonLd
-          type="WebSite"
-          data={{
-            name: siteConfig.name,
-            description: siteConfig.description,
-            url: siteConfig.url,
-          }}
-        />
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        {children}
         <Toaster position="bottom-right" />
         {clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
           <GoogleAnalytics gaId={clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />

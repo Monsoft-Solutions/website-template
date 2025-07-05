@@ -91,12 +91,16 @@ async function runPreCommitChecks(): Promise<void> {
 
   // 2. ESLint check - filter out lib/data files since they're no longer needed
   const filesToLint = stagedFiles.filter((file) => !file.includes("lib/data/"));
-  results.push(
-    runCommand(
-      `npx eslint ${filesToLint.join(" ")} --max-warnings 0`,
-      "ESLint validation"
-    )
-  );
+  if (filesToLint.length > 0) {
+    // Properly escape file paths to handle special characters like parentheses
+    const escapedFiles = filesToLint.map((file) => `"${file}"`).join(" ");
+    results.push(
+      runCommand(
+        `npx eslint ${escapedFiles} --max-warnings 0`,
+        "ESLint validation"
+      )
+    );
+  }
 
   // 3. Next.js build check (only if there are significant changes)
   if (
