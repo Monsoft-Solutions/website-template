@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { DataTable } from "@/components/admin/DataTable";
@@ -49,6 +50,8 @@ import {
  * Features: Pagination, Sorting, Filtering, Search, Bulk Actions
  */
 export default function AdminBlogListPage() {
+  const router = useRouter();
+
   // State for filters and pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -314,14 +317,40 @@ export default function AdminBlogListPage() {
     },
   ];
 
+  // Handle individual post delete
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Are you sure you want to delete this post?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/blog/${postId}`, {
+        method: "DELETE",
+      });
+
+      const result: ApiResponse<null> = await response.json();
+
+      if (result.success) {
+        toast.success("Post deleted successfully");
+        refetch();
+      } else {
+        toast.error(result.error || "Failed to delete post");
+      }
+    } catch (error) {
+      toast.error(
+        `Error deleting post: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
   // DataTable actions
   const actions = [
     {
       label: "Edit",
       onClick: (post: BlogPostWithRelations) => {
-        // Navigate to edit page (will be implemented in next phases)
-        console.log("Edit post:", post.id);
-        toast.info("Edit functionality coming in Phase 3.2");
+        router.push(`/admin/blog/${post.id}/edit`);
       },
     },
     {
@@ -335,10 +364,7 @@ export default function AdminBlogListPage() {
     {
       label: "Delete",
       onClick: (post: BlogPostWithRelations) => {
-        if (confirm("Are you sure you want to delete this post?")) {
-          handleBulkAction("delete");
-          setSelectedPosts([post.id]);
-        }
+        handleDeletePost(post.id);
       },
       variant: "destructive" as const,
     },
@@ -354,7 +380,10 @@ export default function AdminBlogListPage() {
           { label: "Blog Posts", href: "/admin/blog", active: true },
         ]}
         actions={
-          <Button className="gap-2">
+          <Button
+            className="gap-2"
+            onClick={() => router.push("/admin/blog/new")}
+          >
             <Plus className="h-4 w-4" />
             Create Post
           </Button>

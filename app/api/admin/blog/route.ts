@@ -22,6 +22,24 @@ export type AdminBlogListResponse = {
 };
 
 /**
+ * Blog post creation data interface
+ */
+interface BlogPostCreateData {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featuredImage?: string;
+  authorId: string;
+  categoryId: string;
+  status: "draft" | "published" | "archived";
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  tagIds: string[];
+}
+
+/**
  * GET endpoint - Get all blog posts for admin (includes all statuses)
  */
 export async function GET(request: NextRequest) {
@@ -196,6 +214,107 @@ export async function GET(request: NextRequest) {
         error: error instanceof Error ? error.message : "Internal server error",
         message: "Failed to fetch blog posts",
       } as ApiResponse<AdminBlogListResponse>,
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST endpoint - Create new blog post
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const data: BlogPostCreateData = await request.json();
+
+    // Validate required fields
+    if (!data.title || !data.slug || !data.excerpt || !data.content) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: "Missing required fields",
+        } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    // Check if slug already exists
+    const existingPost = await db
+      .select({ id: blogPosts.id })
+      .from(blogPosts)
+      .where(eq(blogPosts.slug, data.slug))
+      .limit(1);
+
+    if (existingPost.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: "A post with this slug already exists",
+        } as ApiResponse<null>,
+        { status: 400 }
+      );
+    }
+
+    // Prepare insert data
+    const insertData: typeof blogPosts.$inferInsert = {
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt,
+      content: data.content,
+      authorId: data.authorId,
+      categoryId: data.categoryId,
+      status: data.status,
+      metaTitle: data.metaTitle || null,
+      metaDescription: data.metaDescription || null,
+      metaKeywords: data.metaKeywords || null,
+      featuredImage: data.featuredImage || null,
+    };
+
+    // Set publishedAt when publishing
+    if (data.status === "published") {
+      insertData.publishedAt = new Date();
+    }
+
+    // Insert the blog post
+    const newPosts = await db
+      .insert(blogPosts)
+      .values(insertData)
+      .returning({ id: blogPosts.id });
+
+    const newPostId = newPosts[0].id;
+
+    // Handle tags
+    if (data.tagIds && data.tagIds.length > 0) {
+      // Filter out temp tags (they start with "temp-")
+      const validTagIds = data.tagIds.filter(
+        (tagId) => !tagId.startsWith("temp-")
+      );
+
+      if (validTagIds.length > 0) {
+        await db.insert(blogPostsTags).values(
+          validTagIds.map((tagId) => ({
+            postId: newPostId,
+            tagId: tagId,
+          }))
+        );
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: { id: newPostId },
+      message: "Blog post created successfully",
+    } as ApiResponse<{ id: string }>);
+  } catch (error) {
+    console.error("Error creating blog post:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        error: error instanceof Error ? error.message : "Internal server error",
+        message: "Failed to create blog post",
+      } as ApiResponse<null>,
       { status: 500 }
     );
   }
