@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useService } from "@/lib/hooks/use-services.hook";
+import { clientEnv } from "@/lib/env-client";
 
 // Import the new service detail components
 import { ServiceHeroSection } from "@/components/services/service-detail/service-hero-section";
@@ -94,8 +95,8 @@ export default function ServicePage({ params }: ServicePageProps) {
     category: serviceData.category,
     provider: {
       "@type": "Organization",
-      name: process.env.NEXT_PUBLIC_SITE_NAME || "SiteWave",
-      url: process.env.NEXT_PUBLIC_SITE_URL || "https://sitewave.com",
+      name: clientEnv.NEXT_PUBLIC_SITE_NAME || "SiteWave",
+      url: clientEnv.NEXT_PUBLIC_SITE_URL,
     },
     ...(serviceData.pricing.length > 0 && {
       offers: serviceData.pricing.map((tier) => ({

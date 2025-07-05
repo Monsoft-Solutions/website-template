@@ -16,6 +16,10 @@ import { serviceGalleryImages } from "./service-gallery-image.table";
 import { serviceTestimonials } from "./service-testimonial.table";
 import { serviceFaqs } from "./service-faq.table";
 import { serviceRelated } from "./service-related.table";
+import { users } from "./user.table";
+import { sessions } from "./session.table";
+import { accounts } from "./account.table";
+import { adminActivityLogs } from "./admin-activity-log.table";
 
 /**
  * Database relations definitions
@@ -183,3 +187,35 @@ export const serviceRelatedRelations = relations(serviceRelated, ({ one }) => ({
     relationName: "relatedToService",
   }),
 }));
+
+// Auth Relations
+
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  accounts: many(accounts),
+  activityLogs: many(adminActivityLogs),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const adminActivityLogsRelations = relations(
+  adminActivityLogs,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [adminActivityLogs.userId],
+      references: [users.id],
+    }),
+  })
+);

@@ -24,8 +24,16 @@ export * from "./service-testimonial.table";
 export * from "./service-faq.table";
 export * from "./service-related.table";
 
+// Auth tables
+export * from "./user.table";
+export * from "./session.table";
+export * from "./account.table";
+export * from "./verification-token.table";
+export * from "./admin-activity-log.table";
+
 // Relations
 export * from "./relations";
 
 // enums
 export * from "./enums";
+export * from "./auth-enums";

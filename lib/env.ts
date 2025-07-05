@@ -24,6 +24,10 @@ type EnvSchema = {
   NEXTAUTH_SECRET?: string;
   NEXTAUTH_URL?: string;
 
+  // Better Auth
+  BETTER_AUTH_SECRET?: string;
+  BETTER_AUTH_URL?: string;
+
   // Email (if needed)
   SMTP_HOST?: string;
   SMTP_PORT?: string;
@@ -110,6 +114,10 @@ const validateEnv = (): EnvSchema => {
     // Security
     NEXTAUTH_SECRET: env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: env.NEXTAUTH_URL,
+
+    // Better Auth
+    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+    BETTER_AUTH_URL: env.BETTER_AUTH_URL,
 
     // Email
     SMTP_HOST: env.SMTP_HOST,

@@ -3,6 +3,7 @@
  * Each seed operation should be exported here to be automatically discovered
  */
 
+export { adminUserSeed } from "./admin-user.seed";
 export { categoriesSeed } from "./01-categories.seed";
 export { authorsSeed } from "./02-authors.seed";
 export { tagsSeed } from "./03-tags.seed";

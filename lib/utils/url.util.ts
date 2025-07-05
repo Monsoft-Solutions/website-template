@@ -1,3 +1,5 @@
+import { clientEnv } from "../env-client";
+
 /**
  * Get the base URL of the application
  * Handles both server and client side rendering
@@ -13,8 +15,8 @@ export function getBaseUrl(): string {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
+  if (clientEnv.NEXT_PUBLIC_SITE_URL) {
+    return clientEnv.NEXT_PUBLIC_SITE_URL;
   }
 
   // Default fallback

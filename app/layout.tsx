@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { AnalyticsInitializer } from "@/components/analytics/AnalyticsInitializer";
 import { defaultMetadata } from "@/lib/config/seo";
 import { siteConfig } from "@/lib/config/site";
+import { clientEnv } from "@/lib/env-client";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,8 +47,8 @@ export default function RootLayout({
           <Footer />
         </div>
         <Toaster position="bottom-right" />
-        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
+        {clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+          <GoogleAnalytics gaId={clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
         )}
         <AnalyticsInitializer />
       </body>

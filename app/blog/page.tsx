@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { generateSeoMetadata } from "@/lib/config/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { BlogFilters } from "@/components/blog/BlogFilters";
+import { clientEnv } from "@/lib/env-client";
 // Import new blog sections
 import { BlogHero } from "@/components/blog/sections/blog-hero";
 import { FeaturedArticles } from "@/components/blog/sections/featured-articles";
@@ -22,7 +23,7 @@ interface BlogPageProps {
 function getBaseUrl() {
   if (typeof window !== "undefined") return window.location.origin;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  return clientEnv.NEXT_PUBLIC_SITE_URL;
 }
 
 export const metadata: Metadata = generateSeoMetadata({

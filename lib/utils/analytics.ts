@@ -1,4 +1,5 @@
 import { sendGAEvent } from "@next/third-parties/google";
+import { clientEnv } from "../env-client";
 
 // Performance API interfaces
 interface PerformanceEventTiming extends PerformanceEntry {
@@ -41,7 +42,7 @@ export interface CustomEvent {
 export const trackEvent = (eventData: GAEvent) => {
   if (
     typeof window === "undefined" ||
-    !process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    !clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
   ) {
     return;
   }
@@ -202,7 +203,7 @@ export const analytics = {
 export const trackConversion = (conversionData: ConversionEvent) => {
   if (
     typeof window === "undefined" ||
-    !process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    !clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
   ) {
     return;
   }
@@ -233,7 +234,7 @@ export const trackPurchase = (transactionData: {
 export const trackCustomEvent = (eventData: CustomEvent) => {
   if (
     typeof window === "undefined" ||
-    !process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    !clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
   ) {
     return;
   }
@@ -339,7 +340,6 @@ export const initializeAnalytics = () => {
 // Utility to check if analytics is enabled
 export const isAnalyticsEnabled = () => {
   return (
-    typeof window !== "undefined" &&
-    !!process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    typeof window !== "undefined" && !!clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
   );
 };
