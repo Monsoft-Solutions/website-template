@@ -2,6 +2,7 @@
 
 import { execSync } from "child_process";
 import { exit } from "process";
+import { existsSync } from "fs";
 
 interface CheckResult {
   name: string;
@@ -57,7 +58,9 @@ const getStagedFiles = (extensions: string[]): string[] => {
     });
     const files = output.trim().split("\n").filter(Boolean);
 
-    return files.filter((file) => extensions.some((ext) => file.endsWith(ext)));
+    return files
+      .filter((file) => extensions.some((ext) => file.endsWith(ext)))
+      .filter((file) => existsSync(file)); // Only include files that actually exist
   } catch {
     return [];
   }
