@@ -409,7 +409,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 ### Tasks
 
-#### 6.1 Dashboard Analytics
+#### 7.1 Dashboard Analytics
 
 - [ ] Create analytics hooks in `lib/hooks/useAnalytics.ts`
 - [ ] Implement dashboard statistics:
@@ -420,14 +420,14 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Add date range filtering
 - [ ] Create export functionality
 
-#### 6.2 Search & Filtering
+#### 7.2 Search & Filtering
 
 - [ ] Implement global admin search
 - [ ] Add advanced filtering options
 - [ ] Create saved filter presets
 - [ ] Add export filtered results
 
-#### 6.3 Settings & Configuration
+#### 7.3 Settings & Configuration
 
 - [ ] Create `/app/admin/settings/page.tsx`
 - [ ] Add site configuration management
@@ -435,7 +435,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Add email template management
 - [ ] Add SEO settings management
 
-#### 6.4 Activity Logs
+#### 7.4 Activity Logs
 
 - [ ] Create activity logging system
 - [ ] Add audit trail for all admin actions
@@ -459,7 +459,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 ### Tasks
 
-#### 7.1 Google Indexing Service
+#### 8.1 Google Indexing Service
 
 - [ ] Create reusable Google indexing service `lib/services/google-indexing.service.ts`
 - [ ] Abstract the existing script logic into service methods
@@ -467,7 +467,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Implement async notification processing
 - [ ] Add proper logging and monitoring
 
-#### 7.2 Integration with Admin Operations
+#### 8.2 Integration with Admin Operations
 
 - [ ] Integrate Google indexing notifications into blog post API endpoints
 - [ ] Integrate Google indexing notifications into services API endpoints
@@ -475,7 +475,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Implement batch notifications for bulk operations
 - [ ] Add optional manual re-indexing triggers
 
-#### 7.3 Admin UI Enhancements
+#### 8.3 Admin UI Enhancements
 
 - [ ] Add Google indexing status indicators in admin forms
 - [ ] Create manual re-indexing buttons for individual items
@@ -483,7 +483,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Display indexing status and last notification timestamps
 - [ ] Add notification history tracking
 
-#### 7.4 Background Processing & Error Handling
+#### 8.4 Background Processing & Error Handling
 
 - [ ] Implement async processing to avoid blocking admin operations
 - [ ] Add proper error handling for failed notifications
@@ -491,7 +491,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Add rate limiting to comply with Google API limits
 - [ ] Implement fallback strategies for API failures
 
-#### 7.5 Configuration & Monitoring
+#### 8.5 Configuration & Monitoring
 
 - [ ] Add Google indexing configuration to admin settings
 - [ ] Create indexing status dashboard
