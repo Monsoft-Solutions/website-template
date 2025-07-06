@@ -4,6 +4,8 @@ import { useState } from "react";
 import { AnalyticsStatsCard } from "@/components/admin/analytics-stats-card";
 import { AnalyticsChart } from "@/components/admin/analytics-chart";
 import { ContentPopularityTable } from "@/components/admin/content-popularity-table";
+import { ContactSubmissionStatusChart } from "@/components/admin/contact-submission-status-chart";
+import { ContactSubmissionTrendsChart } from "@/components/admin/contact-submission-trends-chart";
 import {
   Select,
   SelectContent,
@@ -14,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnalytics } from "@/lib/hooks/use-analytics.hook";
+import { useContactSubmissionAnalytics } from "@/lib/hooks/use-contact-submission-analytics";
 import { AnalyticsTimePeriod } from "@/lib/types";
 import {
   FileText,
@@ -25,6 +28,9 @@ import {
   Activity,
   BarChart3,
   Clock,
+  MessageSquare,
+  Circle,
+  UserCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -77,6 +83,9 @@ export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] =
     useState<AnalyticsTimePeriod>("month");
   const { data, isLoading, error } = useAnalytics(selectedPeriod);
+  const { data: submissionAnalytics } = useContactSubmissionAnalytics({
+    period: selectedPeriod,
+  });
 
   if (isLoading) {
     return (
@@ -278,6 +287,75 @@ export default function AnalyticsPage() {
           delay={0.6}
         />
       </div>
+
+      {/* Contact Submission Analytics */}
+      {submissionAnalytics && (
+        <>
+          {/* Contact Submission Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.65 }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <MessageSquare className="h-6 w-6 text-primary" />
+              <h2 className="text-2xl font-bold">
+                Contact Submission Analytics
+              </h2>
+            </div>
+          </motion.div>
+
+          {/* Contact Submission Key Metrics */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <AnalyticsStatsCard
+              title="Total Submissions"
+              value={submissionAnalytics.stats.totalSubmissions}
+              icon={MessageSquare}
+              description="All contact submissions"
+              delay={0.7}
+            />
+            <AnalyticsStatsCard
+              title="New Submissions"
+              value={submissionAnalytics.stats.newSubmissions}
+              icon={Circle}
+              description="Pending review"
+              delay={0.75}
+            />
+            <AnalyticsStatsCard
+              title="Avg Response Time"
+              value={`${submissionAnalytics.stats.avgResponseTime}h`}
+              icon={Clock}
+              description="Average response time"
+              delay={0.8}
+            />
+            <AnalyticsStatsCard
+              title="Responded"
+              value={submissionAnalytics.stats.respondedSubmissions}
+              icon={UserCheck}
+              description="Completed submissions"
+              delay={0.85}
+            />
+          </div>
+
+          {/* Contact Submission Charts */}
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <ContactSubmissionStatusChart
+              data={{
+                newSubmissions: submissionAnalytics.stats.newSubmissions,
+                readSubmissions: submissionAnalytics.stats.readSubmissions,
+                respondedSubmissions:
+                  submissionAnalytics.stats.respondedSubmissions,
+              }}
+              delay={0.9}
+            />
+            <ContactSubmissionTrendsChart
+              data={submissionAnalytics.chartData}
+              period={submissionAnalytics.period}
+              delay={0.95}
+            />
+          </div>
+        </>
+      )}
 
       {/* Recent Activity */}
       <motion.div

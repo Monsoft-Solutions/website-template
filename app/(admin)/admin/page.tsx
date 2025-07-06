@@ -25,11 +25,16 @@ import {
   ArrowRight,
   Target,
   Zap,
+  MessageSquare,
+  Clock,
+  UserCheck,
+  Circle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAnalytics } from "@/lib/hooks/use-analytics.hook";
 import { useAdminBlogPosts } from "@/lib/hooks/use-admin-blog-posts";
 import { useAdminServices } from "@/lib/hooks/use-admin-services";
+import { useContactSubmissionAnalytics } from "@/lib/hooks/use-contact-submission-analytics";
 import Link from "next/link";
 
 /**
@@ -41,6 +46,9 @@ export default function AdminDashboard() {
   const { data: analyticsData } = useAnalytics("month");
   const { totalPosts } = useAdminBlogPosts({ limit: 1 });
   const { totalServices } = useAdminServices({ limit: 1 });
+  const { data: submissionAnalytics } = useContactSubmissionAnalytics({
+    period: "month",
+  });
 
   // Mock data for demonstration - this would be replaced with real data
   const quickActions = [
@@ -79,6 +87,17 @@ export default function AdminDashboard() {
       badge: "Available",
       disabled: false,
       color: "bg-orange-500/10 text-orange-600 hover:bg-orange-500/20",
+    },
+    {
+      title: "Contact Submissions",
+      description: "Review and respond to contact forms",
+      icon: MessageSquare,
+      href: "/admin/contact-submissions",
+      badge: submissionAnalytics?.stats.newSubmissions
+        ? `${submissionAnalytics.stats.newSubmissions} new`
+        : "Ready",
+      disabled: false,
+      color: "bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20",
     },
   ];
 
@@ -217,6 +236,43 @@ export default function AdminDashboard() {
           delay={0.3}
         />
       </div>
+
+      {/* Contact Submission Analytics */}
+      {submissionAnalytics && (
+        <>
+          {/* Contact Submission Key Metrics */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <AnalyticsStatsCard
+              title="Total Submissions"
+              value={submissionAnalytics.stats.totalSubmissions}
+              icon={MessageSquare}
+              description="All contact submissions"
+              delay={0.35}
+            />
+            <AnalyticsStatsCard
+              title="New Submissions"
+              value={submissionAnalytics.stats.newSubmissions}
+              icon={Circle}
+              description="Pending review"
+              delay={0.4}
+            />
+            <AnalyticsStatsCard
+              title="Avg Response Time"
+              value={`${submissionAnalytics.stats.avgResponseTime}h`}
+              icon={Clock}
+              description="Average response time"
+              delay={0.45}
+            />
+            <AnalyticsStatsCard
+              title="Responded"
+              value={submissionAnalytics.stats.respondedSubmissions}
+              icon={UserCheck}
+              description="Completed submissions"
+              delay={0.5}
+            />
+          </div>
+        </>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
