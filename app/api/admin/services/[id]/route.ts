@@ -13,6 +13,7 @@ import { serviceGalleryImages } from "@/lib/db/schema/service-gallery-image.tabl
 import { serviceTestimonials } from "@/lib/db/schema/service-testimonial.table";
 import { serviceFaqs } from "@/lib/db/schema/service-faq.table";
 import { serviceRelated } from "@/lib/db/schema/service-related.table";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import { buildServiceWithRelations } from "@/lib/api/services.api";
@@ -74,6 +75,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can access service details
+    await requireAdmin();
+
     const { id } = await params;
 
     if (!id) {
@@ -130,6 +134,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can update services
+    await requireAdmin();
+
     const { id } = await params;
     const data: ServiceUpdateData = await request.json();
 
@@ -326,6 +333,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can delete services
+    await requireAdmin();
+
     const { id } = await params;
 
     if (!id) {

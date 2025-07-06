@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAnalyticsStats } from "@/lib/api/view-tracking.api";
+import { requireAdmin } from "@/lib/auth/server";
 import type {
   ApiResponse,
   AnalyticsResponse,
@@ -11,6 +12,9 @@ import type {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can access analytics
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
     const period =
       (searchParams.get("period") as AnalyticsTimePeriod) || "month";

@@ -13,6 +13,7 @@ import { serviceGalleryImages } from "@/lib/db/schema/service-gallery-image.tabl
 import { serviceTestimonials } from "@/lib/db/schema/service-testimonial.table";
 import { serviceFaqs } from "@/lib/db/schema/service-faq.table";
 import { serviceRelated } from "@/lib/db/schema/service-related.table";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { AdminServicesListResponse } from "@/lib/hooks/use-admin-services";
@@ -72,6 +73,9 @@ interface ServiceCreateData {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can create services
+    await requireAdmin();
+
     const data: ServiceCreateData = await request.json();
 
     // Create the service first
@@ -239,6 +243,9 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can access services management
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -366,6 +373,9 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can bulk update services
+    await requireAdmin();
+
     const { ids, action } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -405,6 +415,9 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can delete services
+    await requireAdmin();
+
     const { ids } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {

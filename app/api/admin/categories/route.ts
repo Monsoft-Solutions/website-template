@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { categories } from "@/lib/db/schema/category.table";
 import { blogPosts } from "@/lib/db/schema/blog-post.table";
 import { eq, ilike, and, or, desc, asc, sql } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { Category, NewCategory } from "@/lib/types/blog/category.type";
 
@@ -27,6 +28,9 @@ export interface CategoryWithUsage extends Category {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can access categories management
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -135,6 +139,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can create categories
+    await requireAdmin();
+
     const data: NewCategory = await request.json();
 
     // Validate required fields
@@ -201,6 +208,9 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can update categories
+    await requireAdmin();
+
     const { ids, action } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -240,6 +250,9 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can delete categories
+    await requireAdmin();
+
     const { ids } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {

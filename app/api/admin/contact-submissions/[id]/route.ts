@@ -4,6 +4,7 @@ import { contactSubmissions } from "@/lib/db/schema/contact-submission.table";
 import { adminComments } from "@/lib/db/schema/admin-comment.table";
 import { user } from "@/lib/db/schema/auth-schema";
 import { eq, and, isNull, desc } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { ContactSubmission } from "@/lib/types/contact/contact-submission.type";
 import type { AdminCommentWithAuthor } from "@/lib/types/admin/admin-comment.type";
@@ -24,6 +25,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can access contact submission details
+    await requireAdmin();
+
     const { id } = await params;
 
     if (!id) {
@@ -134,6 +138,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can update contact submissions
+    await requireAdmin();
+
     const { id } = await params;
     const { status } = await request.json();
 

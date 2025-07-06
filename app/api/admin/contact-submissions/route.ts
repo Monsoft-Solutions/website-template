@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { contactSubmissions } from "@/lib/db/schema/contact-submission.table";
 import { and, eq, or, ilike, desc, asc, sql, gte, lte } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { ContactSubmission } from "@/lib/types/contact/contact-submission.type";
 
@@ -27,6 +28,9 @@ export interface AdminContactSubmissionsListResponse {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can access contact submissions
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -217,6 +221,9 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can update contact submissions
+    await requireAdmin();
+
     const { ids, action } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {

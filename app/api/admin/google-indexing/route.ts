@@ -8,12 +8,16 @@ import {
   IndexingOperationResponse,
   BulkIndexingRequest,
 } from "@/lib/types/google-indexing.type";
+import { requireAdmin } from "@/lib/auth/server";
 
 /**
  * POST /api/admin/google-indexing - Notify Google about content updates
  */
 export async function POST(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can trigger Google indexing
+    await requireAdmin();
+
     const body = await request.json();
     const { action, ...params } = body;
 
@@ -186,6 +190,9 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
+    // Add authentication check - only admin users can check Google indexing status
+    await requireAdmin();
+
     const isConfigured = GoogleIndexingService.isConfigured();
 
     return NextResponse.json({

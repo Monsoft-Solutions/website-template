@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { authors } from "@/lib/db/schema/author.table";
 import { blogPosts } from "@/lib/db/schema/blog-post.table";
 import { eq, sql } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { Author, NewAuthor } from "@/lib/types/blog/author.type";
 
@@ -14,6 +15,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can access author details
+    await requireAdmin();
+
     const { id } = await params;
 
     if (!id) {
@@ -75,6 +79,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can update authors
+    await requireAdmin();
+
     const { id } = await params;
     const data: Partial<NewAuthor> = await request.json();
 
@@ -162,6 +169,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can delete authors
+    await requireAdmin();
+
     const { id } = await params;
 
     if (!id) {

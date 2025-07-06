@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 
 // Maximum file size: 5MB
@@ -87,6 +88,9 @@ function validateFileExtension(mimeType: string, filename: string): boolean {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can upload files
+    await requireAdmin();
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
