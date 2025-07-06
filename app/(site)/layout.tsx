@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { siteConfig } from "@/lib/config/site";
+import { clientEnv } from "@/lib/env-client";
 
 interface SiteLayoutProps {
   children: React.ReactNode;
@@ -19,7 +20,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
         data={{
           name: siteConfig.name,
           description: siteConfig.description,
-          url: siteConfig.url,
+          url: clientEnv.NEXT_PUBLIC_SITE_URL,
         }}
       />
       <div className="flex min-h-screen flex-col">

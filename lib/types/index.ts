@@ -20,6 +20,14 @@ export type {
   ContactFormResponse,
 } from "./contact-submission.type";
 
+// Site configuration types
+export type {
+  SiteConfig,
+  NewSiteConfig,
+  SiteConfigData,
+  SiteConfigFormData,
+} from "./site-config.type";
+
 // Database entity types
 export * from "./service";
 export * from "./blog";

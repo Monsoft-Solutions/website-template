@@ -1,16 +1,15 @@
-import { clientEnv } from "../env-client";
-import type { SiteConfigData } from "../types/site-config.type";
+import { db } from "../../index";
+import { siteConfigs } from "../../schema/index";
+import type { NewSiteConfig } from "@/lib/types/site-config.type";
+import type { SeedOperation } from "../types/seed-config.type";
 
 /**
- * Synchronous site config for server-side compatibility and fallback
- * For client-side usage, use the useSiteConfig hook instead
- * For server-side dynamic config, use getSiteConfigFromDB from site-config.util.ts
+ * Site configuration data based on current hardcoded values
  */
-export const siteConfig = {
+const siteConfigData: NewSiteConfig = {
   name: "Monsoft Solutions",
   description:
     "Monsoft Solutions is a software development company that provides software development services to businesses.",
-  url: clientEnv.NEXT_PUBLIC_SITE_URL,
   ogImage: "/og-image.jpg",
   links: {
     twitter: "https://twitter.com/yourhandle",
@@ -40,7 +39,6 @@ export const siteConfig = {
     },
   },
   metadata: {
-    metadataBase: new URL(clientEnv.NEXT_PUBLIC_SITE_URL),
     generator: "Next.js",
     applicationName: "Your Site Name",
     referrer: "origin-when-cross-origin",
@@ -57,16 +55,50 @@ export const siteConfig = {
       userScalable: true,
     },
     verification: {
-      google: clientEnv.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-      yandex: clientEnv.NEXT_PUBLIC_YANDEX_VERIFICATION,
-      bing: clientEnv.NEXT_PUBLIC_BING_VERIFICATION,
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+      yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+      bing: process.env.NEXT_PUBLIC_BING_VERIFICATION,
     },
   },
-} as const;
+  isActive: true,
+};
 
-export type SiteConfig = SiteConfigData & {
-  url: string;
-  metadata: SiteConfigData["metadata"] & {
-    metadataBase: URL;
-  };
+/**
+ * Execute site configuration seeding operation
+ */
+const execute = async (): Promise<number> => {
+  // Check if site config already exists
+  const existingConfig = await db.select().from(siteConfigs).limit(1);
+
+  if (existingConfig.length === 0) {
+    const insertedConfig = await db
+      .insert(siteConfigs)
+      .values(siteConfigData)
+      .returning();
+
+    return insertedConfig.length;
+  }
+
+  // Return 0 if already exists to avoid duplicates
+  return 0;
+};
+
+/**
+ * Clear site configuration data
+ */
+const clear = async (): Promise<void> => {
+  await db.delete(siteConfigs);
+};
+
+/**
+ * Site configuration seed operation
+ */
+export const siteConfigSeed: SeedOperation = {
+  config: {
+    name: "site-config",
+    order: 0,
+    description: "Seed site configuration data",
+  },
+  execute,
+  clear,
 };

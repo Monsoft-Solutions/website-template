@@ -68,11 +68,9 @@ const navItems: NavItem[] = [
     icon: Users,
   },
   {
-    title: "Settings",
+    title: "Site Settings",
     href: "/admin/settings",
     icon: Settings,
-    badge: "Phase 6",
-    comingSoon: true,
   },
 ];
 

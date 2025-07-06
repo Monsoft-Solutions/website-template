@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { siteConfig } from "@/lib/config/site";
+import { useSiteConfig } from "@/lib/hooks/use-site-config";
 import { cn } from "@/lib/utils/cn";
 
 interface NavItem {
@@ -24,6 +24,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const { config: siteConfig } = useSiteConfig();
 
   useEffect(() => {
     const handleScroll = () => {
