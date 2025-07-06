@@ -19,3 +19,6 @@ export { StatsCard } from "./StatsCard";
 
 // Blog components
 export { BlogPostForm } from "./BlogPostForm";
+
+// Service components
+export { ServiceForm } from "./ServiceForm";
