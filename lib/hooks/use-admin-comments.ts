@@ -6,6 +6,98 @@ import type {
 } from "@/lib/types/admin/admin-comment.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 
+// Constants for error messages and validation
+const ERROR_MESSAGES = {
+  CONTENT_REQUIRED: "Comment content is required",
+  FETCH_FAILED: "Failed to fetch comments",
+  CREATE_FAILED: "Failed to create comment",
+  GENERIC_ERROR: "An error occurred",
+  INVALID_ENTITY_ID: "Entity ID must be a non-empty string",
+  INVALID_CONTENT: "Comment content must be a non-empty string",
+} as const;
+
+const VALIDATION = {
+  MIN_CONTENT_LENGTH: 1,
+  MAX_CONTENT_LENGTH: 10000,
+} as const;
+
+// Type definitions for hook return values
+interface UseAdminCommentsReturn {
+  // Data
+  comments: AdminCommentWithAuthor[];
+  pinnedComments: AdminCommentWithAuthor[];
+  regularComments: AdminCommentWithAuthor[];
+  commentsCount: number;
+
+  // Loading states
+  isLoading: boolean;
+  isCreating: boolean;
+  error: string | null;
+
+  // Actions
+  createComment: (
+    content: string,
+    options?: {
+      isInternal?: boolean;
+      isPinned?: boolean;
+    }
+  ) => Promise<AdminCommentWithAuthor>;
+  refetch: () => Promise<void>;
+}
+
+interface UseCreateCommentReturn {
+  createComment: (
+    entityType: CommentEntityType,
+    entityId: string,
+    content: string,
+    options?: {
+      isInternal?: boolean;
+      isPinned?: boolean;
+    }
+  ) => Promise<AdminCommentWithAuthor>;
+  isCreating: boolean;
+  error: string | null;
+  clearError: () => void;
+}
+
+interface CommentOptions {
+  isInternal?: boolean;
+  isPinned?: boolean;
+}
+
+/**
+ * Validates comment content
+ */
+const validateContent = (content: string): void => {
+  if (!content || typeof content !== "string") {
+    throw new Error(ERROR_MESSAGES.CONTENT_REQUIRED);
+  }
+
+  const trimmedContent = content.trim();
+  if (trimmedContent.length < VALIDATION.MIN_CONTENT_LENGTH) {
+    throw new Error(ERROR_MESSAGES.INVALID_CONTENT);
+  }
+
+  if (trimmedContent.length > VALIDATION.MAX_CONTENT_LENGTH) {
+    throw new Error(
+      `Comment content must be less than ${VALIDATION.MAX_CONTENT_LENGTH} characters`
+    );
+  }
+};
+
+/**
+ * Validates entity ID
+ */
+const validateEntityId = (entityId: string): void => {
+  if (
+    !entityId ||
+    typeof entityId !== "string" ||
+    entityId.trim().length === 0
+  ) {
+    throw new Error(ERROR_MESSAGES.INVALID_ENTITY_ID);
+  }
+};
+
 /**
  * Hook for managing admin comments
  * Reusable across different entity types
@@ -13,16 +105,19 @@ import type { ApiResponse } from "@/lib/types/api-response.type";
 export function useAdminComments(
   entityType: CommentEntityType,
   entityId: string
-) {
+): UseAdminCommentsReturn {
   const [comments, setComments] = useState<AdminCommentWithAuthor[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
    * Fetch comments from API
    */
-  const fetchComments = useCallback(async () => {
+  const fetchComments = useCallback(async (): Promise<void> => {
+    // Validate inputs
+    validateEntityId(entityId);
+
     setIsLoading(true);
     setError(null);
 
@@ -45,10 +140,13 @@ export function useAdminComments(
       if (result.success) {
         setComments(result.data);
       } else {
-        setError(result.error || "Failed to fetch comments");
+        setError(result.error || ERROR_MESSAGES.FETCH_FAILED);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const errorMessage =
+        err instanceof Error ? err.message : ERROR_MESSAGES.GENERIC_ERROR;
+      setError(errorMessage);
+      console.error("Error fetching comments:", err);
     } finally {
       setIsLoading(false);
     }
@@ -60,14 +158,11 @@ export function useAdminComments(
   const createComment = useCallback(
     async (
       content: string,
-      options?: {
-        isInternal?: boolean;
-        isPinned?: boolean;
-      }
-    ) => {
-      if (!content.trim()) {
-        throw new Error("Comment content is required");
-      }
+      options: CommentOptions = {}
+    ): Promise<AdminCommentWithAuthor> => {
+      // Validate inputs
+      validateContent(content);
+      validateEntityId(entityId);
 
       setIsCreating(true);
 
@@ -76,8 +171,8 @@ export function useAdminComments(
           entityType,
           entityId,
           content: content.trim(),
-          isInternal: options?.isInternal ?? true,
-          isPinned: options?.isPinned ?? false,
+          isInternal: options.isInternal ?? true,
+          isPinned: options.isPinned ?? false,
         };
 
         const response = await fetch("/api/admin/comments", {
@@ -89,15 +184,15 @@ export function useAdminComments(
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to create comment");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || ERROR_MESSAGES.CREATE_FAILED);
         }
 
         const result: ApiResponse<AdminCommentWithAuthor> =
           await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || "Failed to create comment");
+          throw new Error(result.error || ERROR_MESSAGES.CREATE_FAILED);
         }
 
         // Refresh comments after successful creation
@@ -122,19 +217,19 @@ export function useAdminComments(
   /**
    * Get comments count
    */
-  const commentsCount = comments.length;
+  const commentsCount: number = comments.length;
 
   /**
    * Get pinned comments
    */
-  const pinnedComments = comments.filter(
+  const pinnedComments: AdminCommentWithAuthor[] = comments.filter(
     (comment: AdminCommentWithAuthor) => comment.isPinned
   );
 
   /**
    * Get regular comments (non-pinned)
    */
-  const regularComments = comments.filter(
+  const regularComments: AdminCommentWithAuthor[] = comments.filter(
     (comment: AdminCommentWithAuthor) => !comment.isPinned
   );
 
@@ -160,8 +255,8 @@ export function useAdminComments(
  * Hook for creating comments without fetching existing ones
  * Useful for forms where you only need to create comments
  */
-export function useCreateComment() {
-  const [isCreating, setIsCreating] = useState(false);
+export function useCreateComment(): UseCreateCommentReturn {
+  const [isCreating, setIsCreating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const createComment = useCallback(
@@ -169,14 +264,11 @@ export function useCreateComment() {
       entityType: CommentEntityType,
       entityId: string,
       content: string,
-      options?: {
-        isInternal?: boolean;
-        isPinned?: boolean;
-      }
-    ) => {
-      if (!content.trim()) {
-        throw new Error("Comment content is required");
-      }
+      options: CommentOptions = {}
+    ): Promise<AdminCommentWithAuthor> => {
+      // Validate inputs
+      validateContent(content);
+      validateEntityId(entityId);
 
       setIsCreating(true);
       setError(null);
@@ -186,8 +278,8 @@ export function useCreateComment() {
           entityType,
           entityId,
           content: content.trim(),
-          isInternal: options?.isInternal ?? true,
-          isPinned: options?.isPinned ?? false,
+          isInternal: options.isInternal ?? true,
+          isPinned: options.isPinned ?? false,
         };
 
         const response = await fetch("/api/admin/comments", {
@@ -199,22 +291,23 @@ export function useCreateComment() {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to create comment");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || ERROR_MESSAGES.CREATE_FAILED);
         }
 
         const result: ApiResponse<AdminCommentWithAuthor> =
           await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || "Failed to create comment");
+          throw new Error(result.error || ERROR_MESSAGES.CREATE_FAILED);
         }
 
         return result.data;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to create comment";
+          error instanceof Error ? error.message : ERROR_MESSAGES.CREATE_FAILED;
         setError(errorMessage);
+        console.error("Error creating comment:", error);
         throw error;
       } finally {
         setIsCreating(false);
@@ -223,10 +316,14 @@ export function useCreateComment() {
     []
   );
 
+  const clearError = useCallback((): void => {
+    setError(null);
+  }, []);
+
   return {
     createComment,
     isCreating,
     error,
-    clearError: () => setError(null),
+    clearError,
   };
 }
