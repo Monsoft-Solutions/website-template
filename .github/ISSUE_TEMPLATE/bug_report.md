@@ -1,3 +1,13 @@
+---
+name: 🐛 Bug Report
+about: Report a bug or issue
+title: "[BUG] "
+labels: bug
+assignees: ""
+---
+
+## 🐛 Bug Description
+
 <!-- Clearly and concisely describe the bug. What is happening that shouldn't? -->
 
 ## 🔁 Steps to Reproduce
