@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { authors } from "@/lib/db/schema/author.table";
 import { blogPosts } from "@/lib/db/schema/blog-post.table";
-import { eq, ilike, and, or, desc, asc, sql } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { Author, NewAuthor } from "@/lib/types/blog/author.type";
 
 /**
- * Admin Authors API Response Types
+ * Admin authors list response type
  */
 export interface AdminAuthorsListResponse {
   authors: AuthorWithUsage[];
@@ -23,10 +24,13 @@ export interface AuthorWithUsage extends Author {
 }
 
 /**
- * GET endpoint - Fetch authors with usage statistics and admin filtering
+ * GET endpoint - Fetch authors with admin filtering and pagination
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can access author management
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -36,15 +40,38 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get("sortBy") || "createdAt";
     const sortOrder = searchParams.get("sortOrder") || "desc";
 
+    // Validate pagination parameters
+    if (page < 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: {} as AdminAuthorsListResponse,
+          error: "Invalid page number",
+        } as ApiResponse<AdminAuthorsListResponse>,
+        { status: 400 }
+      );
+    }
+
+    if (limit < 1 || limit > 100) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: {} as AdminAuthorsListResponse,
+          error: "Invalid limit. Must be between 1 and 100",
+        } as ApiResponse<AdminAuthorsListResponse>,
+        { status: 400 }
+      );
+    }
+
     // Build where conditions
     const whereConditions = [];
 
+    // Add search query filter
     if (searchQuery) {
       whereConditions.push(
         or(
           ilike(authors.name, `%${searchQuery}%`),
-          ilike(authors.email, `%${searchQuery}%`),
-          ilike(authors.bio, `%${searchQuery}%`)
+          ilike(authors.email, `%${searchQuery}%`)
         )
       );
     }
@@ -58,8 +85,6 @@ export async function GET(request: NextRequest) {
         ? authors.name
         : sortBy === "email"
         ? authors.email
-        : sortBy === "postsCount"
-        ? sql`posts_count`
         : authors.createdAt;
 
     const orderByClause =
@@ -73,7 +98,7 @@ export async function GET(request: NextRequest) {
 
     const totalAuthors = totalCountResult[0]?.count || 0;
 
-    // Get authors with usage statistics
+    // Get authors with pagination and posts count
     const authorsResult = await db
       .select({
         id: authors.id,
@@ -114,6 +139,30 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: {} as AdminAuthorsListResponse,
+            error: "Unauthorized",
+          } as ApiResponse<AdminAuthorsListResponse>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: {} as AdminAuthorsListResponse,
+            error: "Forbidden",
+          } as ApiResponse<AdminAuthorsListResponse>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error fetching admin authors:", error);
 
     const result: ApiResponse<AdminAuthorsListResponse> = {
@@ -138,6 +187,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can create authors
+    await requireAdmin();
+
     const data: NewAuthor = await request.json();
 
     // Validate required fields
@@ -187,6 +239,30 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Unauthorized",
+          } as ApiResponse<Author | null>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Forbidden",
+          } as ApiResponse<Author | null>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error creating author:", error);
 
     const result: ApiResponse<Author | null> = {
@@ -204,6 +280,9 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can update authors
+    await requireAdmin();
+
     const { ids, action } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -223,6 +302,30 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Unauthorized",
+          } as ApiResponse<null>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Forbidden",
+          } as ApiResponse<null>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error performing bulk action:", error);
 
     const result: ApiResponse<null> = {
@@ -243,6 +346,9 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can delete authors
+    await requireAdmin();
+
     const { ids } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -293,6 +399,30 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Unauthorized",
+          } as ApiResponse<null>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Forbidden",
+          } as ApiResponse<null>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error deleting authors:", error);
 
     const result: ApiResponse<null> = {

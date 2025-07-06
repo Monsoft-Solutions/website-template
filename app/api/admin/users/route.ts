@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { user as users } from "@/lib/db/schema/auth-schema";
-import { eq, and, or, ilike, asc, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, sql, ilike } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import { UserRole } from "@/lib/types/auth.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 
@@ -29,19 +30,23 @@ export type AdminUsersListResponse = {
 };
 
 /**
- * GET endpoint - Fetch users with pagination and filtering
+ * GET endpoint - Fetch users with admin filtering and pagination
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can access user management
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const role = searchParams.get("role") as UserRole | undefined;
     const searchQuery = searchParams.get("searchQuery") || undefined;
-    const roleFilter = searchParams.get("role") || undefined;
     const sortBy = searchParams.get("sortBy") || "createdAt";
     const sortOrder = searchParams.get("sortOrder") || "desc";
+    const verified = searchParams.get("verified");
 
     // Validate pagination parameters
     if (page < 1) {
@@ -69,6 +74,11 @@ export async function GET(request: NextRequest) {
     // Build where conditions
     const whereConditions = [];
 
+    // Add role filter
+    if (role) {
+      whereConditions.push(eq(users.role, role));
+    }
+
     // Add search query filter
     if (searchQuery) {
       whereConditions.push(
@@ -79,9 +89,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Add role filter
-    if (roleFilter && roleFilter !== "all") {
-      whereConditions.push(eq(users.role, roleFilter));
+    // Add verified filter
+    if (verified === "true") {
+      whereConditions.push(eq(users.emailVerified, true));
+    } else if (verified === "false") {
+      whereConditions.push(eq(users.emailVerified, false));
     }
 
     const whereClause =
@@ -110,18 +122,7 @@ export async function GET(request: NextRequest) {
 
     // Get users with pagination
     const usersResult = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        role: users.role,
-        emailVerified: users.emailVerified,
-        image: users.image,
-        bio: users.bio,
-        lang: users.lang,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-      })
+      .select()
       .from(users)
       .where(whereClause)
       .orderBy(orderByClause)
@@ -149,6 +150,30 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: {} as AdminUsersListResponse,
+            error: "Unauthorized",
+          } as ApiResponse<AdminUsersListResponse>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: {} as AdminUsersListResponse,
+            error: "Forbidden",
+          } as ApiResponse<AdminUsersListResponse>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error fetching admin users:", error);
 
     const result: ApiResponse<AdminUsersListResponse> = {
@@ -173,6 +198,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can create users
+    await requireAdmin();
+
     const body = await request.json();
     const { email, name, role = "user" } = body;
 
@@ -252,6 +280,30 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Unauthorized",
+          } as ApiResponse<null>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Forbidden",
+          } as ApiResponse<null>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error creating user:", error);
 
     const result: ApiResponse<null> = {
@@ -269,6 +321,9 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can update users
+    await requireAdmin();
+
     const { ids, action } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -288,6 +343,30 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Unauthorized",
+          } as ApiResponse<null>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Forbidden",
+          } as ApiResponse<null>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error performing bulk action:", error);
 
     const result: ApiResponse<null> = {
@@ -308,6 +387,9 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can delete users
+    await requireAdmin();
+
     const { ids } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -328,6 +410,30 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Unauthorized",
+          } as ApiResponse<null>,
+          { status: 401 }
+        );
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: "Forbidden",
+          } as ApiResponse<null>,
+          { status: 403 }
+        );
+      }
+    }
+
     console.error("Error deleting users:", error);
 
     const result: ApiResponse<null> = {
