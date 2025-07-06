@@ -16,6 +16,11 @@ export { MarkdownEditor } from "./MarkdownEditor";
 // Data components
 export { DataTable } from "./DataTable";
 export { StatsCard } from "./StatsCard";
+export { SubmissionStatusBadge } from "./SubmissionStatusBadge";
+
+// Comments Components
+export { CommentCard } from "./CommentCard";
+export { AddCommentForm } from "./AddCommentForm";
 
 // Blog components
 export { BlogPostForm } from "./BlogPostForm";

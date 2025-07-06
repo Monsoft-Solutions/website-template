@@ -18,7 +18,8 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 - **Blog Posts**: Full CRUD with categories, tags, authors, and metadata
 - **Services**: Comprehensive service data with features, benefits, pricing, etc.
-- **Supporting Entities**: Categories, tags, authors, contact submissions
+- **Contact Submissions**: Enhanced contact form data with project details, status workflow, and admin tracking
+- **Supporting Entities**: Categories, tags, authors, users, admin activity logs
 
 ## 📋 Implementation Phases
 
@@ -93,11 +94,14 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Create sidebar component `components/admin/Sidebar.tsx`
 - [ ] Implement navigation items with icons:
   - Dashboard
+  - Analytics
   - Blog Posts
   - Services
   - Categories
   - Tags
   - Authors
+  - Contact Submissions
+  - User Management
   - Settings
 - [ ] Add active state indicators
 - [ ] Implement collapsible sidebar for mobile
@@ -287,11 +291,121 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 ---
 
-## Phase 6: Advanced Features & Analytics
+## Phase 6: Contact Submissions Management
+
+**Duration**: 2-3 days  
+**Priority**: High  
+**Blockers**: Phase 5 completion
+
+### Tasks
+
+#### 6.1 Contact Submissions List View
+
+- [ ] Create `/app/(admin)/admin/contact-submissions/page.tsx`
+- [ ] Implement paginated submissions table with filtering and sorting
+- [ ] Add status filtering (new, read, responded)
+- [ ] Add date range filtering (today, week, month, custom)
+- [ ] Add search by name, email, company, or message content
+- [ ] Add sorting by date, status, project type, budget
+- [ ] Implement bulk status updates (mark as read, responded)
+- [ ] Add submission statistics cards (total, new, pending response)
+
+#### 6.2 Contact Submission Detail View
+
+- [ ] Create `/app/(admin)/admin/contact-submissions/[id]/page.tsx`
+- [ ] Display complete submission details in organized layout:
+  - Contact information (name, email, company)
+  - Project details (type, budget, timeline)
+  - Message content with proper formatting
+  - System metadata (IP address, user agent, submission date)
+  - Current status with visual indicators
+- [ ] Add status update functionality with confirmation
+- [ ] Add internal notes/comments system for admin tracking
+- [ ] Add quick email response template integration
+- [ ] Add submission history tracking (status changes, admin actions)
+
+#### 6.3 Contact Submissions API Endpoints
+
+- [ ] Create admin submissions API routes in `/app/api/admin/contact-submissions/`
+- [ ] Implement CRUD operations:
+  - `GET /api/admin/contact-submissions` - List with pagination/filtering
+  - `GET /api/admin/contact-submissions/[id]` - Get single submission
+  - `PUT /api/admin/contact-submissions/[id]` - Update submission status
+  - `DELETE /api/admin/contact-submissions/[id]` - Delete submission (soft delete)
+- [ ] Add bulk operations endpoint for status updates
+- [ ] Add statistics endpoint for dashboard metrics
+- [ ] Add export functionality (CSV/JSON) for submissions data
+
+#### 6.4 Contact Submissions Components
+
+- [ ] Create submission status badge component `components/admin/SubmissionStatusBadge.tsx`
+- [ ] Create submission detail card component `components/admin/SubmissionDetailCard.tsx`
+- [ ] Create submission statistics component `components/admin/SubmissionStats.tsx`
+- [ ] Create submission filters component `components/admin/SubmissionFilters.tsx`
+- [ ] Add contact submission management to admin sidebar navigation
+  - Update `components/admin/Sidebar.tsx` to include "Contact Submissions" nav item
+  - Add appropriate icon (e.g., `MessageSquare` or `Inbox`)
+  - Position between "Authors" and "User Management" in navigation order
+
+#### 6.5 Admin Dashboard Integration
+
+- [ ] Add contact submissions statistics to main dashboard
+- [ ] Create "Recent Submissions" widget showing latest entries
+- [ ] Add quick action to view pending submissions
+- [ ] Integrate submission metrics into analytics overview
+- [ ] Add submission status distribution chart
+
+#### 6.6 Status Workflow Management
+
+- [ ] Implement status transition logic and validation
+- [ ] Add automatic status updates (new → read when viewed)
+- [ ] Create status change confirmation dialogs
+- [ ] Add status history tracking in admin activity logs
+- [ ] Implement email notifications for status changes (optional)
+
+### Technical Implementation Details
+
+#### Database Integration
+
+- **Existing Schema**: Contact submissions table with enhanced fields
+- **Status Enum**: "new", "read", "responded"
+- **Fields Available**:
+  - Basic: name, email, subject, message
+  - Enhanced: company, projectType, budget, timeline
+  - System: status, createdAt, ipAddress, userAgent
+
+#### API Patterns
+
+- Follow existing admin API patterns from blog/services implementations
+- Use consistent pagination, filtering, and sorting approaches
+- Implement proper TypeScript types and Zod validation schemas
+- Add proper error handling and response formatting
+
+#### UI/UX Considerations
+
+- Use existing admin components (DataTable, AdminForm, PageHeader)
+- Follow established design patterns from blog/services management
+- Implement responsive design for mobile admin access
+- Add proper loading states and error boundaries
+- Use consistent color coding for submission status
+
+### Deliverables
+
+- Complete contact submissions management system
+- Status workflow with proper tracking
+- Comprehensive filtering and search capabilities
+- Dashboard integration with submission metrics
+- Export functionality for data analysis
+- Mobile-responsive admin interface
+- Admin activity logging for submission actions
+
+---
+
+## Phase 7: Advanced Features & Analytics
 
 **Duration**: 2-3 days  
 **Priority**: Medium  
-**Blockers**: Phase 5 completion
+**Blockers**: Phase 6 completion
 
 ### Tasks
 
@@ -337,7 +451,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 ---
 
-## Phase 7: Google Indexing Notifications
+## Phase 8: Google Indexing Notifications
 
 **Duration**: 1-2 days  
 **Priority**: High  
@@ -396,11 +510,11 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 ---
 
-## Phase 8: Testing & Optimization
+## Phase 9: Testing & Optimization
 
 **Duration**: 2-3 days  
 **Priority**: High  
-**Blockers**: Phase 7 completion
+**Blockers**: Phase 8 completion
 
 ### Tasks
 
@@ -451,33 +565,51 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 ```
 app/
-├── admin/
-│   ├── layout.tsx                 # Admin layout with sidebar
-│   ├── page.tsx                   # Dashboard
-│   ├── blog/
-│   │   ├── page.tsx              # Blog posts list
-│   │   ├── new/page.tsx          # Create blog post
-│   │   └── [id]/
-│   │       ├── edit/page.tsx     # Edit blog post
-│   │       └── preview/page.tsx  # Preview blog post
-│   ├── services/
-│   │   ├── page.tsx              # Services list
-│   │   ├── new/page.tsx          # Create service
-│   │   └── [id]/
-│   │       ├── edit/page.tsx     # Edit service
-│   │       └── preview/page.tsx  # Preview service
-│   ├── categories/page.tsx        # Categories management
-│   ├── tags/page.tsx             # Tags management
-│   ├── authors/page.tsx          # Authors management
-│   └── settings/page.tsx         # Admin settings
+├── (admin)/                       # Admin route group (no layout interference)
+│   ├── layout.tsx                # Admin layout with sidebar
+│   └── admin/
+│       ├── page.tsx              # Dashboard
+│       ├── analytics/
+│       │   └── page.tsx          # Analytics dashboard
+│       ├── blog/
+│       │   ├── page.tsx          # Blog posts list
+│       │   ├── new/page.tsx      # Create blog post
+│       │   └── [id]/
+│       │       ├── edit/page.tsx # Edit blog post
+│       │       └── preview/page.tsx # Preview blog post
+│       ├── services/
+│       │   ├── page.tsx          # Services list
+│       │   ├── new/page.tsx      # Create service
+│       │   └── [id]/
+│       │       ├── edit/page.tsx # Edit service
+│       │       └── preview/page.tsx # Preview service
+│       ├── categories/page.tsx    # Categories management
+│       ├── tags/page.tsx         # Tags management
+│       ├── authors/page.tsx      # Authors management
+│       ├── users/page.tsx        # User management
+│       ├── contact-submissions/   # Contact submissions management
+│       │   ├── page.tsx          # Submissions list
+│       │   └── [id]/
+│       │       └── page.tsx      # View submission details
+│       └── settings/page.tsx     # Admin settings
+├── auth/
+│   └── signin/page.tsx           # Sign in page
 ├── api/
 │   ├── auth/[...all]/route.ts    # Better Auth handler
 │   └── admin/
+│       ├── analytics/route.ts    # Analytics API endpoints
 │       ├── blog/route.ts         # Blog API endpoints
 │       ├── services/route.ts     # Services API endpoints
 │       ├── categories/route.ts   # Categories API endpoints
 │       ├── tags/route.ts         # Tags API endpoints
-│       └── authors/route.ts      # Authors API endpoints
+│       ├── authors/route.ts      # Authors API endpoints
+│       ├── users/route.ts        # Users API endpoints
+│       ├── contact-submissions/  # Contact submissions API
+│       │   ├── route.ts          # List/create endpoints
+│       │   └── [id]/route.ts     # Get/update/delete specific submission
+│       ├── google-indexing/      # Google indexing API
+│       ├── site-config/          # Site configuration API
+│       └── upload/               # File upload endpoints
 │
 components/
 ├── admin/
@@ -486,13 +618,22 @@ components/
 │   ├── AdminForm.tsx             # Admin form wrapper
 │   ├── PageHeader.tsx            # Admin page header
 │   ├── StatsCard.tsx             # Dashboard stats cards
-│   └── RichTextEditor.tsx        # Rich text editor
+│   ├── MarkdownEditor.tsx        # Rich text editor
+│   ├── BlogPostForm.tsx          # Blog post form component
+│   ├── ServiceForm.tsx           # Service form component
+│   ├── GoogleIndexingPanel.tsx   # Google indexing management
+│   ├── analytics-stats-card.tsx  # Analytics statistics cards
+│   ├── analytics-chart.tsx       # Analytics charts
+│   ├── content-popularity-table.tsx # Content popularity metrics
+│   ├── blog-post-form/           # Blog post form sub-components
+│   ├── service-form/             # Service form sub-components
+│   └── index.ts                  # Admin component exports
 │
 lib/
 ├── auth/
 │   ├── auth.ts                   # Better Auth configuration
 │   ├── client.ts                 # Auth client
-│   └── middleware.ts             # Auth middleware
+│   └── middleware.ts             # Auth middleware (implemented in root)
 ├── api/
 │   ├── blog.api.ts               # Blog API functions
 │   ├── services.api.ts           # Services API functions
@@ -500,12 +641,24 @@ lib/
 ├── services/
 │   └── google-indexing.service.ts # Google indexing notifications
 ├── hooks/
-│   ├── useAuth.ts                # Auth hook
-│   ├── useAnalytics.ts           # Analytics hook
-│   └── useAdminData.ts           # Admin data fetching hook
+│   ├── use-analytics.hook.ts     # Analytics hook
+│   ├── use-admin-blog-posts.ts   # Admin blog posts hook
+│   ├── use-admin-services.ts     # Admin services hook
+│   └── use-admin-data.ts         # Admin data fetching hook
+├── db/
+│   ├── schema/
+│   │   ├── contact-submission.table.ts # Contact submissions schema
+│   │   ├── admin-activity-log.table.ts # Admin activity logging
+│   │   └── enums/
+│   │       └── submission-status.enum.ts # Contact status enum
+│   └── seed/operations/
+│       └── admin-user.seed.ts    # Admin user seeding
 └── types/
     ├── auth.type.ts              # Auth types
     ├── admin.type.ts             # Admin-specific types
+    ├── contact/
+    │   ├── contact-submission.type.ts # Contact submission types
+    │   └── index.ts              # Contact exports
     └── google-indexing.type.ts   # Google indexing types
 ```
 
@@ -561,7 +714,9 @@ CREATE TABLE admin_activity_logs (
     "@tanstack/react-table": "^8.x.x",
     "react-hook-form": "^7.x.x",
     "recharts": "^2.x.x",
-    "@monsoft/google-indexing": "^latest"
+    "@monsoft/google-indexing": "^latest",
+    "date-fns": "^3.x.x",
+    "zod": "^3.x.x"
   }
 }
 ```
@@ -599,12 +754,14 @@ CREATE TABLE admin_activity_logs (
 
 - [ ] Complete authentication and authorization system
 - [ ] CRUD operations for blog posts and services
+- [ ] Contact submissions management with status workflow
 - [ ] Responsive admin interface with sidebar navigation
 - [ ] Dashboard with key metrics and analytics
 - [ ] Role-based access control
 - [ ] Image upload and management
 - [ ] Search and filtering capabilities
 - [ ] Bulk operations support
+- [ ] Google indexing notifications integration
 
 ### Technical Requirements
 
@@ -659,6 +816,28 @@ CREATE TABLE admin_activity_logs (
 - Consider implementing caching strategies
 - Optimize database queries and minimize N+1 problems
 - Plan for horizontal scaling if needed
+
+### Contact Submissions Workflow
+
+The contact submissions management follows a three-stage status workflow:
+
+1. **New** - Initial submission state, requires admin attention
+2. **Read** - Admin has viewed the submission, may need response
+3. **Responded** - Final state, submission has been handled
+
+**Enhanced Form Fields Available:**
+
+- Basic contact: name, email, subject, message
+- Project details: company, projectType, budget, timeline
+- System tracking: status, createdAt, ipAddress, userAgent
+
+**Admin Management Features:**
+
+- Status transition tracking with admin activity logs
+- Bulk status updates for efficient processing
+- Advanced filtering by status, date range, project type, and budget
+- Export functionality for external processing or reporting
+- Dashboard integration showing submission metrics and trends
 
 ---
 

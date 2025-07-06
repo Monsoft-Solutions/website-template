@@ -23,6 +23,7 @@ import {
   Shield,
   Menu,
   X,
+  MessageSquare,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -72,6 +73,11 @@ const navItems: NavItem[] = [
     title: "Authors",
     href: "/admin/authors",
     icon: Users,
+  },
+  {
+    title: "Contact Submissions",
+    href: "/admin/contact-submissions",
+    icon: MessageSquare,
   },
   {
     title: "User Management",

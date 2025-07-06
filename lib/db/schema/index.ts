@@ -11,6 +11,10 @@ export * from "./blog-post.table";
 export * from "./tag.table";
 export * from "./blog-post-tag.table";
 export * from "./contact-submission.table";
+export * from "./admin-comment.table";
+
+// Enums
+export * from "./enums/comment-entity-type.enum";
 export * from "./service.table";
 export * from "./service-feature.table";
 export * from "./service-benefit.table";
