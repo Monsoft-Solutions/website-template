@@ -12,6 +12,18 @@ import { serviceTestimonials } from "@/lib/db/schema/service-testimonial.table";
 import { serviceFaqs } from "@/lib/db/schema/service-faq.table";
 
 /**
+ * Related service type for displaying service cards
+ */
+export type RelatedService = {
+  id: string;
+  title: string;
+  slug: string;
+  shortDescription: string;
+  category: string;
+  featuredImage: string;
+};
+
+/**
  * Complete service type with all relations - matches the static data structure
  */
 export type ServiceWithRelations = InferSelectModel<typeof services> & {
@@ -22,9 +34,9 @@ export type ServiceWithRelations = InferSelectModel<typeof services> & {
   technologies: string[];
   deliverables: string[];
   gallery?: string[];
-  testimonial?: Testimonial;
+  testimonials?: Testimonial[];
   faq: FAQ[];
-  relatedServices: string[];
+  relatedServices: RelatedService[];
 };
 
 /**

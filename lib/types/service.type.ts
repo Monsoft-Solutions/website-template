@@ -39,7 +39,7 @@ export type Service = {
   /** Optional gallery of additional images */
   readonly gallery?: readonly string[];
   /** Optional customer testimonial */
-  readonly testimonial?: Testimonial;
+  readonly testimonials?: Testimonial[];
   /** Frequently asked questions about this service */
   readonly faq: readonly FAQ[];
   /** Array of related service slugs */

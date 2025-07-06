@@ -5,6 +5,7 @@ import {
   getBlogCategories,
   getBlogTags,
 } from "@/lib/api/blog.service";
+import { getAllServices } from "@/lib/api/services.api";
 import fs from "fs";
 import path from "path";
 
@@ -164,7 +165,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
     }));
 
-    return [...staticPages, ...blogPostPages, ...categoryPages, ...tagPages];
+    // Fetch all services
+    const servicesResult = await getAllServices();
+    const servicePages: MetadataRoute.Sitemap = servicesResult.success
+      ? servicesResult.data.map((service) => ({
+          url: `${siteConfig.url}/services/${service.slug}`,
+          lastModified: service.updatedAt,
+          changeFrequency: "monthly" as const,
+          priority: 0.7,
+        }))
+      : [];
+
+    return [
+      ...staticPages,
+      ...blogPostPages,
+      ...categoryPages,
+      ...tagPages,
+      ...servicePages,
+    ];
   } catch (error) {
     console.error("Error generating dynamic sitemap entries:", error);
     // Return at least the static pages if there's an error

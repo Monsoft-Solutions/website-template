@@ -36,6 +36,216 @@ type BadUserResponse = {
 };
 ```
 
+## Next.js 15 Parameter Handling (CRITICAL)
+
+### 🚨 Breaking Change in Next.js 15
+
+In **Next.js 15**, route parameters are now **asynchronous** and must be awaited before accessing their properties. This applies to:
+- API route handlers (`route.ts`)
+- Page components (`page.tsx`)
+- Layout components (`layout.tsx`)
+- Metadata generation functions
+
+### API Route Handlers - Correct Pattern
+
+```typescript
+// ✅ CORRECT - Next.js 15 pattern
+import { NextRequest, NextResponse } from "next/server";
+import { ApiResponse } from "@/lib/types/api-response.type";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // MUST await params before accessing properties
+    const { id } = await params;
+    
+    // Your logic here
+    return NextResponse.json({
+      success: true,
+      data: { id }
+    } as ApiResponse<{ id: string }>);
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      data: {} as { id: string },
+      error: error instanceof Error ? error.message : "Failed to process request"
+    } as ApiResponse<{ id: string }>, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    
+    // Your update logic here
+    return NextResponse.json({
+      success: true,
+      data: null,
+      message: `Updated entity ${id}`
+    } as ApiResponse<null>);
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : "Failed to update"
+    } as ApiResponse<null>, { status: 500 });
+  }
+}
+```
+
+```typescript
+// ❌ WRONG - Old Next.js 14 pattern (will cause build errors)
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } } // Missing Promise wrapper
+) {
+  const { id } = params; // Direct access without await
+  // This will fail in Next.js 15
+}
+```
+
+### Multiple Parameters
+
+```typescript
+// ✅ CORRECT - Multiple dynamic parameters
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ categoryId: string; itemId: string }> }
+) {
+  try {
+    const { categoryId, itemId } = await params;
+    
+    // Your logic here
+    return NextResponse.json({
+      success: true,
+      data: { categoryId, itemId }
+    });
+  } catch (error) {
+    // Error handling
+  }
+}
+```
+
+### Catch-all Routes
+
+```typescript
+// ✅ CORRECT - Catch-all segments
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string[] }> }
+) {
+  try {
+    const { slug } = await params;
+    
+    // slug is an array: ['segment1', 'segment2', ...]
+    return NextResponse.json({
+      success: true,
+      data: { slug }
+    });
+  } catch (error) {
+    // Error handling
+  }
+}
+
+// ✅ CORRECT - Optional catch-all segments
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug?: string[] }> }
+) {
+  try {
+    const { slug } = await params;
+    
+    // slug can be undefined for the base route
+    return NextResponse.json({
+      success: true,
+      data: { slug: slug || [] }
+    });
+  } catch (error) {
+    // Error handling
+  }
+}
+```
+
+### Page Components
+
+```typescript
+// ✅ CORRECT - Server Component (async function)
+export default async function UserPage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params;
+  
+  return <div>User ID: {id}</div>;
+}
+```
+
+```typescript
+// ✅ CORRECT - Client Component (use React.use())
+'use client'
+import { use } from 'react';
+
+export default function UserPage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = use(params);
+  
+  return <div>User ID: {id}</div>;
+}
+```
+
+### Migration from Next.js 14
+
+If you're migrating from Next.js 14, update your route handlers:
+
+```typescript
+// Before (Next.js 14)
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
+  // ...
+}
+
+// After (Next.js 15)
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  // ...
+}
+```
+
+### Common Mistakes to Avoid
+
+```typescript
+// ❌ WRONG - Forgetting Promise wrapper in type
+{ params }: { params: { id: string } }
+
+// ❌ WRONG - Accessing params property directly
+const id = params.id;
+
+// ❌ WRONG - Destructuring params directly
+const { id } = params;
+
+// ❌ WRONG - Using await on individual properties
+const id = await params.id;
+
+// ✅ CORRECT - Proper async handling
+const { id } = await params;
+```
+
 ## Client-Side API Requests
 
 1. Prefer direct API calls in components for simple requests:
@@ -134,20 +344,22 @@ function UserProfile({ userId }: { userId: string }) {
 2. Keep simple logic directly in route handlers:
 
 ```typescript
-// Good example - simple logic in route handler
-import { NextResponse } from "next/server";
+// Good example - simple logic in route handler with Next.js 15 async params
+import { NextRequest, NextResponse } from "next/server";
 import { ApiResponse } from "@/lib/types/api-response.type";
 import { User } from "@/lib/types/user.type";
 import { db } from "@/lib/db";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     // Simple database query directly in the route handler
     const user = await db.users.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
     
     if (!user) {
@@ -221,19 +433,28 @@ export async function getUserWithRelations(id: string): Promise<ApiResponse<User
   }
 }
 
-// Usage in route handler
+// Usage in route handler with Next.js 15 async params
 // /app/api/users/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getUserWithRelations } from "@/lib/api/users.api";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const result = await getUserWithRelations(params.id);
-  return NextResponse.json(result, { 
-    status: result.success ? 200 : result.error === "User not found" ? 404 : 500 
-  });
+  try {
+    const { id } = await params;
+    const result = await getUserWithRelations(id);
+    return NextResponse.json(result, { 
+      status: result.success ? 200 : result.error === "User not found" ? 404 : 500 
+    });
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      data: {} as User,
+      error: error instanceof Error ? error.message : "Failed to process request"
+    } as ApiResponse<User>, { status: 500 });
+  }
 }
 ```
 
@@ -290,3 +511,23 @@ if (!response.ok) {
    - 401/403: Authentication/authorization errors
    - 404: Resource not found
    - 500: Server errors
+
+## Quick Reference Checklist
+
+### Before writing any API route handler:
+- [ ] Is `params` typed as `Promise<{ param: string }>` ?
+- [ ] Am I using `await params` before accessing properties?
+- [ ] Are all route handler functions properly handling async params?
+- [ ] Am I using the correct pattern for my Next.js version?
+
+### Common Next.js 15 Migration Issues:
+1. **Build Error**: "Type 'X' does not satisfy constraint 'ParamCheck<RouteContext>'"
+   - **Fix**: Wrap params type in Promise: `Promise<{ id: string }>`
+
+2. **Runtime Error**: "params should be awaited before using its properties"
+   - **Fix**: Use `const { id } = await params;` instead of `const { id } = params;`
+
+3. **TypeScript Error**: "Property 'id' does not exist on type 'Promise<...>'"
+   - **Fix**: Await the params object before destructuring
+
+Remember: In Next.js 15, always treat `params` as a Promise that needs to be awaited!

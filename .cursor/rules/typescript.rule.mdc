@@ -1,7 +1,7 @@
 ---
-description: 
+description: TypeScript Code Style and Best Practices
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # TypeScript Code Style and Best Practices
 

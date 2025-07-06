@@ -16,9 +16,39 @@ export type { LazyImageProps } from "./lazy-image.type";
 // Shared types
 export type { ApiResponse } from "./api-response.type";
 export type {
+  ViewTracking,
+  NewViewTracking,
+  ContentViewStats,
+  AnalyticsStats,
+  AnalyticsTimePeriod,
+  AnalyticsDataPoint,
+  AnalyticsResponse,
+} from "./view-tracking.type";
+export type {
   ContactSubmissionResponse,
   ContactFormResponse,
 } from "./contact-submission.type";
+
+// Google Indexing types
+export type {
+  GoogleIndexingUrlType,
+  GoogleIndexingUrl,
+  GoogleIndexingResult,
+  GoogleIndexingConfig,
+  IndexableContentType,
+  IndexingNotificationStatus,
+  IndexingNotification,
+  BulkIndexingRequest,
+  IndexingOperationResponse,
+} from "./google-indexing.type";
+
+// Site configuration types
+export type {
+  SiteConfig,
+  NewSiteConfig,
+  SiteConfigData,
+  SiteConfigFormData,
+} from "./site-config.type";
 
 // Database entity types
 export * from "./service";

@@ -140,7 +140,7 @@ export async function getServicesByCategory(
 /**
  * Helper function to build a service with all its relations
  */
-async function buildServiceWithRelations(
+export async function buildServiceWithRelations(
   serviceId: string,
   baseService: Record<string, unknown>
 ): Promise<ServiceWithRelations> {
@@ -202,8 +202,16 @@ async function buildServiceWithRelations(
       .where(eq(serviceFaqs.serviceId, serviceId))
       .orderBy(asc(serviceFaqs.order)),
     db
-      .select({ relatedServiceId: serviceRelated.relatedServiceId })
+      .select({
+        id: services.id,
+        title: services.title,
+        slug: services.slug,
+        shortDescription: services.shortDescription,
+        category: services.category,
+        featuredImage: services.featuredImage,
+      })
       .from(serviceRelated)
+      .innerJoin(services, eq(serviceRelated.relatedServiceId, services.id))
       .where(eq(serviceRelated.serviceId, serviceId)),
   ]);
 
@@ -233,16 +241,15 @@ async function buildServiceWithRelations(
     duration: step.duration || undefined,
   }));
 
-  // Transform testimonial
-  const testimonial: Testimonial | undefined =
-    testimonials.length > 0
-      ? {
-          quote: testimonials[0].quote,
-          author: testimonials[0].author,
-          company: testimonials[0].company,
-          avatar: testimonials[0].avatar || undefined,
-        }
-      : undefined;
+  // Transform testimonials
+  const transformedTestimonials: Testimonial[] = testimonials.map(
+    (testimonial) => ({
+      quote: testimonial.quote,
+      author: testimonial.author,
+      company: testimonial.company,
+      avatar: testimonial.avatar || undefined,
+    })
+  );
 
   // Transform FAQs
   const faq: FAQ[] = faqs.map((f) => ({
@@ -262,8 +269,9 @@ async function buildServiceWithRelations(
       galleryImages.length > 0
         ? galleryImages.map((g) => g.imageUrl)
         : undefined,
-    testimonial,
+    testimonials:
+      transformedTestimonials.length > 0 ? transformedTestimonials : undefined,
     faq,
-    relatedServices: relatedServices.map((r) => r.relatedServiceId),
+    relatedServices: relatedServices,
   };
 }

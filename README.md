@@ -26,6 +26,18 @@
 - ✅ **Responsive Design** - Mobile-first approach with beautiful UI components
 - ✅ **Dark Mode Support** - Built-in theme switching with next-themes
 - ✅ **Type Safety** - End-to-end TypeScript with Zod validation
+- ✅ **Admin Area** - Complete content management system with Better Auth authentication
+
+### Admin Area Features
+
+- 🔐 **Authentication & Authorization** - Better Auth with role-based access control (Admin, Editor, Viewer)
+- 📊 **Dashboard Analytics** - Real-time metrics, charts, and performance insights
+- 📝 **Content Management** - Full CRUD operations for blog posts and services
+- 📬 **Contact Submissions** - Workflow management with status tracking (New → Read → Responded)
+- 👥 **User Management** - Invitation-only registration system with role management
+- 🔍 **Google Indexing** - Automatic Search Console notifications and manual re-indexing
+- 📱 **Mobile-Responsive** - Touch-friendly admin interface for mobile devices
+- 🔒 **Security Features** - CSRF protection, input validation, and audit logging
 
 ### Blog Features
 
@@ -75,8 +87,10 @@
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
 - **Database:** [PostgreSQL](https://www.postgresql.org/)
 - **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
+- **Authentication:** [Better Auth](https://www.better-auth.com/)
 - **Forms:** [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
 - **Analytics:** [Next.js Third Parties](https://nextjs.org/docs/app/guides/third-party-libraries) (Google Analytics 4)
+- **Charts:** [Recharts](https://recharts.org/)
 - **Markdown:** [React Markdown](https://github.com/remarkjs/react-markdown) + [Gray Matter](https://github.com/jonschlinkert/gray-matter)
 - **Icons:** [Lucide React](https://lucide.dev/)
 - **Date Handling:** [date-fns](https://date-fns.org/)
@@ -127,6 +141,10 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SITE_NAME="Your Site Name"
 NEXT_PUBLIC_SITE_DESCRIPTION="Your site description"
 
+# Authentication (Better Auth)
+BETTER_AUTH_SECRET=your-super-secret-key-here
+BETTER_AUTH_URL=http://localhost:3000
+
 # Contact Form Email (Optional)
 EMAIL_FROM=noreply@yoursite.com
 EMAIL_HOST=smtp.gmail.com
@@ -171,66 +189,136 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) to see your website.
 
+### 6. Access the Admin Area
+
+1. **Create your first admin user:**
+
+   ```bash
+   npx tsx scripts/add-user.ts
+   ```
+
+2. **Follow the prompts to:**
+
+   - Enter email address
+   - Choose admin role
+   - User will receive registration email
+
+3. **Access the admin dashboard:**
+   - Go to [http://localhost:3000/admin](http://localhost:3000/admin)
+   - Sign in with your admin credentials
+   - Start managing your content!
+
 ## 📁 Project Structure
 
 ```
 site-wave-website/
 ├── app/                        # Next.js App Router
-│   ├── api/                    # API routes
-│   ├── about/                  # About page
-│   ├── blog/                   # Blog pages
-│   │   └── [slug]/            # Dynamic blog post pages
-│   ├── contact/               # Contact page
-│   ├── services/              # Services page
-│   ├── layout.tsx             # Root layout
-│   ├── page.tsx               # Home page
-│   ├── error.tsx              # Error boundary
-│   ├── not-found.tsx          # 404 page
-│   ├── loading.tsx            # Loading state
-│   ├── sitemap.ts             # Dynamic sitemap
-│   └── robots.ts              # Dynamic robots.txt
+│   ├── (admin)/               # Admin route group
+│   │   ├── layout.tsx         # Admin layout with sidebar
+│   │   └── admin/             # Admin pages
+│   │       ├── page.tsx       # Admin dashboard
+│   │       ├── analytics/     # Analytics dashboard
+│   │       ├── blog/          # Blog management
+│   │       ├── services/      # Services management
+│   │       ├── contact-submissions/ # Contact submissions
+│   │       ├── categories/    # Categories management
+│   │       ├── tags/          # Tags management
+│   │       ├── authors/       # Authors management
+│   │       ├── users/         # User management
+│   │       └── settings/      # Site settings
+│   ├── auth/                  # Authentication pages
+│   │   ├── signin/           # Login page
+│   │   └── register/         # Registration page
+│   ├── api/                   # API routes
+│   │   ├── auth/             # Authentication API
+│   │   └── admin/            # Admin API endpoints
+│   ├── about/                 # About page
+│   ├── blog/                  # Blog pages
+│   │   └── [slug]/           # Dynamic blog post pages
+│   ├── contact/              # Contact page
+│   ├── services/             # Services page
+│   ├── layout.tsx            # Root layout
+│   ├── page.tsx              # Home page
+│   ├── error.tsx             # Error boundary
+│   ├── not-found.tsx         # 404 page
+│   ├── loading.tsx           # Loading state
+│   ├── sitemap.ts            # Dynamic sitemap
+│   └── robots.ts             # Dynamic robots.txt
 │
-├── components/                 # React components
-│   ├── analytics/             # Analytics components and tracking
-│   ├── blog/                  # Blog-specific components with analytics
-│   ├── forms/                 # Form components with analytics tracking
-│   ├── layout/                # Layout components (Header, Footer, etc.)
-│   ├── seo/                   # SEO components
-│   └── ui/                    # shadcn/ui components
+├── components/                # React components
+│   ├── admin/                # Admin UI components
+│   │   ├── Sidebar.tsx       # Admin sidebar navigation
+│   │   ├── DataTable.tsx     # Admin data tables
+│   │   ├── BlogPostForm.tsx  # Blog post form
+│   │   ├── ServiceForm.tsx   # Service form
+│   │   └── ...               # Other admin components
+│   ├── analytics/            # Analytics components and tracking
+│   ├── blog/                 # Blog-specific components with analytics
+│   ├── forms/                # Form components with analytics tracking
+│   ├── layout/               # Layout components (Header, Footer, etc.)
+│   ├── seo/                  # SEO components
+│   └── ui/                   # shadcn/ui components
 │
-├── lib/                       # Utilities and configurations
-│   ├── api/                   # API client functions
-│   ├── config/                # Site configuration
-│   ├── db/                    # Database configuration
-│   │   ├── migrations/        # Database migrations
-│   │   ├── schema/            # Database schema definitions
-│   │   └── seed/              # Database seeders
-│   ├── types/                 # TypeScript type definitions
-│   └── utils/                 # Utility functions
-│       └── analytics.ts       # Google Analytics tracking utilities
+├── lib/                      # Utilities and configurations
+│   ├── api/                  # API client functions
+│   ├── auth/                 # Authentication configuration
+│   │   ├── auth.ts           # Better Auth config
+│   │   ├── client.ts         # Auth client
+│   │   └── server.ts         # Server-side auth utilities
+│   ├── config/               # Site configuration
+│   ├── db/                   # Database configuration
+│   │   ├── migrations/       # Database migrations
+│   │   ├── schema/           # Database schema definitions
+│   │   │   ├── auth-schema.ts # Authentication tables
+│   │   │   └── ...           # Other schema files
+│   │   └── seed/             # Database seeders
+│   ├── hooks/                # Custom React hooks
+│   │   ├── use-admin-*.ts    # Admin-specific hooks
+│   │   └── ...               # Other hooks
+│   ├── types/                # TypeScript type definitions
+│   │   ├── auth.type.ts      # Authentication types
+│   │   └── ...               # Other type definitions
+│   └── utils/                # Utility functions
+│       └── analytics.ts      # Google Analytics tracking utilities
 │
-├── public/                    # Static assets
-│   └── images/               # Images
+├── docs/                     # Documentation
+│   ├── admin-area.md         # Admin area documentation
+│   ├── analytics-implementation.md # Analytics setup guide
+│   └── ...                   # Other documentation
 │
-├── .env.example              # Environment variables example
-├── drizzle.config.ts         # Drizzle ORM configuration
-├── next.config.ts            # Next.js configuration
-├── tailwind.config.ts        # Tailwind CSS configuration
-└── tsconfig.json             # TypeScript configuration
+├── public/                   # Static assets
+│   └── images/              # Images
+│
+├── middleware.ts             # Next.js middleware (auth protection)
+├── .env.example             # Environment variables example
+├── drizzle.config.ts        # Drizzle ORM configuration
+├── next.config.ts           # Next.js configuration
+├── tailwind.config.ts       # Tailwind CSS configuration
+└── tsconfig.json            # TypeScript configuration
 ```
 
 ## 🗄️ Database Schema
 
-The template includes a complete database schema for a blog system:
+The template includes a complete database schema for a blog system and admin area:
 
-### Tables
+### Core Tables
 
 - **authors** - Blog post authors with profiles
 - **categories** - Post categories with slugs
 - **blog_posts** - Blog posts with full metadata
 - **tags** - Tags for blog posts
 - **blog_posts_tags** - Many-to-many relationship
-- **contact_submissions** - Contact form submissions
+- **contact_submissions** - Contact form submissions with status workflow
+- **services** - Service offerings with comprehensive details
+- **service\_\*\*** - Related service tables (features, benefits, pricing, etc.)
+
+### Authentication Tables
+
+- **user** - User accounts with role-based permissions
+- **session** - User session management
+- **account** - OAuth provider accounts
+- **verification** - Email verification tokens
+- **admin_activity_logs** - Audit trail for admin actions
 
 ## 🎨 Customization
 
@@ -288,6 +376,7 @@ export default function NewPage() {
 - `npm run db:studio` - Open Drizzle Studio (database GUI)
 - `npm run db:seed` - Seed database with sample data
 - `npm run sitemap:notify` - Submit all pages to Google for indexing
+- `npx tsx scripts/add-user.ts` - Create new admin user account
 
 ## 🚀 Deployment
 
@@ -438,6 +527,58 @@ For detailed implementation guide, see:
 - [Analytics Implementation Guide](docs/analytics-implementation.md)
 - [Next.js Third Parties Documentation](https://nextjs.org/docs/app/guides/third-party-libraries#google-third-parties)
 
+## 🔐 Admin Area
+
+The Site Wave template includes a comprehensive admin area for content management built with Better Auth and modern UI components.
+
+### Key Features
+
+- **📊 Dashboard** - Analytics overview with key metrics and charts
+- **📝 Content Management** - Full CRUD operations for blog posts and services
+- **📬 Contact Management** - Review and manage contact form submissions
+- **👥 User Management** - Invitation-only registration with role-based access
+- **🔍 SEO Tools** - Google indexing notifications and SEO optimization
+- **📱 Mobile Responsive** - Admin interface optimized for mobile devices
+
+### Quick Start
+
+1. **Create Admin User**:
+
+   ```bash
+   npx tsx scripts/add-user.ts
+   ```
+
+2. **Access Admin Dashboard**:
+   - Navigate to `/admin`
+   - Sign in with admin credentials
+   - Start managing your content
+
+### Admin Routes
+
+- `/admin` - Main dashboard with analytics and quick actions
+- `/admin/blog` - Blog post management (create, edit, delete)
+- `/admin/services` - Service management with multi-step forms
+- `/admin/contact-submissions` - Contact form submissions workflow
+- `/admin/analytics` - Advanced analytics and reporting
+- `/admin/users` - User management and role assignment
+- `/admin/settings` - Site configuration and preferences
+
+### Security Features
+
+- **Role-based Access** - Admin, Editor, Viewer, and User roles
+- **Session Management** - Secure session handling with automatic expiration
+- **Input Validation** - Comprehensive form validation and sanitization
+- **CSRF Protection** - Built-in protection against cross-site request forgery
+- **Audit Logging** - Track all admin actions for security monitoring
+
+### Documentation
+
+For comprehensive admin area documentation, see:
+
+- [Admin Area Documentation](docs/admin-area.md)
+- [User Registration Guide](docs/USER_REGISTRATION.md)
+- [Environment Configuration](docs/environment-configuration.md)
+
 ## 🧪 Development Guidelines
 
 ### Code Style
@@ -490,6 +631,13 @@ For detailed implementation guide, see:
 - Check browser Network tab for GA4 requests
 - Use GA4 DebugView for real-time testing
 - Run `testAnalytics()` in browser console to verify setup
+
+**Admin Area Issues**
+
+- **Authentication Problems**: Check `BETTER_AUTH_SECRET` is set and database connection
+- **Permission Errors**: Verify user role in database and restart application
+- **Session Issues**: Clear browser cookies and ensure session tables exist
+- **Admin Access**: Confirm middleware is protecting `/admin/*` routes correctly
 
 ## 🤝 Contributing
 

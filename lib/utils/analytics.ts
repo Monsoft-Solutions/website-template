@@ -1,4 +1,5 @@
 import { sendGAEvent } from "@next/third-parties/google";
+import { clientEnv } from "../env-client";
 
 // Performance API interfaces
 interface PerformanceEventTiming extends PerformanceEntry {
@@ -9,6 +10,20 @@ interface LayoutShift extends PerformanceEntry {
   value: number;
   hadRecentInput: boolean;
 }
+
+// Analytics event categories as constants
+export const ANALYTICS_CATEGORIES = {
+  NAVIGATION: "navigation",
+  BLOG: "blog",
+  FORMS: "forms",
+  SOCIAL: "social",
+  ENGAGEMENT: "engagement",
+  CONVERSION: "conversion",
+  DOWNLOADS: "downloads",
+  OUTBOUND: "outbound",
+  PERFORMANCE: "performance",
+  ERRORS: "errors",
+} as const;
 
 // Types for analytics events
 export interface GAEvent {
@@ -37,68 +52,82 @@ export interface CustomEvent {
   [key: string]: string | number | boolean;
 }
 
-// Basic event tracking
-export const trackEvent = (eventData: GAEvent) => {
-  if (
-    typeof window === "undefined" ||
-    !process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
-  ) {
-    return;
-  }
+/**
+ * Basic event tracking with error handling
+ */
+export const trackEvent = (eventData: GAEvent): void => {
+  try {
+    if (
+      typeof window === "undefined" ||
+      !clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    ) {
+      return;
+    }
 
-  sendGAEvent("event", eventData.action, {
-    event_category: eventData.category,
-    event_label: eventData.label,
-    value: eventData.value,
-  });
+    sendGAEvent("event", eventData.action, {
+      event_category: eventData.category,
+      event_label: eventData.label,
+      value: eventData.value,
+    });
+  } catch (error) {
+    console.warn("Failed to track event:", error);
+  }
 };
 
 // Common website events
 export const analytics = {
   // Navigation events
-  trackPageView: (page_title: string, page_location?: string) => {
+  trackPageView: (page_title: string, page_location?: string): void => {
     trackEvent({
       action: "page_view",
-      category: "navigation",
+      category: ANALYTICS_CATEGORIES.NAVIGATION,
       label: page_title,
     });
 
     if (page_location) {
-      sendGAEvent("event", "page_view", {
-        page_title,
-        page_location,
-      });
+      try {
+        sendGAEvent("event", "page_view", {
+          page_title,
+          page_location,
+        });
+      } catch (error) {
+        console.warn("Failed to track page view:", error);
+      }
     }
   },
 
   // Blog events
   trackBlogPost: {
-    view: (postTitle: string, category?: string) => {
+    view: (postTitle: string, category?: string): void => {
       trackEvent({
         action: "blog_post_view",
-        category: "blog",
+        category: ANALYTICS_CATEGORIES.BLOG,
         label: postTitle,
       });
 
       // Custom event for more detailed tracking
-      sendGAEvent("event", "blog_post_read", {
-        post_title: postTitle,
-        post_category: category || "uncategorized",
-      });
+      try {
+        sendGAEvent("event", "blog_post_read", {
+          post_title: postTitle,
+          post_category: category || "uncategorized",
+        });
+      } catch (error) {
+        console.warn("Failed to track blog post view:", error);
+      }
     },
 
-    share: (postTitle: string, platform: string) => {
+    share: (postTitle: string, platform: string): void => {
       trackEvent({
         action: "blog_post_share",
-        category: "social",
+        category: ANALYTICS_CATEGORIES.SOCIAL,
         label: `${platform}: ${postTitle}`,
       });
     },
 
-    complete: (postTitle: string, readingTime: number) => {
+    complete: (postTitle: string, readingTime: number): void => {
       trackEvent({
         action: "blog_post_complete",
-        category: "engagement",
+        category: ANALYTICS_CATEGORIES.ENGAGEMENT,
         label: postTitle,
         value: readingTime,
       });
@@ -107,59 +136,63 @@ export const analytics = {
 
   // Contact form events
   trackContact: {
-    formStart: () => {
+    formStart: (): void => {
       trackEvent({
         action: "contact_form_start",
-        category: "forms",
+        category: ANALYTICS_CATEGORIES.FORMS,
       });
     },
 
-    formSubmit: () => {
+    formSubmit: (): void => {
       trackEvent({
         action: "contact_form_submit",
-        category: "forms",
+        category: ANALYTICS_CATEGORIES.FORMS,
       });
     },
 
-    formComplete: () => {
+    formComplete: (): void => {
       trackEvent({
         action: "contact_form_complete",
-        category: "conversion",
+        category: ANALYTICS_CATEGORIES.CONVERSION,
       });
     },
   },
 
   // Search events
-  trackSearch: (searchTerm: string, resultsCount: number) => {
-    sendGAEvent("event", "search", {
-      search_term: searchTerm,
-      results_count: resultsCount,
-    });
+  trackSearch: (searchTerm: string, resultsCount: number): void => {
+    try {
+      sendGAEvent("event", "search", {
+        search_term: searchTerm,
+        results_count: resultsCount,
+      });
+    } catch (error) {
+      console.warn("Failed to track search:", error);
+    }
   },
 
   // Download events
-  trackDownload: (fileName: string, fileType: string) => {
+  trackDownload: (fileName: string, fileType: string): void => {
     trackEvent({
       action: "file_download",
-      category: "downloads",
+      category: ANALYTICS_CATEGORIES.DOWNLOADS,
       label: `${fileType}: ${fileName}`,
     });
   },
 
   // External link clicks
-  trackExternalLink: (url: string, linkText?: string) => {
+  trackExternalLink: (url: string, linkText?: string): void => {
     trackEvent({
       action: "external_link_click",
-      category: "outbound",
+      category: ANALYTICS_CATEGORIES.OUTBOUND,
       label: linkText || url,
     });
   },
 
   // Email subscription
-  trackEmailSignup: (source: string) => {
+  trackEmailSignup: (source: string): void => {
     trackEvent({
       action: "email_signup",
-      category: "conversion",
+      category: ANALYTICS_CATEGORIES.CONVERSION,
       label: source,
     });
   },
@@ -169,10 +202,10 @@ export const analytics = {
     metricName: string,
     value: number,
     unit: string = "ms"
-  ) => {
+  ): void => {
     trackEvent({
       action: "performance_metric",
-      category: "performance",
+      category: ANALYTICS_CATEGORIES.PERFORMANCE,
       label: `${metricName} (${unit})`,
       value: Math.round(value),
     });
@@ -183,18 +216,22 @@ export const analytics = {
     errorType: string,
     errorMessage: string,
     errorLocation?: string
-  ) => {
+  ): void => {
     trackEvent({
       action: "error",
-      category: "errors",
+      category: ANALYTICS_CATEGORIES.ERRORS,
       label: `${errorType}: ${errorMessage}`,
     });
 
-    sendGAEvent("event", "exception", {
-      description: errorMessage,
-      fatal: false,
-      error_location: errorLocation,
-    });
+    try {
+      sendGAEvent("event", "exception", {
+        description: errorMessage,
+        fatal: false,
+        error_location: errorLocation,
+      });
+    } catch (error) {
+      console.warn("Failed to track error:", error);
+    }
   },
 };
 
@@ -202,7 +239,7 @@ export const analytics = {
 export const trackConversion = (conversionData: ConversionEvent) => {
   if (
     typeof window === "undefined" ||
-    !process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    !clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
   ) {
     return;
   }
@@ -233,7 +270,7 @@ export const trackPurchase = (transactionData: {
 export const trackCustomEvent = (eventData: CustomEvent) => {
   if (
     typeof window === "undefined" ||
-    !process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    !clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
   ) {
     return;
   }
@@ -339,7 +376,6 @@ export const initializeAnalytics = () => {
 // Utility to check if analytics is enabled
 export const isAnalyticsEnabled = () => {
   return (
-    typeof window !== "undefined" &&
-    !!process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+    typeof window !== "undefined" && !!clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
   );
 };

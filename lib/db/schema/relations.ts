@@ -16,6 +16,10 @@ import { serviceGalleryImages } from "./service-gallery-image.table";
 import { serviceTestimonials } from "./service-testimonial.table";
 import { serviceFaqs } from "./service-faq.table";
 import { serviceRelated } from "./service-related.table";
+import { user as users } from "./auth-schema";
+import { session as sessions, account as accounts } from "./auth-schema";
+import { adminActivityLogs } from "./admin-activity-log.table";
+import { viewTracking } from "./view-tracking.table";
 
 /**
  * Database relations definitions
@@ -40,6 +44,7 @@ export const blogPostsRelations = relations(blogPosts, ({ one, many }) => ({
     references: [categories.id],
   }),
   tags: many(blogPostsTags),
+  views: many(viewTracking),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -71,6 +76,7 @@ export const servicesRelations = relations(services, ({ many }) => ({
   faqs: many(serviceFaqs),
   relatedServices: many(serviceRelated, { relationName: "serviceToRelated" }),
   parentServices: many(serviceRelated, { relationName: "relatedToService" }),
+  views: many(viewTracking),
 }));
 
 export const serviceFeaturesRelations = relations(
@@ -181,5 +187,50 @@ export const serviceRelatedRelations = relations(serviceRelated, ({ one }) => ({
     fields: [serviceRelated.relatedServiceId],
     references: [services.id],
     relationName: "relatedToService",
+  }),
+}));
+
+// Auth Relations
+
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  accounts: many(accounts),
+  activityLogs: many(adminActivityLogs),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const adminActivityLogsRelations = relations(
+  adminActivityLogs,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [adminActivityLogs.userId],
+      references: [users.id],
+    }),
+  })
+);
+
+// View Tracking Relations
+
+export const viewTrackingRelations = relations(viewTracking, ({ one }) => ({
+  blogPost: one(blogPosts, {
+    fields: [viewTracking.contentId],
+    references: [blogPosts.id],
+  }),
+  service: one(services, {
+    fields: [viewTracking.contentId],
+    references: [services.id],
   }),
 }));

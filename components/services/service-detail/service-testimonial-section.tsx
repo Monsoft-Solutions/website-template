@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import {
   Quote,
@@ -12,7 +12,10 @@ import {
   Building,
   Heart,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Testimonial {
   quote: string;
@@ -22,13 +25,15 @@ interface Testimonial {
 }
 
 interface ServiceTestimonialSectionProps {
-  testimonial: Testimonial;
+  testimonials: Testimonial[];
 }
 
 export function ServiceTestimonialSection({
-  testimonial,
+  testimonials,
 }: ServiceTestimonialSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
@@ -41,6 +46,24 @@ export function ServiceTestimonialSection({
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -40]);
   const quoteScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1, 1.2]);
+
+  // Handle empty testimonials array
+  if (!testimonials || testimonials.length === 0) {
+    return null;
+  }
+
+  const currentTestimonial = testimonials[currentIndex];
+
+  // Navigation functions
+  const nextTestimonial = () => {
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentIndex(
+      (prev) => (prev - 1 + testimonials.length) % testimonials.length
+    );
+  };
 
   // Animation variants
   const containerVariants = {
@@ -223,6 +246,7 @@ export function ServiceTestimonialSection({
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
             }}
             transition={{ duration: 0.3 }}
+            key={currentIndex} // Add key for smooth transitions
           >
             {/* Background gradient overlay */}
             <motion.div
@@ -230,6 +254,30 @@ export function ServiceTestimonialSection({
               whileHover={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             />
+
+            {/* Navigation Controls */}
+            {testimonials.length > 1 && (
+              <div className="absolute top-4 right-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={prevTestimonial}
+                  className="w-8 h-8 p-0"
+                  disabled={testimonials.length <= 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={nextTestimonial}
+                  className="w-8 h-8 p-0"
+                  disabled={testimonials.length <= 1}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
 
             {/* Large quote mark */}
             <motion.div
@@ -267,14 +315,20 @@ export function ServiceTestimonialSection({
             <motion.blockquote
               className="relative z-10 text-xl md:text-2xl lg:text-3xl font-medium text-foreground text-center leading-relaxed mb-8"
               variants={quoteVariants}
+              initial="hidden"
+              animate="visible"
+              key={`quote-${currentIndex}`}
             >
-              &ldquo;{testimonial.quote}&rdquo;
+              &ldquo;{currentTestimonial.quote}&rdquo;
             </motion.blockquote>
 
             {/* Author information */}
             <motion.div
               className="flex items-center justify-center gap-4"
               variants={authorVariants}
+              initial="hidden"
+              animate="visible"
+              key={`author-${currentIndex}`}
             >
               {/* Avatar */}
               <motion.div
@@ -286,10 +340,10 @@ export function ServiceTestimonialSection({
                   className="w-16 h-16 rounded-full overflow-hidden border-3 border-primary/20"
                   whileHover={{ borderColor: "hsl(var(--primary))" }}
                 >
-                  {testimonial.avatar ? (
+                  {currentTestimonial.avatar ? (
                     <Image
-                      src={testimonial.avatar}
-                      alt={testimonial.author}
+                      src={currentTestimonial.avatar}
+                      alt={currentTestimonial.author}
                       width={64}
                       height={64}
                       className="w-full h-full object-cover"
@@ -325,14 +379,14 @@ export function ServiceTestimonialSection({
                   className="text-lg font-semibold text-foreground"
                   whileHover={{ scale: 1.05 }}
                 >
-                  {testimonial.author}
+                  {currentTestimonial.author}
                 </motion.h4>
                 <motion.div
                   className="flex items-center gap-2 text-muted-foreground"
                   whileHover={{ scale: 1.05 }}
                 >
                   <Building className="w-4 h-4" />
-                  <span className="text-sm">{testimonial.company}</span>
+                  <span className="text-sm">{currentTestimonial.company}</span>
                 </motion.div>
               </div>
             </motion.div>
@@ -371,6 +425,28 @@ export function ServiceTestimonialSection({
               transition={{ delay: 1, duration: 0.8 }}
             />
           </motion.div>
+
+          {/* Testimonial indicators */}
+          {testimonials.length > 1 && (
+            <motion.div
+              className="flex justify-center gap-2 mt-8"
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
+            >
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentIndex
+                      ? "bg-primary scale-125"
+                      : "bg-primary/30 hover:bg-primary/50"
+                  }`}
+                />
+              ))}
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Bottom message */}
@@ -387,6 +463,18 @@ export function ServiceTestimonialSection({
             Join hundreds of satisfied clients who have transformed their
             business with our innovative solutions and dedicated support.
           </motion.p>
+
+          {/* Testimonial count */}
+          {testimonials.length > 1 && (
+            <motion.p
+              className="text-sm text-muted-foreground mt-4"
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ delay: 1.8, duration: 0.5 }}
+            >
+              Showing {currentIndex + 1} of {testimonials.length} testimonials
+            </motion.p>
+          )}
         </motion.div>
       </div>
     </section>

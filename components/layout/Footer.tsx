@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { siteConfig } from "@/lib/config/site";
+import { useSiteConfig } from "@/lib/hooks/use-site-config";
 import { Github, Twitter, Linkedin, Facebook, Instagram } from "lucide-react";
 
 const footerLinks = {
@@ -15,36 +17,44 @@ const footerLinks = {
   ],
 };
 
-const socialLinks = [
-  {
-    href: siteConfig.links.github,
-    label: "GitHub",
-    icon: Github,
-  },
-  {
-    href: siteConfig.links.twitter,
-    label: "Twitter",
-    icon: Twitter,
-  },
-  {
-    href: siteConfig.links.linkedin,
-    label: "LinkedIn",
-    icon: Linkedin,
-  },
-  {
-    href: siteConfig.links.facebook,
-    label: "Facebook",
-    icon: Facebook,
-  },
-  {
-    href: siteConfig.links.instagram,
-    label: "Instagram",
-    icon: Instagram,
-  },
-];
-
 export function Footer() {
+  const { config: siteConfig } = useSiteConfig();
   const currentYear = new Date().getFullYear();
+
+  // Create social links dynamically based on site config, filtering out undefined links
+  const allSocialLinks = [
+    {
+      href: siteConfig.links.github,
+      label: "GitHub",
+      icon: Github,
+    },
+    {
+      href: siteConfig.links.twitter,
+      label: "Twitter",
+      icon: Twitter,
+    },
+    {
+      href: siteConfig.links.linkedin,
+      label: "LinkedIn",
+      icon: Linkedin,
+    },
+    {
+      href: siteConfig.links.facebook,
+      label: "Facebook",
+      icon: Facebook,
+    },
+    {
+      href: siteConfig.links.instagram,
+      label: "Instagram",
+      icon: Instagram,
+    },
+  ];
+
+  // Filter out undefined/empty links and ensure type safety
+  const socialLinks = allSocialLinks.filter(
+    (link): link is typeof link & { href: string } =>
+      link.href != null && link.href.length > 0
+  );
 
   return (
     <footer className="border-t bg-background">

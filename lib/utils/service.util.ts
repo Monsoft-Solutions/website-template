@@ -40,9 +40,8 @@ export const getRelatedServices = (
   const currentService = getServiceBySlug(services, currentServiceSlug);
   if (!currentService) return [];
 
-  return services.filter((service) =>
-    currentService.relatedServices.includes(service.slug)
-  );
+  const relatedSlugs = currentService.relatedServices.map((rs) => rs.slug);
+  return services.filter((service) => relatedSlugs.includes(service.slug));
 };
 
 /**

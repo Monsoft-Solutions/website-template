@@ -1,8 +1,16 @@
+import { clientEnv } from "../env-client";
+import type { SiteConfigData } from "../types/site-config.type";
+
+/**
+ * Synchronous site config for server-side compatibility and fallback
+ * For client-side usage, use the useSiteConfig hook instead
+ * For server-side dynamic config, use getSiteConfigFromDB from site-config.util.ts
+ */
 export const siteConfig = {
   name: "Monsoft Solutions",
   description:
     "Monsoft Solutions is a software development company that provides software development services to businesses.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://yoursite.com",
+  url: clientEnv.NEXT_PUBLIC_SITE_URL,
   ogImage: "/og-image.jpg",
   links: {
     twitter: "https://twitter.com/yourhandle",
@@ -32,9 +40,7 @@ export const siteConfig = {
     },
   },
   metadata: {
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL || "https://yoursite.com"
-    ),
+    metadataBase: new URL(clientEnv.NEXT_PUBLIC_SITE_URL),
     generator: "Next.js",
     applicationName: "Your Site Name",
     referrer: "origin-when-cross-origin",
@@ -51,11 +57,16 @@ export const siteConfig = {
       userScalable: true,
     },
     verification: {
-      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-      yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
-      bing: process.env.NEXT_PUBLIC_BING_VERIFICATION,
+      google: clientEnv.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+      yandex: clientEnv.NEXT_PUBLIC_YANDEX_VERIFICATION,
+      bing: clientEnv.NEXT_PUBLIC_BING_VERIFICATION,
     },
   },
 } as const;
 
-export type SiteConfig = typeof siteConfig;
+export type SiteConfig = SiteConfigData & {
+  url: string;
+  metadata: SiteConfigData["metadata"] & {
+    metadataBase: URL;
+  };
+};
