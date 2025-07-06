@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, asc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { services } from "@/lib/db/schema/service.table";
 import { serviceFeatures } from "@/lib/db/schema/service-feature.table";
@@ -15,6 +15,7 @@ import { serviceFaqs } from "@/lib/db/schema/service-faq.table";
 import { serviceRelated } from "@/lib/db/schema/service-related.table";
 import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
+import { buildServiceWithRelations } from "@/lib/api/services.api";
 
 // Types for request data
 interface ProcessStepData {
@@ -282,6 +283,16 @@ export async function PUT(
       }
     }
 
+    // Insert related services
+    if (data.relatedServices && data.relatedServices.length > 0) {
+      await db.insert(serviceRelated).values(
+        data.relatedServices.map((relatedServiceId: string) => ({
+          serviceId: id,
+          relatedServiceId,
+        }))
+      );
+    }
+
     const result: ApiResponse<{ id: string }> = {
       success: true,
       data: { id },
@@ -356,126 +367,6 @@ export async function DELETE(
 
     return NextResponse.json(result, { status: 500 });
   }
-}
-
-/**
- * Helper function to build a service with all its relations
- */
-async function buildServiceWithRelations(
-  serviceId: string,
-  baseService: Record<string, unknown>
-): Promise<ServiceWithRelations> {
-  // Get all related data in parallel
-  const [
-    features,
-    benefits,
-    processSteps,
-    pricingTiers,
-    technologies,
-    deliverables,
-    galleryImages,
-    testimonials,
-    faqs,
-    relatedServices,
-  ] = await Promise.all([
-    db
-      .select()
-      .from(serviceFeatures)
-      .where(eq(serviceFeatures.serviceId, serviceId))
-      .orderBy(asc(serviceFeatures.order)),
-    db
-      .select()
-      .from(serviceBenefits)
-      .where(eq(serviceBenefits.serviceId, serviceId))
-      .orderBy(asc(serviceBenefits.order)),
-    db
-      .select()
-      .from(serviceProcessSteps)
-      .where(eq(serviceProcessSteps.serviceId, serviceId))
-      .orderBy(asc(serviceProcessSteps.step)),
-    db
-      .select()
-      .from(servicePricingTiers)
-      .where(eq(servicePricingTiers.serviceId, serviceId))
-      .orderBy(asc(servicePricingTiers.order)),
-    db
-      .select()
-      .from(serviceTechnologies)
-      .where(eq(serviceTechnologies.serviceId, serviceId))
-      .orderBy(asc(serviceTechnologies.order)),
-    db
-      .select()
-      .from(serviceDeliverables)
-      .where(eq(serviceDeliverables.serviceId, serviceId))
-      .orderBy(asc(serviceDeliverables.order)),
-    db
-      .select()
-      .from(serviceGalleryImages)
-      .where(eq(serviceGalleryImages.serviceId, serviceId))
-      .orderBy(asc(serviceGalleryImages.order)),
-    db
-      .select()
-      .from(serviceTestimonials)
-      .where(eq(serviceTestimonials.serviceId, serviceId)),
-    db
-      .select()
-      .from(serviceFaqs)
-      .where(eq(serviceFaqs.serviceId, serviceId))
-      .orderBy(asc(serviceFaqs.order)),
-    db
-      .select()
-      .from(serviceRelated)
-      .where(eq(serviceRelated.serviceId, serviceId)),
-  ]);
-
-  // Get pricing features for each pricing tier
-  const pricingTiersWithFeatures = await Promise.all(
-    pricingTiers.map(async (tier) => {
-      const pricingFeatures = await db
-        .select()
-        .from(servicePricingFeatures)
-        .where(eq(servicePricingFeatures.pricingTierId, tier.id))
-        .orderBy(asc(servicePricingFeatures.order));
-
-      return {
-        name: tier.name,
-        price: tier.price,
-        description: tier.description,
-        popular: tier.popular,
-        features: pricingFeatures.map((feature) => feature.feature),
-      };
-    })
-  );
-
-  // Transform to the expected format
-  const serviceWithRelations: ServiceWithRelations = {
-    ...baseService,
-    features: features.map((feature) => feature.feature),
-    benefits: benefits.map((benefit) => benefit.benefit),
-    process: processSteps.map((step) => ({
-      step: step.step,
-      title: step.title,
-      description: step.description,
-      duration: step.duration,
-    })),
-    pricing: pricingTiersWithFeatures,
-    technologies: technologies.map((tech) => tech.technology),
-    deliverables: deliverables.map((deliverable) => deliverable.deliverable),
-    gallery: galleryImages.map((image) => image.imageUrl),
-    testimonials: testimonials.map((testimonial) => ({
-      quote: testimonial.quote,
-      author: testimonial.author,
-      company: testimonial.company,
-      avatar: testimonial.avatar,
-    })),
-    faq: faqs.map((faq) => ({
-      question: faq.question,
-      answer: faq.answer,
-    })),
-    relatedServices: relatedServices.map((related) => related.relatedServiceId),
-  } as ServiceWithRelations;
-
-  return serviceWithRelations;
 }
 
 /**
@@ -566,5 +457,6 @@ async function deleteServiceRelations(serviceId: string) {
     db
       .delete(servicePricingTiers)
       .where(eq(servicePricingTiers.serviceId, serviceId)),
+    db.delete(serviceRelated).where(eq(serviceRelated.serviceId, serviceId)),
   ]);
 }

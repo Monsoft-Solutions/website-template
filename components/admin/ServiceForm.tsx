@@ -27,6 +27,7 @@ import {
   GalleryAndMediaStep,
   FAQsStep,
   TestimonialsStep,
+  RelatedServicesStep,
   serviceFormSchema,
   STEPS,
   type ServiceFormData,
@@ -73,7 +74,10 @@ export function ServiceForm({
       process: initialData?.process || [],
       pricing: initialData?.pricing || [],
       testimonials: initialData?.testimonials || [],
-      relatedServices: initialData?.relatedServices || [],
+      relatedServices:
+        initialData?.relatedServices?.map((rs) =>
+          typeof rs === "string" ? rs : rs.id
+        ) || [],
     },
   });
 
@@ -178,6 +182,10 @@ export function ServiceForm({
         return <FAQsStep form={form} />;
       case 8:
         return <TestimonialsStep form={form} />;
+      case 9:
+        return (
+          <RelatedServicesStep form={form} currentServiceId={initialData?.id} />
+        );
       default:
         return null;
     }

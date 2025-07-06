@@ -11,4 +11,5 @@ export { GalleryAndMediaStep } from "./gallery-and-media-step";
 export { FAQsStep } from "./faqs-step";
 export { TestimonialsStep } from "./testimonials-step";
 export { TestimonialCard } from "./testimonial-card";
+export { RelatedServicesStep } from "./related-services-step";
 export * from "./types";

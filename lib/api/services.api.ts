@@ -140,7 +140,7 @@ export async function getServicesByCategory(
 /**
  * Helper function to build a service with all its relations
  */
-async function buildServiceWithRelations(
+export async function buildServiceWithRelations(
   serviceId: string,
   baseService: Record<string, unknown>
 ): Promise<ServiceWithRelations> {
@@ -202,8 +202,16 @@ async function buildServiceWithRelations(
       .where(eq(serviceFaqs.serviceId, serviceId))
       .orderBy(asc(serviceFaqs.order)),
     db
-      .select({ relatedServiceId: serviceRelated.relatedServiceId })
+      .select({
+        id: services.id,
+        title: services.title,
+        slug: services.slug,
+        shortDescription: services.shortDescription,
+        category: services.category,
+        featuredImage: services.featuredImage,
+      })
       .from(serviceRelated)
+      .innerJoin(services, eq(serviceRelated.relatedServiceId, services.id))
       .where(eq(serviceRelated.serviceId, serviceId)),
   ]);
 
@@ -264,6 +272,6 @@ async function buildServiceWithRelations(
     testimonials:
       transformedTestimonials.length > 0 ? transformedTestimonials : undefined,
     faq,
-    relatedServices: relatedServices.map((r) => r.relatedServiceId),
+    relatedServices: relatedServices,
   };
 }

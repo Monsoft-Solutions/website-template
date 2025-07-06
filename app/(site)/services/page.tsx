@@ -3,6 +3,7 @@
 import { JsonLd } from "@/components/seo/JsonLd";
 import { useServices } from "@/lib/hooks/use-services.hook";
 import { useServiceCategories } from "@/lib/hooks/use-service-categories.hook";
+import { transformServicesWithRelationsToServices } from "@/lib/utils/service-transform.util";
 
 // Import our new service components
 import { ServicesHeroSection } from "@/components/services/services-hero-section";
@@ -52,7 +53,9 @@ export default function ServicesPage() {
             </div>
 
             <ServicesGrid
-              services={services || []}
+              services={transformServicesWithRelationsToServices(
+                services || []
+              )}
               categories={categories || []}
               isLoading={isLoading || categoriesLoading}
               error={error}

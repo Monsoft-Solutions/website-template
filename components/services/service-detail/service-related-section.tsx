@@ -13,8 +13,10 @@ import {
   Target,
 } from "lucide-react";
 
+import { RelatedService } from "@/lib/types/service-with-relations.type";
+
 interface ServiceRelatedSectionProps {
-  relatedServices: string[];
+  relatedServices: RelatedService[];
 }
 
 export function ServiceRelatedSection({
@@ -32,76 +34,6 @@ export function ServiceRelatedSection({
   });
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -30]);
-
-  // Mock service data - in real app, this would be fetched based on slugs
-  const getServiceData = (slug: string) => {
-    const mockData: Record<
-      string,
-      {
-        title: string;
-        description: string;
-        category: string;
-        image: string;
-      }
-    > = {
-      "web-development": {
-        title: "Web Development",
-        description:
-          "Custom websites and web applications built with modern technologies",
-        category: "Development",
-        image:
-          "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop",
-      },
-      "mobile-app-development": {
-        title: "Mobile App Development",
-        description:
-          "Native and cross-platform mobile applications for iOS and Android",
-        category: "Development",
-        image:
-          "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop",
-      },
-      "ui-ux-design": {
-        title: "UI/UX Design",
-        description:
-          "User-centered design solutions that enhance user experience",
-        category: "Design",
-        image:
-          "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&h=400&fit=crop",
-      },
-      "digital-consulting": {
-        title: "Digital Consulting",
-        description: "Strategic guidance for digital transformation and growth",
-        category: "Consulting",
-        image:
-          "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop",
-      },
-      "e-commerce-development": {
-        title: "E-commerce Development",
-        description:
-          "Complete online store solutions with secure payment integration",
-        category: "Development",
-        image:
-          "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop",
-      },
-      "seo-optimization": {
-        title: "SEO Optimization",
-        description: "Improve your search engine rankings and organic traffic",
-        category: "Marketing",
-        image:
-          "https://images.unsplash.com/photo-1562577309-2592ab84b1bc?w=600&h=400&fit=crop",
-      },
-    };
-
-    return (
-      mockData[slug] || {
-        title: slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-        description: "Professional service solutions tailored to your needs",
-        category: "Service",
-        image:
-          "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
-      }
-    );
-  };
 
   // Animation variants
   const containerVariants = {
@@ -238,18 +170,16 @@ export function ServiceRelatedSection({
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
         >
-          {relatedServices.slice(0, 6).map((serviceSlug) => {
-            const serviceData = getServiceData(serviceSlug);
-
+          {relatedServices.slice(0, 6).map((service) => {
             return (
               <motion.div
-                key={serviceSlug}
+                key={service.id}
                 variants={cardVariants}
                 className="group"
                 whileHover={{ y: -8 }}
                 transition={{ duration: 0.3 }}
               >
-                <Link href={`/services/${serviceSlug}`}>
+                <Link href={`/services/${service.slug}`}>
                   <motion.div
                     className="relative h-full bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
                     whileHover={{ borderColor: "hsl(var(--primary)/30)" }}
@@ -269,7 +199,9 @@ export function ServiceRelatedSection({
                     >
                       <div
                         className="w-full h-full bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
-                        style={{ backgroundImage: `url(${serviceData.image})` }}
+                        style={{
+                          backgroundImage: `url(${service.featuredImage})`,
+                        }}
                       />
 
                       {/* Overlay */}
@@ -286,7 +218,7 @@ export function ServiceRelatedSection({
                         whileHover={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 }}
                       >
-                        {serviceData.category}
+                        {service.category}
                       </motion.div>
 
                       {/* External link icon */}
@@ -306,7 +238,7 @@ export function ServiceRelatedSection({
                         className="text-xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors duration-300"
                         whileHover={{ scale: 1.02 }}
                       >
-                        {serviceData.title}
+                        {service.title}
                       </motion.h3>
 
                       <motion.p
@@ -314,7 +246,7 @@ export function ServiceRelatedSection({
                         initial={{ opacity: 0.8 }}
                         whileHover={{ opacity: 1 }}
                       >
-                        {serviceData.description}
+                        {service.shortDescription}
                       </motion.p>
 
                       {/* CTA Button */}

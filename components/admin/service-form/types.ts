@@ -81,6 +81,11 @@ export interface BasicInformationStepProps extends StepProps {
   onTitleChange: (value: string) => void;
 }
 
+// Related services step props
+export interface RelatedServicesStepProps extends StepProps {
+  currentServiceId?: string;
+}
+
 // Pricing tier card props
 export interface PricingTierCardProps {
   form: UseFormReturn<ServiceFormData>;
@@ -134,5 +139,10 @@ export const STEPS: StepConfig[] = [
     id: 8,
     title: "Testimonials",
     description: "Customer testimonials and reviews",
+  },
+  {
+    id: 9,
+    title: "Related Services",
+    description: "Services related to this offering",
   },
 ];
