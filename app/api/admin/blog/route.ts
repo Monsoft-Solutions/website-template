@@ -6,6 +6,7 @@ import { categories } from "@/lib/db/schema/category.table";
 import { tags } from "@/lib/db/schema/tag.table";
 import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 import { and, eq, or, like, desc, count, exists, sql } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { BlogPostWithRelations } from "@/lib/types/blog-post-with-relations.type";
 import { notifyContentUpdate } from "@/lib/services/google-indexing.service";
@@ -45,6 +46,9 @@ interface BlogPostCreateData {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can access blog management
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -225,6 +229,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can create blog posts
+    await requireAdmin();
+
     const data: BlogPostCreateData = await request.json();
 
     // Validate required fields
@@ -329,6 +336,9 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can delete blog posts
+    await requireAdmin();
+
     const { ids } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -382,6 +392,9 @@ export async function DELETE(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can bulk update blog posts
+    await requireAdmin();
+
     const { ids, action } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {

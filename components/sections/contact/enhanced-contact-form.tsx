@@ -30,8 +30,82 @@ import {
   Heart,
 } from "lucide-react";
 
+// Form configuration constants
+const FORM_CONFIG = {
+  TOTAL_STEPS: 4,
+  ANIMATION_DURATION: 0.3,
+  PROGRESS_TRANSITION_DURATION: 0.5,
+} as const;
+
+// HTTP status codes
+const HTTP_STATUS = {
+  BAD_REQUEST: 400,
+  TOO_MANY_REQUESTS: 429,
+} as const;
+
+// Error messages
+const ERROR_MESSAGES = {
+  RATE_LIMIT_EXCEEDED: "Rate limit exceeded",
+  VALIDATION_FAILED: "Validation failed",
+  SEND_FAILED: "Failed to send message",
+  GENERIC_ERROR: "Unknown error",
+  RATE_LIMIT_DESCRIPTION: "Too many submissions. Please try again later.",
+  VALIDATION_DESCRIPTION: "Please check your form data and try again.",
+  RETRY_DESCRIPTION: "Please try again later.",
+} as const;
+
+// Success messages
+const SUCCESS_MESSAGES = {
+  MESSAGE_SENT: "Message sent successfully!",
+  RESPONSE_DESCRIPTION: "We'll get back to you as soon as possible.",
+} as const;
+
+// Type definitions
+type ProjectTypeId =
+  | "web-development"
+  | "mobile-app"
+  | "ui-ux-design"
+  | "consulting"
+  | "maintenance"
+  | "other";
+
+type BudgetId =
+  | "under-10k"
+  | "10k-25k"
+  | "25k-50k"
+  | "50k-100k"
+  | "100k+"
+  | "not-sure";
+
+type TimelineId =
+  | "asap"
+  | "1-2-months"
+  | "3-6-months"
+  | "6-12-months"
+  | "flexible";
+
+interface ProjectType {
+  id: ProjectTypeId;
+  title: string;
+  description: string;
+  icon: string;
+  badge: string;
+}
+
+interface BudgetRange {
+  id: BudgetId;
+  label: string;
+  icon: string;
+}
+
+interface TimelineOption {
+  id: TimelineId;
+  label: string;
+  icon: string;
+}
+
 // Project type options
-const projectTypes = [
+const projectTypes: ProjectType[] = [
   {
     id: "web-development",
     title: "Web Development",
@@ -77,7 +151,7 @@ const projectTypes = [
 ];
 
 // Budget ranges
-const budgetRanges = [
+const budgetRanges: BudgetRange[] = [
   { id: "under-10k", label: "Under $10k", icon: "💰" },
   { id: "10k-25k", label: "$10k - $25k", icon: "💎" },
   { id: "25k-50k", label: "$25k - $50k", icon: "🏆" },
@@ -87,7 +161,7 @@ const budgetRanges = [
 ];
 
 // Timeline options
-const timelineOptions = [
+const timelineOptions: TimelineOption[] = [
   { id: "asap", label: "ASAP", icon: "⚡" },
   { id: "1-2-months", label: "1-2 months", icon: "📅" },
   { id: "3-6-months", label: "3-6 months", icon: "🗓️" },
@@ -95,13 +169,18 @@ const timelineOptions = [
   { id: "flexible", label: "Flexible", icon: "🕰️" },
 ];
 
-export function EnhancedContactForm() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasStartedForm, setHasStartedForm] = useState(false);
-  const [selectedProjectType, setSelectedProjectType] = useState<string>("");
-  const [selectedBudget, setSelectedBudget] = useState<string>("");
-  const [selectedTimeline, setSelectedTimeline] = useState<string>("");
+/**
+ * Enhanced contact form with multi-step workflow
+ */
+export function EnhancedContactForm(): React.JSX.Element {
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [hasStartedForm, setHasStartedForm] = useState<boolean>(false);
+  const [selectedProjectType, setSelectedProjectType] = useState<
+    ProjectTypeId | ""
+  >("");
+  const [selectedBudget, setSelectedBudget] = useState<BudgetId | "">("");
+  const [selectedTimeline, setSelectedTimeline] = useState<TimelineId | "">("");
 
   const form = useForm<EnhancedContactFormData>({
     resolver: zodResolver(enhancedContactFormSchema),
@@ -115,8 +194,6 @@ export function EnhancedContactForm() {
     mode: "onChange",
   });
 
-  const totalSteps = 4;
-
   // Track form start when user first interacts with any field
   useEffect(() => {
     const subscription = form.watch(() => {
@@ -128,19 +205,28 @@ export function EnhancedContactForm() {
     return () => subscription.unsubscribe();
   }, [form, hasStartedForm]);
 
-  const nextStep = () => {
-    if (currentStep < totalSteps) {
+  /**
+   * Navigate to next step
+   */
+  const nextStep = (): void => {
+    if (currentStep < FORM_CONFIG.TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  const prevStep = () => {
+  /**
+   * Navigate to previous step
+   */
+  const prevStep = (): void => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
-  const onSubmit = async (data: EnhancedContactFormData) => {
+  /**
+   * Handle form submission
+   */
+  const onSubmit = async (data: EnhancedContactFormData): Promise<void> => {
     setIsSubmitting(true);
     analytics.trackContact.formSubmit();
 
@@ -160,34 +246,41 @@ export function EnhancedContactForm() {
         body: JSON.stringify(submissionData),
       });
 
-      const result: ContactFormResponse = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          toast.error("Rate limit exceeded", {
-            description:
-              result.message || "Too many submissions. Please try again later.",
-          });
-          return;
-        }
-
-        if (response.status === 400) {
-          toast.error("Validation failed", {
-            description:
-              result.error || "Please check your form data and try again.",
-          });
-          return;
-        }
-
-        throw new Error(result.error || "Failed to send message");
+      // Handle response parsing with error handling
+      let result: ContactFormResponse;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        throw new Error("Invalid response from server");
       }
 
-      toast.success("Message sent successfully!", {
-        description:
-          result.message || "We&apos;ll get back to you as soon as possible.",
+      if (!response.ok) {
+        if (response.status === HTTP_STATUS.TOO_MANY_REQUESTS) {
+          toast.error(ERROR_MESSAGES.RATE_LIMIT_EXCEEDED, {
+            description:
+              result.message || ERROR_MESSAGES.RATE_LIMIT_DESCRIPTION,
+          });
+          return;
+        }
+
+        if (response.status === HTTP_STATUS.BAD_REQUEST) {
+          toast.error(ERROR_MESSAGES.VALIDATION_FAILED, {
+            description: result.error || ERROR_MESSAGES.VALIDATION_DESCRIPTION,
+          });
+          return;
+        }
+
+        throw new Error(result.error || ERROR_MESSAGES.SEND_FAILED);
+      }
+
+      toast.success(SUCCESS_MESSAGES.MESSAGE_SENT, {
+        description: result.message || SUCCESS_MESSAGES.RESPONSE_DESCRIPTION,
       });
 
       analytics.trackContact.formComplete();
+
+      // Reset form state
       form.reset();
       setCurrentStep(1);
       setSelectedProjectType("");
@@ -195,21 +288,29 @@ export function EnhancedContactForm() {
       setSelectedTimeline("");
     } catch (error) {
       console.error("Contact form error:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : ERROR_MESSAGES.GENERIC_ERROR;
       analytics.trackError(
         "contact_form_error",
-        error instanceof Error ? error.message : "Unknown error",
+        errorMessage,
         "EnhancedContactForm"
       );
 
-      toast.error("Failed to send message", {
+      toast.error(ERROR_MESSAGES.SEND_FAILED, {
         description:
-          error instanceof Error ? error.message : "Please try again later.",
+          error instanceof Error
+            ? error.message
+            : ERROR_MESSAGES.RETRY_DESCRIPTION,
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  /**
+   * Check if current step is valid
+   */
   const isStepValid = (step: number): boolean => {
     switch (step) {
       case 1:
@@ -225,6 +326,9 @@ export function EnhancedContactForm() {
     }
   };
 
+  /**
+   * Animation variants for step transitions
+   */
   const stepVariants = {
     hidden: { opacity: 0, x: 50 },
     visible: { opacity: 1, x: 0 },
@@ -261,18 +365,24 @@ export function EnhancedContactForm() {
             <div className="p-6 border-b bg-muted/10">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">
-                  Step {currentStep} of {totalSteps}
+                  Step {currentStep} of {FORM_CONFIG.TOTAL_STEPS}
                 </h3>
                 <span className="text-sm text-muted-foreground">
-                  {Math.round((currentStep / totalSteps) * 100)}% Complete
+                  {Math.round((currentStep / FORM_CONFIG.TOTAL_STEPS) * 100)}%
+                  Complete
                 </span>
               </div>
               <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   className="absolute top-0 left-0 h-full bg-primary rounded-full"
                   initial={{ width: "0%" }}
-                  animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  animate={{
+                    width: `${(currentStep / FORM_CONFIG.TOTAL_STEPS) * 100}%`,
+                  }}
+                  transition={{
+                    duration: FORM_CONFIG.PROGRESS_TRANSITION_DURATION,
+                    ease: "easeInOut",
+                  }}
                 />
               </div>
             </div>
@@ -289,7 +399,9 @@ export function EnhancedContactForm() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        transition={{ duration: 0.3 }}
+                        transition={{
+                          duration: FORM_CONFIG.ANIMATION_DURATION,
+                        }}
                         className="space-y-6"
                       >
                         <div className="text-center mb-8">
@@ -346,7 +458,9 @@ export function EnhancedContactForm() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        transition={{ duration: 0.3 }}
+                        transition={{
+                          duration: FORM_CONFIG.ANIMATION_DURATION,
+                        }}
                         className="space-y-8"
                       >
                         {/* Budget Selection */}
@@ -432,7 +546,9 @@ export function EnhancedContactForm() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        transition={{ duration: 0.3 }}
+                        transition={{
+                          duration: FORM_CONFIG.ANIMATION_DURATION,
+                        }}
                         className="space-y-6"
                       >
                         <div className="text-center mb-8">
@@ -485,7 +601,9 @@ export function EnhancedContactForm() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        transition={{ duration: 0.3 }}
+                        transition={{
+                          duration: FORM_CONFIG.ANIMATION_DURATION,
+                        }}
                         className="space-y-6"
                       >
                         <div className="text-center mb-8">
@@ -564,7 +682,7 @@ export function EnhancedContactForm() {
                       Previous
                     </Button>
 
-                    {currentStep < totalSteps ? (
+                    {currentStep < FORM_CONFIG.TOTAL_STEPS ? (
                       <Button
                         type="button"
                         onClick={nextStep}

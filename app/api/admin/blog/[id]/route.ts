@@ -6,6 +6,7 @@ import { categories } from "@/lib/db/schema/category.table";
 import { tags } from "@/lib/db/schema/tag.table";
 import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 import { eq, and } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { BlogPostWithRelations } from "@/lib/types/blog-post-with-relations.type";
 import { notifyContentUpdate } from "@/lib/services/google-indexing.service";
@@ -33,6 +34,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can access blog posts
+    await requireAdmin();
+
     const { id } = await params;
 
     // Get blog post with relations
@@ -107,6 +111,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can update blog posts
+    await requireAdmin();
+
     const { id } = await params;
     const data: BlogPostUpdateData = await request.json();
 
@@ -226,6 +233,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Add authentication check - only admin users can delete blog posts
+    await requireAdmin();
+
     const { id } = await params;
 
     // Get the blog post slug before deleting (for Google indexing notification)

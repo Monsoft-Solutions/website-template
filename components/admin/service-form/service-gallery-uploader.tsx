@@ -8,12 +8,38 @@ import { Input } from "@/components/ui/input";
 import { Upload, X, Plus, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
+// Constants for file validation
+const FILE_SIZE_LIMITS = {
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB in bytes
+  MAX_IMAGES_DEFAULT: 10,
+} as const;
+
+const VALIDATION_MESSAGES = {
+  MAX_IMAGES: (max: number) => `Maximum ${max} images allowed`,
+  INVALID_FILE_TYPE: "Please select only valid image files",
+  FILE_TOO_LARGE: "All image files must be smaller than 5MB",
+  INVALID_URL: "Please enter a valid URL",
+  DUPLICATE_URL: "This image URL is already in the gallery",
+  UPLOAD_FAILED: "Failed to upload images",
+  SUCCESS_UPLOAD: (count: number) => `${count} image(s) uploaded successfully`,
+  SUCCESS_URL_ADDED: "Image URL added to gallery",
+  SUCCESS_REMOVED: "Image removed from gallery",
+} as const;
+
 interface ServiceGalleryUploaderProps {
   value: string[];
   onChange: (value: string[]) => void;
   disabled?: boolean;
   error?: string;
   maxImages?: number;
+}
+
+interface UploadResponse {
+  success: boolean;
+  data?: {
+    url: string;
+  };
+  error?: string;
 }
 
 /**
@@ -25,69 +51,99 @@ export function ServiceGalleryUploader({
   onChange,
   disabled = false,
   error,
-  maxImages = 10,
-}: ServiceGalleryUploaderProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [urlInput, setUrlInput] = useState("");
+  maxImages = FILE_SIZE_LIMITS.MAX_IMAGES_DEFAULT,
+}: ServiceGalleryUploaderProps): React.JSX.Element {
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [urlInput, setUrlInput] = useState<string>("");
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * Validates file type and size
+   */
+  const validateFile = (file: File): boolean => {
+    if (!file.type.startsWith("image/")) {
+      return false;
+    }
+    if (file.size > FILE_SIZE_LIMITS.MAX_FILE_SIZE) {
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * Validates URL format
+   */
+  const validateUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  /**
+   * Uploads a single file to the server
+   */
+  const uploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/admin/upload/service", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed with status ${response.status}`);
+    }
+
+    const result: UploadResponse = await response.json();
+
+    if (result.success && result.data) {
+      return result.data.url;
+    } else {
+      throw new Error(result.error || "Failed to upload image");
+    }
+  };
+
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
     // Check if adding files would exceed max limit
     if (value.length + files.length > maxImages) {
-      toast.error(`Maximum ${maxImages} images allowed`);
+      toast.error(VALIDATION_MESSAGES.MAX_IMAGES(maxImages));
       return;
     }
 
     // Validate file types
-    const invalidFiles = files.filter(
-      (file) => !file.type.startsWith("image/")
-    );
+    const invalidFiles = files.filter((file) => !validateFile(file));
     if (invalidFiles.length > 0) {
-      toast.error("Please select only valid image files");
+      toast.error(VALIDATION_MESSAGES.INVALID_FILE_TYPE);
       return;
     }
 
-    // Validate file sizes (5MB limit per file)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const oversizedFiles = files.filter((file) => file.size > maxSize);
+    // Validate file sizes
+    const oversizedFiles = files.filter(
+      (file) => file.size > FILE_SIZE_LIMITS.MAX_FILE_SIZE
+    );
     if (oversizedFiles.length > 0) {
-      toast.error("All image files must be smaller than 5MB");
+      toast.error(VALIDATION_MESSAGES.FILE_TOO_LARGE);
       return;
     }
 
     setIsUploading(true);
 
     try {
-      const uploadPromises = files.map(async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await fetch("/api/admin/upload/service", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Upload failed with status ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success && result.data) {
-          return result.data.url;
-        } else {
-          throw new Error(result.error || "Failed to upload image");
-        }
-      });
-
+      const uploadPromises = files.map(uploadFile);
       const uploadedUrls = await Promise.all(uploadPromises);
       const newGallery = [...value, ...uploadedUrls];
       onChange(newGallery);
-      toast.success(`${uploadedUrls.length} image(s) uploaded successfully`);
+      toast.success(VALIDATION_MESSAGES.SUCCESS_UPLOAD(uploadedUrls.length));
     } catch (error) {
-      toast.error("Failed to upload images");
+      toast.error(VALIDATION_MESSAGES.UPLOAD_FAILED);
       console.error("Image upload error:", error);
     } finally {
       setIsUploading(false);
@@ -96,41 +152,39 @@ export function ServiceGalleryUploader({
     }
   };
 
-  const handleUrlAdd = () => {
+  const handleUrlAdd = (): void => {
     if (!urlInput.trim()) return;
 
     if (value.length >= maxImages) {
-      toast.error(`Maximum ${maxImages} images allowed`);
+      toast.error(VALIDATION_MESSAGES.MAX_IMAGES(maxImages));
       return;
     }
 
-    // Basic URL validation
-    try {
-      new URL(urlInput);
-    } catch {
-      toast.error("Please enter a valid URL");
+    // Validate URL format
+    if (!validateUrl(urlInput)) {
+      toast.error(VALIDATION_MESSAGES.INVALID_URL);
       return;
     }
 
     // Check if URL already exists
     if (value.includes(urlInput)) {
-      toast.error("This image URL is already in the gallery");
+      toast.error(VALIDATION_MESSAGES.DUPLICATE_URL);
       return;
     }
 
     const newGallery = [...value, urlInput];
     onChange(newGallery);
     setUrlInput("");
-    toast.success("Image URL added to gallery");
+    toast.success(VALIDATION_MESSAGES.SUCCESS_URL_ADDED);
   };
 
-  const handleRemoveImage = (index: number) => {
+  const handleRemoveImage = (index: number): void => {
     const newGallery = value.filter((_, i) => i !== index);
     onChange(newGallery);
-    toast.success("Image removed from gallery");
+    toast.success(VALIDATION_MESSAGES.SUCCESS_REMOVED);
   };
 
-  const handleMoveImage = (fromIndex: number, toIndex: number) => {
+  const handleMoveImage = (fromIndex: number, toIndex: number): void => {
     const newGallery = [...value];
     const [movedImage] = newGallery.splice(fromIndex, 1);
     newGallery.splice(toIndex, 0, movedImage);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { siteConfigs } from "@/lib/db/schema/site-config.table";
 import { eq } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/server";
 import type { SiteConfigFormData } from "@/lib/types/site-config.type";
 
 /**
@@ -9,6 +10,9 @@ import type { SiteConfigFormData } from "@/lib/types/site-config.type";
  */
 export async function GET() {
   try {
+    // Add authentication check - only admin users can access site config
+    await requireAdmin();
+
     const result = await db
       .select()
       .from(siteConfigs)
@@ -49,6 +53,16 @@ export async function GET() {
 
     return NextResponse.json({ data: formData });
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     console.error("Failed to fetch site configuration:", error);
     return NextResponse.json(
       { error: "Failed to fetch site configuration" },
@@ -62,6 +76,9 @@ export async function GET() {
  */
 export async function PUT(request: NextRequest) {
   try {
+    // Add authentication check - only admin users can update site config
+    await requireAdmin();
+
     const body = await request.json();
     const formData = body as SiteConfigFormData;
 
@@ -89,31 +106,17 @@ export async function PUT(request: NextRequest) {
       },
     };
 
-    // Get current active configuration
-    const currentConfig = await db
-      .select()
-      .from(siteConfigs)
-      .where(eq(siteConfigs.isActive, true))
-      .limit(1);
-
-    if (currentConfig.length === 0) {
-      return NextResponse.json(
-        { error: "Site configuration not found" },
-        { status: 404 }
-      );
-    }
-
-    // Update the configuration
+    // Update the configuration atomically to avoid race conditions
     const result = await db
       .update(siteConfigs)
       .set(updateData)
-      .where(eq(siteConfigs.id, currentConfig[0].id))
+      .where(eq(siteConfigs.isActive, true))
       .returning();
 
     if (result.length === 0) {
       return NextResponse.json(
-        { error: "Failed to update site configuration" },
-        { status: 500 }
+        { error: "Site configuration not found or failed to update" },
+        { status: 404 }
       );
     }
 
@@ -122,6 +125,16 @@ export async function PUT(request: NextRequest) {
       message: "Site configuration updated successfully",
     });
   } catch (error) {
+    // Handle authentication errors specifically
+    if (error instanceof Error) {
+      if (error.message === "Authentication required") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (error.message === "Admin privileges required") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     console.error("Failed to update site configuration:", error);
     return NextResponse.json(
       { error: "Failed to update site configuration" },

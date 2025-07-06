@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { adminComments } from "@/lib/db/schema/admin-comment.table";
 import { user } from "@/lib/db/schema/auth-schema";
 import { eq, and, isNull, desc } from "drizzle-orm";
-import { getCurrentUser } from "@/lib/auth/server";
+import { requireAdmin, getCurrentUser } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type {
   AdminCommentWithAuthor,
@@ -16,30 +16,8 @@ import type {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          data: [],
-          error: "Authentication required",
-        } as ApiResponse<AdminCommentWithAuthor[]>,
-        { status: 401 }
-      );
-    }
-
-    // Check admin privileges
-    if (currentUser.role !== "admin" && currentUser.role !== "editor") {
-      return NextResponse.json(
-        {
-          success: false,
-          data: [],
-          error: "Admin privileges required",
-        } as ApiResponse<AdminCommentWithAuthor[]>,
-        { status: 403 }
-      );
-    }
+    // Add authentication check - only admin users can access comments
+    await requireAdmin();
 
     const { searchParams } = new URL(request.url);
     const entityType = searchParams.get("entityType") as CommentEntityType;
@@ -112,7 +90,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
+    // Add authentication check - only admin users can create comments
+    await requireAdmin();
+
+    // Get authenticated user for author information
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return NextResponse.json(
@@ -122,18 +103,6 @@ export async function POST(request: NextRequest) {
           error: "Authentication required",
         } as ApiResponse<AdminCommentWithAuthor>,
         { status: 401 }
-      );
-    }
-
-    // Check admin privileges
-    if (currentUser.role !== "admin" && currentUser.role !== "editor") {
-      return NextResponse.json(
-        {
-          success: false,
-          data: {} as AdminCommentWithAuthor,
-          error: "Admin privileges required",
-        } as ApiResponse<AdminCommentWithAuthor>,
-        { status: 403 }
       );
     }
 
