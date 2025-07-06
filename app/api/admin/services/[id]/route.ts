@@ -16,6 +16,7 @@ import { serviceRelated } from "@/lib/db/schema/service-related.table";
 import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import { buildServiceWithRelations } from "@/lib/api/services.api";
+import { notifyContentUpdate } from "@/lib/services/google-indexing.service";
 
 // Types for request data
 interface ProcessStepData {
@@ -293,6 +294,9 @@ export async function PUT(
       );
     }
 
+    // Notify Google about the service update (async - doesn't block response)
+    notifyContentUpdate("service", data.slug, "URL_UPDATED");
+
     const result: ApiResponse<{ id: string }> = {
       success: true,
       data: { id },
@@ -331,9 +335,9 @@ export async function DELETE(
       );
     }
 
-    // Check if service exists
+    // Check if service exists and get slug for Google indexing notification
     const [existingService] = await db
-      .select()
+      .select({ slug: services.slug })
       .from(services)
       .where(eq(services.id, id))
       .limit(1);
@@ -347,6 +351,9 @@ export async function DELETE(
 
     // Delete service with all its relations
     await deleteServiceWithRelations(id);
+
+    // Notify Google about the service deletion (async - doesn't block response)
+    notifyContentUpdate("service", existingService.slug, "URL_DELETED");
 
     const result: ApiResponse<null> = {
       success: true,

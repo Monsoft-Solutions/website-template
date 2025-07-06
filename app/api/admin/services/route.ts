@@ -17,6 +17,7 @@ import type { ServiceWithRelations } from "@/lib/types/service-with-relations.ty
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { AdminServicesListResponse } from "@/lib/hooks/use-admin-services";
 import { buildServiceWithRelations } from "@/lib/api/services.api";
+import { notifyContentUpdate } from "@/lib/services/google-indexing.service";
 
 // Types for request data
 interface ProcessStepData {
@@ -208,6 +209,9 @@ export async function POST(request: NextRequest) {
         }))
       );
     }
+
+    // Notify Google about the new service (async - doesn't block response)
+    notifyContentUpdate("service", data.slug, "URL_UPDATED");
 
     const result: ApiResponse<{ id: string }> = {
       success: true,

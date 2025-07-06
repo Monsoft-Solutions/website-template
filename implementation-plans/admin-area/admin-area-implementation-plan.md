@@ -337,15 +337,74 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 
 ---
 
-## Phase 7: Testing & Optimization
+## Phase 7: Google Indexing Notifications
 
-**Duration**: 2-3 days  
+**Duration**: 1-2 days  
 **Priority**: High  
-**Blockers**: Phase 6 completion
+**Blockers**: Phase 4 completion (Services Management)
 
 ### Tasks
 
-#### 7.1 Testing Implementation
+#### 7.1 Google Indexing Service
+
+- [ ] Create reusable Google indexing service `lib/services/google-indexing.service.ts`
+- [ ] Abstract the existing script logic into service methods
+- [ ] Add error handling and retry logic
+- [ ] Implement async notification processing
+- [ ] Add proper logging and monitoring
+
+#### 7.2 Integration with Admin Operations
+
+- [ ] Integrate Google indexing notifications into blog post API endpoints
+- [ ] Integrate Google indexing notifications into services API endpoints
+- [ ] Add notifications for site settings updates
+- [ ] Implement batch notifications for bulk operations
+- [ ] Add optional manual re-indexing triggers
+
+#### 7.3 Admin UI Enhancements
+
+- [ ] Add Google indexing status indicators in admin forms
+- [ ] Create manual re-indexing buttons for individual items
+- [ ] Add bulk re-indexing functionality
+- [ ] Display indexing status and last notification timestamps
+- [ ] Add notification history tracking
+
+#### 7.4 Background Processing & Error Handling
+
+- [ ] Implement async processing to avoid blocking admin operations
+- [ ] Add proper error handling for failed notifications
+- [ ] Create retry mechanism for failed indexing requests
+- [ ] Add rate limiting to comply with Google API limits
+- [ ] Implement fallback strategies for API failures
+
+#### 7.5 Configuration & Monitoring
+
+- [ ] Add Google indexing configuration to admin settings
+- [ ] Create indexing status dashboard
+- [ ] Add activity logs for indexing operations
+- [ ] Implement notification preferences (auto vs manual)
+- [ ] Add Google API quota monitoring
+
+### Deliverables
+
+- Reusable Google indexing service
+- Automatic notifications on content updates
+- Manual re-indexing capabilities
+- Indexing status monitoring
+- Error handling and retry mechanisms
+- Admin UI for indexing management
+
+---
+
+## Phase 8: Testing & Optimization
+
+**Duration**: 2-3 days  
+**Priority**: High  
+**Blockers**: Phase 7 completion
+
+### Tasks
+
+#### 8.1 Testing Implementation
 
 - [ ] Create unit tests for admin components
 - [ ] Create integration tests for API endpoints
@@ -353,7 +412,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Test responsive design across devices
 - [ ] Test performance with large datasets
 
-#### 7.2 Security & Performance
+#### 8.2 Security & Performance
 
 - [ ] Implement rate limiting for admin APIs
 - [ ] Add input sanitization and validation
@@ -361,7 +420,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Add caching for frequently accessed data
 - [ ] Implement CSRF protection
 
-#### 7.3 Error Handling & UX
+#### 8.3 Error Handling & UX
 
 - [ ] Add comprehensive error boundaries
 - [ ] Implement offline support notifications
@@ -369,7 +428,7 @@ Create a comprehensive admin area at `/admin/*` routes with Better Auth authenti
 - [ ] Add success/error toast notifications
 - [ ] Implement auto-save for forms
 
-#### 7.4 Documentation
+#### 8.4 Documentation
 
 - [ ] Create admin user guide
 - [ ] Document API endpoints
@@ -438,13 +497,16 @@ lib/
 │   ├── blog.api.ts               # Blog API functions
 │   ├── services.api.ts           # Services API functions
 │   └── admin.api.ts              # Admin-specific API functions
+├── services/
+│   └── google-indexing.service.ts # Google indexing notifications
 ├── hooks/
 │   ├── useAuth.ts                # Auth hook
 │   ├── useAnalytics.ts           # Analytics hook
 │   └── useAdminData.ts           # Admin data fetching hook
 └── types/
     ├── auth.type.ts              # Auth types
-    └── admin.type.ts             # Admin-specific types
+    ├── admin.type.ts             # Admin-specific types
+    └── google-indexing.type.ts   # Google indexing types
 ```
 
 ### Database Schema Updates
@@ -498,10 +560,19 @@ CREATE TABLE admin_activity_logs (
     "better-auth/next-js": "^0.x.x",
     "@tanstack/react-table": "^8.x.x",
     "react-hook-form": "^7.x.x",
-    "recharts": "^2.x.x"
+    "recharts": "^2.x.x",
+    "@monsoft/google-indexing": "^latest"
   }
 }
 ```
+
+### Google Indexing Integration
+
+- Reuses existing `@monsoft/google-indexing` package from the current script
+- Requires `GOOGLE_CLIENT_EMAIL` and `GOOGLE_PRIVATE_KEY` environment variables
+- Integrates with dynamic sitemap for URL detection
+- Supports both automatic notifications and manual re-indexing
+- Implements async processing to avoid blocking admin operations
 
 ### Authentication Flow
 

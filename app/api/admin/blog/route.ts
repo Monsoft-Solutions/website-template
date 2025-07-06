@@ -8,6 +8,7 @@ import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 import { and, eq, or, like, desc, count, exists, sql } from "drizzle-orm";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { BlogPostWithRelations } from "@/lib/types/blog-post-with-relations.type";
+import { notifyContentUpdate } from "@/lib/services/google-indexing.service";
 
 /**
  * Admin blog posts list response type
@@ -301,6 +302,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Notify Google about the new blog post (async - doesn't block response)
+    notifyContentUpdate("blog_post", data.slug, "URL_UPDATED");
+
     return NextResponse.json({
       success: true,
       data: { id: newPostId },
@@ -433,6 +437,25 @@ export async function PATCH(request: NextRequest) {
           sql`, `
         )})`
       );
+
+    // Notify Google about bulk blog post updates (async - doesn't block response)
+    if (action === "publish" || action === "unpublish") {
+      // Get the slugs of the updated posts to notify Google
+      const updatedPosts = await db
+        .select({ slug: blogPosts.slug })
+        .from(blogPosts)
+        .where(
+          sql`${blogPosts.id} IN (${sql.join(
+            ids.map((id) => sql`${id}`),
+            sql`, `
+          )})`
+        );
+
+      // Notify Google about each updated post
+      for (const post of updatedPosts) {
+        notifyContentUpdate("blog_post", post.slug, "URL_UPDATED");
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@
 
 import { useSession } from "@/lib/auth/client";
 import { AnalyticsStatsCard } from "@/components/admin/analytics-stats-card";
+import { GoogleIndexingPanel } from "@/components/admin/GoogleIndexingPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -364,6 +365,15 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* Google Indexing Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.475 }}
+      >
+        <GoogleIndexingPanel />
       </motion.div>
 
       {/* Content Management Quick Overview */}

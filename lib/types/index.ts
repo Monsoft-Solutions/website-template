@@ -29,6 +29,19 @@ export type {
   ContactFormResponse,
 } from "./contact-submission.type";
 
+// Google Indexing types
+export type {
+  GoogleIndexingUrlType,
+  GoogleIndexingUrl,
+  GoogleIndexingResult,
+  GoogleIndexingConfig,
+  IndexableContentType,
+  IndexingNotificationStatus,
+  IndexingNotification,
+  BulkIndexingRequest,
+  IndexingOperationResponse,
+} from "./google-indexing.type";
+
 // Site configuration types
 export type {
   SiteConfig,

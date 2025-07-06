@@ -8,6 +8,7 @@ import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 import { eq, and } from "drizzle-orm";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { BlogPostWithRelations } from "@/lib/types/blog-post-with-relations.type";
+import { notifyContentUpdate } from "@/lib/services/google-indexing.service";
 
 interface BlogPostUpdateData {
   title: string;
@@ -195,6 +196,9 @@ export async function PUT(
       }
     }
 
+    // Notify Google about the blog post update (async - doesn't block response)
+    notifyContentUpdate("blog_post", data.slug, "URL_UPDATED");
+
     return NextResponse.json({
       success: true,
       data: null,
@@ -224,6 +228,24 @@ export async function DELETE(
   try {
     const { id } = await params;
 
+    // Get the blog post slug before deleting (for Google indexing notification)
+    const [postToDelete] = await db
+      .select({ slug: blogPosts.slug })
+      .from(blogPosts)
+      .where(eq(blogPosts.id, id))
+      .limit(1);
+
+    if (!postToDelete) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: "Blog post not found",
+        } as ApiResponse<null>,
+        { status: 404 }
+      );
+    }
+
     // First, delete related blog_posts_tags entries
     await db.delete(blogPostsTags).where(eq(blogPostsTags.postId, id));
 
@@ -243,6 +265,9 @@ export async function DELETE(
         { status: 404 }
       );
     }
+
+    // Notify Google about the blog post deletion (async - doesn't block response)
+    notifyContentUpdate("blog_post", postToDelete.slug, "URL_DELETED");
 
     return NextResponse.json({
       success: true,
