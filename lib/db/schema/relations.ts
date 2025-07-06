@@ -19,6 +19,7 @@ import { serviceRelated } from "./service-related.table";
 import { user as users } from "./auth-schema";
 import { session as sessions, account as accounts } from "./auth-schema";
 import { adminActivityLogs } from "./admin-activity-log.table";
+import { viewTracking } from "./view-tracking.table";
 
 /**
  * Database relations definitions
@@ -43,6 +44,7 @@ export const blogPostsRelations = relations(blogPosts, ({ one, many }) => ({
     references: [categories.id],
   }),
   tags: many(blogPostsTags),
+  views: many(viewTracking),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -74,6 +76,7 @@ export const servicesRelations = relations(services, ({ many }) => ({
   faqs: many(serviceFaqs),
   relatedServices: many(serviceRelated, { relationName: "serviceToRelated" }),
   parentServices: many(serviceRelated, { relationName: "relatedToService" }),
+  views: many(viewTracking),
 }));
 
 export const serviceFeaturesRelations = relations(
@@ -218,3 +221,16 @@ export const adminActivityLogsRelations = relations(
     }),
   })
 );
+
+// View Tracking Relations
+
+export const viewTrackingRelations = relations(viewTracking, ({ one }) => ({
+  blogPost: one(blogPosts, {
+    fields: [viewTracking.contentId],
+    references: [blogPosts.id],
+  }),
+  service: one(services, {
+    fields: [viewTracking.contentId],
+    references: [services.id],
+  }),
+}));

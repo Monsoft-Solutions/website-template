@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBlogPostBySlug } from "@/lib/api/blog.service";
+import { recordView } from "@/lib/api/view-tracking.api";
 import type { BlogPostWithRelations } from "@/lib/types";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 
@@ -38,6 +39,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         { status: 404 }
       );
     }
+
+    // Record view asynchronously (don't wait for it)
+    const ipAddress =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      undefined;
+    const userAgent = request.headers.get("user-agent") || undefined;
+    const referer = request.headers.get("referer") || undefined;
+
+    // Record view without blocking the response
+    recordView({
+      contentType: "blog_post",
+      contentId: post.id,
+      ipAddress,
+      userAgent,
+      referer,
+    }).catch((error) => {
+      console.warn("Failed to record blog post view:", error);
+    });
 
     return NextResponse.json({
       success: true,

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSession, signOut } from "@/lib/auth/client";
 import {
   LayoutDashboard,
+  BarChart3,
   FileText,
   Briefcase,
   FolderOpen,
@@ -41,6 +42,11 @@ const navItems: NavItem[] = [
     title: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Analytics",
+    href: "/admin/analytics",
+    icon: BarChart3,
   },
   {
     title: "Blog Posts",

@@ -16,6 +16,15 @@ export type { LazyImageProps } from "./lazy-image.type";
 // Shared types
 export type { ApiResponse } from "./api-response.type";
 export type {
+  ViewTracking,
+  NewViewTracking,
+  ContentViewStats,
+  AnalyticsStats,
+  AnalyticsTimePeriod,
+  AnalyticsDataPoint,
+  AnalyticsResponse,
+} from "./view-tracking.type";
+export type {
   ContactSubmissionResponse,
   ContactFormResponse,
 } from "./contact-submission.type";

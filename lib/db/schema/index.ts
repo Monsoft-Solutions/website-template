@@ -23,6 +23,7 @@ export * from "./service-gallery-image.table";
 export * from "./service-testimonial.table";
 export * from "./service-faq.table";
 export * from "./service-related.table";
+export * from "./view-tracking.table";
 
 // Site configuration
 export * from "./site-config.table";
