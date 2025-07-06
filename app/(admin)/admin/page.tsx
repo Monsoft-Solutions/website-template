@@ -89,8 +89,8 @@ export default function AdminDashboard() {
       description: "View and manage user accounts",
       icon: Users,
       href: "/admin/users",
-      badge: "Phase 5",
-      disabled: true,
+      badge: "Complete",
+      disabled: false,
     },
     {
       title: "Analytics",

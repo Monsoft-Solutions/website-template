@@ -68,6 +68,11 @@ const navItems: NavItem[] = [
     icon: Users,
   },
   {
+    title: "User Management",
+    href: "/admin/users",
+    icon: Shield,
+  },
+  {
     title: "Site Settings",
     href: "/admin/settings",
     icon: Settings,
