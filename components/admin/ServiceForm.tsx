@@ -38,6 +38,7 @@ import type { UseFormReturn } from "react-hook-form";
 import {
   ServiceImageUploader,
   ServiceGalleryUploader,
+  TestimonialAvatarUploader,
 } from "@/components/admin/service-form";
 
 // Form validation schema
@@ -95,13 +96,15 @@ const serviceFormSchema = z.object({
       })
     )
     .optional(),
-  testimonial: z
-    .object({
-      quote: z.string().min(1, "Quote is required"),
-      author: z.string().min(1, "Author is required"),
-      company: z.string().min(1, "Company is required"),
-      avatar: z.string().optional(),
-    })
+  testimonials: z
+    .array(
+      z.object({
+        quote: z.string().min(1, "Quote is required"),
+        author: z.string().min(1, "Author is required"),
+        company: z.string().min(1, "Company is required"),
+        avatar: z.string().optional(),
+      })
+    )
     .optional(),
   relatedServices: z.array(z.string()).optional(),
 });
@@ -193,7 +196,7 @@ export function ServiceForm({
       faq: initialData?.faq || [],
       process: initialData?.process || [],
       pricing: initialData?.pricing || [],
-      testimonial: initialData?.testimonial || undefined,
+      testimonials: initialData?.testimonials || [],
       relatedServices: initialData?.relatedServices || [],
     },
   });
@@ -1124,98 +1127,151 @@ const FAQsStep = ({ form }: StepProps) => {
 };
 
 const TestimonialsStep = ({ form }: StepProps) => {
-  const hasTestimonial = form.watch("testimonial");
+  const {
+    fields: testimonialFields,
+    append: appendTestimonial,
+    remove: removeTestimonial,
+  } = useFieldArray({
+    control: form.control,
+    name: "testimonials",
+  } as any);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Testimonials</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center space-x-2 mb-4">
-          <Controller
-            name="testimonial"
-            control={form.control}
-            render={({ field }) => (
-              <Checkbox
-                checked={!!field.value}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    field.onChange({
-                      quote: "",
-                      author: "",
-                      company: "",
-                      avatar: "",
-                    });
-                  } else {
-                    field.onChange(undefined);
-                  }
-                }}
-              />
-            )}
-          />
-          <Label>Add testimonial for this service</Label>
+      <CardContent className="space-y-6">
+        <div className="flex items-center justify-between mb-4">
+          <Label className="text-base font-medium">Customer Testimonials</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              appendTestimonial({
+                quote: "",
+                author: "",
+                company: "",
+                avatar: "",
+              } as any)
+            }
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Testimonial
+          </Button>
         </div>
-        {hasTestimonial && (
-          <div className="border rounded-lg p-4 space-y-4">
-            <div>
-              <Label htmlFor="testimonial.quote">Quote *</Label>
-              <Textarea
-                id="testimonial.quote"
-                {...form.register("testimonial.quote")}
-                placeholder="Enter testimonial quote"
-                rows={4}
-              />
-              {form.formState.errors.testimonial?.quote && (
-                <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.testimonial.quote.message}
-                </p>
-              )}
+
+        <div className="space-y-6">
+          {testimonialFields.map((field, index) => (
+            <TestimonialCard
+              key={field.id}
+              form={form}
+              index={index}
+              onRemove={() => removeTestimonial(index)}
+            />
+          ))}
+        </div>
+
+        {testimonialFields.length === 0 && (
+          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <Plus className="w-6 h-6 text-muted-foreground" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="testimonial.author">Author *</Label>
-                <Input
-                  id="testimonial.author"
-                  {...form.register("testimonial.author")}
-                  placeholder="Author name"
-                />
-                {form.formState.errors.testimonial?.author && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.testimonial.author.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="testimonial.company">Company *</Label>
-                <Input
-                  id="testimonial.company"
-                  {...form.register("testimonial.company")}
-                  placeholder="Company name"
-                />
-                {form.formState.errors.testimonial?.company && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.testimonial.company.message}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="testimonial.avatar">Avatar URL</Label>
-              <Input
-                id="testimonial.avatar"
-                {...form.register("testimonial.avatar")}
-                placeholder="https://example.com/avatar.jpg"
-              />
-              {form.formState.errors.testimonial?.avatar && (
-                <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.testimonial.avatar.message}
-                </p>
-              )}
-            </div>
+            <p className="text-muted-foreground">No testimonials added</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Add customer testimonials to showcase your service quality
+            </p>
           </div>
         )}
       </CardContent>
     </Card>
+  );
+};
+
+const TestimonialCard = ({
+  form,
+  index,
+  onRemove,
+}: {
+  form: UseFormReturn<ServiceFormData>;
+  index: number;
+  onRemove: () => void;
+}) => {
+  return (
+    <div className="border rounded-lg p-6 space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <Label className="text-base font-medium">Testimonial {index + 1}</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRemove}
+          className="flex items-center gap-2"
+        >
+          <X className="w-4 h-4" />
+          Remove
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor={`testimonials.${index}.quote`}>Quote *</Label>
+          <Textarea
+            id={`testimonials.${index}.quote`}
+            {...form.register(`testimonials.${index}.quote`)}
+            placeholder="Enter the testimonial quote"
+            rows={4}
+          />
+          {form.formState.errors.testimonials?.[index]?.quote && (
+            <p className="text-sm text-destructive mt-1">
+              {form.formState.errors.testimonials[index]?.quote?.message}
+            </p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor={`testimonials.${index}.author`}>Author *</Label>
+            <Input
+              id={`testimonials.${index}.author`}
+              {...form.register(`testimonials.${index}.author`)}
+              placeholder="Author name"
+            />
+            {form.formState.errors.testimonials?.[index]?.author && (
+              <p className="text-sm text-destructive mt-1">
+                {form.formState.errors.testimonials[index]?.author?.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor={`testimonials.${index}.company`}>Company *</Label>
+            <Input
+              id={`testimonials.${index}.company`}
+              {...form.register(`testimonials.${index}.company`)}
+              placeholder="Company name"
+            />
+            {form.formState.errors.testimonials?.[index]?.company && (
+              <p className="text-sm text-destructive mt-1">
+                {form.formState.errors.testimonials[index]?.company?.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <Label>Avatar Image</Label>
+          <TestimonialAvatarUploader
+            value={form.watch(`testimonials.${index}.avatar`) || ""}
+            onChange={(value) =>
+              form.setValue(`testimonials.${index}.avatar`, value)
+            }
+            error={form.formState.errors.testimonials?.[index]?.avatar?.message}
+            uniqueId={`testimonial-avatar-upload-${index}`}
+          />
+        </div>
+      </div>
+    </div>
   );
 };

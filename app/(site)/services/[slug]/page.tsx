@@ -81,7 +81,7 @@ export default function ServicePage({ params }: ServicePageProps) {
     technologies: service.technologies || [],
     deliverables: service.deliverables || [],
     gallery: service.gallery || [],
-    testimonial: service.testimonial,
+    testimonials: service.testimonials,
     faq: service.faq || [],
     relatedServices: service.relatedServices || [],
   };
@@ -161,8 +161,8 @@ export default function ServicePage({ params }: ServicePageProps) {
         )}
 
         {/* Testimonial Section */}
-        {serviceData.testimonial && (
-          <ServiceTestimonialSection testimonial={serviceData.testimonial} />
+        {serviceData.testimonials && serviceData.testimonials.length > 0 && (
+          <ServiceTestimonialSection testimonials={serviceData.testimonials} />
         )}
 
         {/* FAQ Section */}

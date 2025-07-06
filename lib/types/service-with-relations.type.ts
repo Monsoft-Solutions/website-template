@@ -22,7 +22,7 @@ export type ServiceWithRelations = InferSelectModel<typeof services> & {
   technologies: string[];
   deliverables: string[];
   gallery?: string[];
-  testimonial?: Testimonial;
+  testimonials?: Testimonial[];
   faq: FAQ[];
   relatedServices: string[];
 };

@@ -379,31 +379,40 @@ export default function PreviewServicePage() {
         )}
 
         {/* Testimonial */}
-        {service.testimonial && (
+        {service.testimonials && service.testimonials.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>What Our Clients Say</CardTitle>
             </CardHeader>
             <CardContent>
-              <blockquote className="text-lg italic border-l-4 border-primary pl-4">
-                &ldquo;{service.testimonial.quote}&rdquo;
-              </blockquote>
-              <div className="mt-4 flex items-center gap-3">
-                {service.testimonial.avatar && (
-                  <Image
-                    src={service.testimonial.avatar}
-                    alt={service.testimonial.author}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full"
-                  />
-                )}
-                <div>
-                  <p className="font-semibold">{service.testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {service.testimonial.company}
-                  </p>
-                </div>
+              <div className="space-y-6">
+                {service.testimonials.map((testimonial, index) => (
+                  <div
+                    key={index}
+                    className="border-b border-border pb-6 last:border-b-0 last:pb-0"
+                  >
+                    <blockquote className="text-lg italic border-l-4 border-primary pl-4">
+                      &ldquo;{testimonial.quote}&rdquo;
+                    </blockquote>
+                    <div className="mt-4 flex items-center gap-3">
+                      {testimonial.avatar && (
+                        <Image
+                          src={testimonial.avatar}
+                          alt={testimonial.author}
+                          width={40}
+                          height={40}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      )}
+                      <div>
+                        <p className="font-semibold">{testimonial.author}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {testimonial.company}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

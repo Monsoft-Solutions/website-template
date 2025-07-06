@@ -61,7 +61,7 @@ interface ServiceCreateData {
   faq?: FAQData[];
   process?: ProcessStepData[];
   pricing?: PricingTierData[];
-  testimonial?: TestimonialData;
+  testimonials?: TestimonialData[];
   relatedServices?: string[];
 }
 
@@ -160,14 +160,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (data.testimonial) {
-      await db.insert(serviceTestimonials).values({
-        serviceId: newService.id,
-        quote: data.testimonial.quote,
-        author: data.testimonial.author,
-        company: data.testimonial.company,
-        avatar: data.testimonial.avatar,
-      });
+    if (data.testimonials && data.testimonials.length > 0) {
+      await db.insert(serviceTestimonials).values(
+        data.testimonials.map((testimonial: TestimonialData) => ({
+          serviceId: newService.id,
+          quote: testimonial.quote,
+          author: testimonial.author,
+          company: testimonial.company,
+          avatar: testimonial.avatar,
+        }))
+      );
     }
 
     if (data.pricing && data.pricing.length > 0) {
@@ -527,15 +529,12 @@ async function buildServiceWithRelations(
     technologies: technologies.map((tech) => tech.technology),
     deliverables: deliverables.map((deliverable) => deliverable.deliverable),
     gallery: galleryImages.map((image) => image.imageUrl),
-    testimonial:
-      testimonials.length > 0
-        ? {
-            quote: testimonials[0].quote,
-            author: testimonials[0].author,
-            company: testimonials[0].company,
-            avatar: testimonials[0].avatar,
-          }
-        : undefined,
+    testimonials: testimonials.map((testimonial) => ({
+      quote: testimonial.quote,
+      author: testimonial.author,
+      company: testimonial.company,
+      avatar: testimonial.avatar,
+    })),
     faq: faqs.map((faq) => ({
       question: faq.question,
       answer: faq.answer,
