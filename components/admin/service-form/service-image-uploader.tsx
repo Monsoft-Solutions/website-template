@@ -8,6 +8,35 @@ import { Input } from "@/components/ui/input";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
+// Constants for file validation
+const FILE_CONSTRAINTS = {
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB in bytes
+  ALLOWED_TYPES: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+  IMAGE_DISPLAY_SIZE: {
+    WIDTH: 400,
+    HEIGHT: 200,
+  },
+} as const;
+
+// Validation messages
+const VALIDATION_MESSAGES = {
+  INVALID_FILE_TYPE:
+    "Please select a valid image file (JPEG, PNG, WebP, or GIF)",
+  FILE_TOO_LARGE: "Image file must be smaller than 5MB",
+  UPLOAD_FAILED: "Failed to upload image",
+  UPLOAD_SUCCESS: "Image uploaded successfully",
+  LOAD_FAILED: "Failed to load image",
+  INVALID_URL: "Please enter a valid image URL",
+  INVALID_RESPONSE: "Invalid response from server",
+} as const;
+
+// Loading states
+const LOADING_STATES = {
+  UPLOADING: "Uploading...",
+  UPLOAD_BUTTON: "Upload Image",
+} as const;
+
+// Type definitions
 interface ServiceImageUploaderProps {
   value: string;
   onChange: (value: string) => void;
@@ -16,6 +45,47 @@ interface ServiceImageUploaderProps {
   label?: string;
   placeholder?: string;
 }
+
+interface UploadResponse {
+  success: boolean;
+  data?: {
+    url: string;
+  };
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Validates file type
+ */
+const validateFileType = (file: File): boolean => {
+  return (
+    FILE_CONSTRAINTS.ALLOWED_TYPES.includes(
+      file.type as (typeof FILE_CONSTRAINTS.ALLOWED_TYPES)[number]
+    ) || file.type.startsWith("image/")
+  );
+};
+
+/**
+ * Validates file size
+ */
+const validateFileSize = (file: File): boolean => {
+  return file.size <= FILE_CONSTRAINTS.MAX_FILE_SIZE;
+};
+
+/**
+ * Validates URL format
+ */
+const validateUrl = (url: string): boolean => {
+  if (!url.trim()) return false;
+
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
 
 /**
  * Service image uploader component
@@ -28,23 +98,27 @@ export function ServiceImageUploader({
   error,
   label = "Service Image",
   placeholder = "https://example.com/service-image.jpg",
-}: ServiceImageUploaderProps) {
-  const [isUploading, setIsUploading] = useState(false);
+}: ServiceImageUploaderProps): React.JSX.Element {
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * Handle file upload
+   */
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file");
+    if (!validateFileType(file)) {
+      toast.error(VALIDATION_MESSAGES.INVALID_FILE_TYPE);
       return;
     }
 
-    // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      toast.error("Image file must be smaller than 5MB");
+    // Validate file size
+    if (!validateFileSize(file)) {
+      toast.error(VALIDATION_MESSAGES.FILE_TOO_LARGE);
       return;
     }
 
@@ -64,29 +138,67 @@ export function ServiceImageUploader({
         throw new Error(`Upload failed with status ${response.status}`);
       }
 
-      const result = await response.json();
+      // Parse response with error handling
+      let result: UploadResponse;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse upload response:", parseError);
+        throw new Error(VALIDATION_MESSAGES.INVALID_RESPONSE);
+      }
 
       if (result.success && result.data) {
         // Use the Vercel Blob URL directly
         onChange(result.data.url);
-        toast.success(result.message || "Image uploaded successfully");
+        toast.success(result.message || VALIDATION_MESSAGES.UPLOAD_SUCCESS);
       } else {
-        throw new Error(result.error || "Failed to upload image");
+        throw new Error(result.error || VALIDATION_MESSAGES.UPLOAD_FAILED);
       }
     } catch (error) {
-      toast.error("Failed to upload image");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : VALIDATION_MESSAGES.UPLOAD_FAILED;
+      toast.error(errorMessage);
       console.error("Image upload error:", error);
     } finally {
       setIsUploading(false);
+      // Reset file input
+      e.target.value = "";
     }
   };
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
+  /**
+   * Handle URL input change
+   */
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const newUrl = e.target.value;
+
+    // Basic URL validation for user feedback
+    if (newUrl && !validateUrl(newUrl)) {
+      // Don't block the input, just don't show validation error here
+      // The error will be handled by the parent form validation
+    }
+
+    onChange(newUrl);
   };
 
-  const handleRemoveImage = () => {
+  /**
+   * Handle image removal
+   */
+  const handleRemoveImage = (): void => {
     onChange("");
+  };
+
+  /**
+   * Handle image load error
+   */
+  const handleImageError = (
+    e: React.SyntheticEvent<HTMLImageElement>
+  ): void => {
+    const target = e.target as HTMLImageElement;
+    target.style.display = "none";
+    toast.error(VALIDATION_MESSAGES.LOAD_FAILED);
   };
 
   return (
@@ -110,7 +222,9 @@ export function ServiceImageUploader({
           >
             <span>
               <Upload className="w-4 h-4 mr-2" />
-              {isUploading ? "Uploading..." : "Upload Image"}
+              {isUploading
+                ? LOADING_STATES.UPLOADING
+                : LOADING_STATES.UPLOAD_BUTTON}
             </span>
           </Button>
         </Label>
@@ -134,14 +248,10 @@ export function ServiceImageUploader({
           <Image
             src={value}
             alt="Service"
-            width={400}
-            height={200}
+            width={FILE_CONSTRAINTS.IMAGE_DISPLAY_SIZE.WIDTH}
+            height={FILE_CONSTRAINTS.IMAGE_DISPLAY_SIZE.HEIGHT}
             className="w-full h-48 object-cover rounded border"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              toast.error("Failed to load image");
-            }}
+            onError={handleImageError}
           />
           <Button
             type="button"
