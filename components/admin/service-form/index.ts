@@ -1,3 +1,14 @@
 export { ServiceImageUploader } from "./service-image-uploader";
 export { ServiceGalleryUploader } from "./service-gallery-uploader";
 export { TestimonialAvatarUploader } from "./testimonial-avatar-uploader";
+export { BasicInformationStep } from "./basic-information-step";
+export { FeaturesAndBenefitsStep } from "./features-and-benefits-step";
+export { ProcessAndTimelineStep } from "./process-and-timeline-step";
+export { PricingTiersStep } from "./pricing-tiers-step";
+export { PricingTierCard } from "./pricing-tier-card";
+export { TechnologiesStep } from "./technologies-step";
+export { GalleryAndMediaStep } from "./gallery-and-media-step";
+export { FAQsStep } from "./faqs-step";
+export { TestimonialsStep } from "./testimonials-step";
+export { TestimonialCard } from "./testimonial-card";
+export * from "./types";
