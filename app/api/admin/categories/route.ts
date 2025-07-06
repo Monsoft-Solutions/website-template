@@ -1,29 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { authors } from "@/lib/db/schema/author.table";
+import { categories } from "@/lib/db/schema/category.table";
 import { blogPosts } from "@/lib/db/schema/blog-post.table";
 import { eq, ilike, and, or, desc, asc, sql } from "drizzle-orm";
 import type { ApiResponse } from "@/lib/types/api-response.type";
-import type { Author, NewAuthor } from "@/lib/types/blog/author.type";
+import type { Category, NewCategory } from "@/lib/types/blog/category.type";
 
 /**
- * Admin Authors API Response Types
+ * Admin Categories API Response Types
  */
-export interface AdminAuthorsListResponse {
-  authors: AuthorWithUsage[];
-  totalAuthors: number;
+export interface AdminCategoriesListResponse {
+  categories: CategoryWithUsage[];
+  totalCategories: number;
   totalPages: number;
   currentPage: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }
 
-export interface AuthorWithUsage extends Author {
+export interface CategoryWithUsage extends Category {
   postsCount: number;
 }
 
 /**
- * GET endpoint - Fetch authors with usage statistics and admin filtering
+ * GET endpoint - Fetch categories with usage statistics and admin filtering
  */
 export async function GET(request: NextRequest) {
   try {
@@ -42,9 +42,8 @@ export async function GET(request: NextRequest) {
     if (searchQuery) {
       whereConditions.push(
         or(
-          ilike(authors.name, `%${searchQuery}%`),
-          ilike(authors.email, `%${searchQuery}%`),
-          ilike(authors.bio, `%${searchQuery}%`)
+          ilike(categories.name, `%${searchQuery}%`),
+          ilike(categories.description, `%${searchQuery}%`)
         )
       );
     }
@@ -55,12 +54,10 @@ export async function GET(request: NextRequest) {
     // Build order by clause
     const orderByField =
       sortBy === "name"
-        ? authors.name
-        : sortBy === "email"
-        ? authors.email
+        ? categories.name
         : sortBy === "postsCount"
         ? sql`posts_count`
-        : authors.createdAt;
+        : categories.createdAt;
 
     const orderByClause =
       sortOrder === "asc" ? asc(orderByField) : desc(orderByField);
@@ -68,65 +65,65 @@ export async function GET(request: NextRequest) {
     // Get total count
     const totalCountResult = await db
       .select({ count: sql<number>`count(*)` })
-      .from(authors)
+      .from(categories)
       .where(whereClause);
 
-    const totalAuthors = totalCountResult[0]?.count || 0;
+    const totalCategories = totalCountResult[0]?.count || 0;
 
-    // Get authors with usage statistics
-    const authorsResult = await db
+    // Get categories with usage statistics
+    const categoriesResult = await db
       .select({
-        id: authors.id,
-        name: authors.name,
-        email: authors.email,
-        bio: authors.bio,
-        avatarUrl: authors.avatarUrl,
-        createdAt: authors.createdAt,
-        updatedAt: authors.updatedAt,
+        id: categories.id,
+        name: categories.name,
+        slug: categories.slug,
+        description: categories.description,
+        createdAt: categories.createdAt,
+        updatedAt: categories.updatedAt,
         postsCount: sql<number>`count(${blogPosts.id})`.as("posts_count"),
       })
-      .from(authors)
-      .leftJoin(blogPosts, eq(authors.id, blogPosts.authorId))
+      .from(categories)
+      .leftJoin(blogPosts, eq(categories.id, blogPosts.categoryId))
       .where(whereClause)
-      .groupBy(authors.id)
+      .groupBy(categories.id)
       .orderBy(orderByClause)
       .limit(limit)
       .offset((page - 1) * limit);
 
     // Calculate pagination info
-    const totalPages = Math.ceil(totalAuthors / limit);
+    const totalPages = Math.ceil(totalCategories / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    const response: AdminAuthorsListResponse = {
-      authors: authorsResult,
-      totalAuthors,
+    const response: AdminCategoriesListResponse = {
+      categories: categoriesResult,
+      totalCategories,
       totalPages,
       currentPage: page,
       hasNextPage,
       hasPreviousPage,
     };
 
-    const result: ApiResponse<AdminAuthorsListResponse> = {
+    const result: ApiResponse<AdminCategoriesListResponse> = {
       success: true,
       data: response,
     };
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error fetching admin authors:", error);
+    console.error("Error fetching admin categories:", error);
 
-    const result: ApiResponse<AdminAuthorsListResponse> = {
+    const result: ApiResponse<AdminCategoriesListResponse> = {
       success: false,
       data: {
-        authors: [],
-        totalAuthors: 0,
+        categories: [],
+        totalCategories: 0,
         totalPages: 0,
         currentPage: 1,
         hasNextPage: false,
         hasPreviousPage: false,
       },
-      error: error instanceof Error ? error.message : "Failed to fetch authors",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch categories",
     };
 
     return NextResponse.json(result, { status: 500 });
@@ -134,65 +131,65 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST endpoint - Create new author
+ * POST endpoint - Create new category
  */
 export async function POST(request: NextRequest) {
   try {
-    const data: NewAuthor = await request.json();
+    const data: NewCategory = await request.json();
 
     // Validate required fields
-    if (!data.name || !data.email) {
+    if (!data.name || !data.slug) {
       return NextResponse.json(
         {
           success: false,
-          error: "Name and email are required",
-        } as ApiResponse<Author>,
+          error: "Name and slug are required",
+        } as ApiResponse<Category>,
         { status: 400 }
       );
     }
 
-    // Check if author with same email already exists
-    const existingAuthor = await db
+    // Check if category with same name or slug already exists
+    const existingCategory = await db
       .select()
-      .from(authors)
-      .where(eq(authors.email, data.email))
+      .from(categories)
+      .where(or(eq(categories.name, data.name), eq(categories.slug, data.slug)))
       .limit(1);
 
-    if (existingAuthor.length > 0) {
+    if (existingCategory.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: "Author with this email already exists",
-        } as ApiResponse<Author>,
+          error: "Category with this name or slug already exists",
+        } as ApiResponse<Category>,
         { status: 409 }
       );
     }
 
-    // Create new author
-    const [newAuthor] = await db
-      .insert(authors)
+    // Create new category
+    const [newCategory] = await db
+      .insert(categories)
       .values({
         name: data.name,
-        email: data.email,
-        bio: data.bio || null,
-        avatarUrl: data.avatarUrl || null,
+        slug: data.slug,
+        description: data.description || null,
       })
       .returning();
 
-    const result: ApiResponse<Author> = {
+    const result: ApiResponse<Category> = {
       success: true,
-      data: newAuthor,
-      message: "Author created successfully",
+      data: newCategory,
+      message: "Category created successfully",
     };
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error("Error creating author:", error);
+    console.error("Error creating category:", error);
 
-    const result: ApiResponse<Author | null> = {
+    const result: ApiResponse<Category | null> = {
       success: false,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to create author",
+      error:
+        error instanceof Error ? error.message : "Failed to create category",
     };
 
     return NextResponse.json(result, { status: 500 });
@@ -200,7 +197,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PATCH endpoint - Bulk update authors
+ * PATCH endpoint - Bulk update categories
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -208,13 +205,13 @@ export async function PATCH(request: NextRequest) {
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid author IDs" },
+        { success: false, error: "Invalid category IDs" },
         { status: 400 }
       );
     }
 
-    // For now, authors don't have status fields, so we'll just return success
-    // This can be extended when author status fields are added
+    // For now, categories don't have status fields, so we'll just return success
+    // This can be extended when category status fields are added
     const result: ApiResponse<null> = {
       success: true,
       data: null,
@@ -239,7 +236,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 /**
- * DELETE endpoint - Bulk delete authors
+ * DELETE endpoint - Bulk delete categories
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -247,39 +244,39 @@ export async function DELETE(request: NextRequest) {
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid author IDs" },
+        { success: false, error: "Invalid category IDs" },
         { status: 400 }
       );
     }
 
-    // Check if any authors have associated blog posts
-    const authorsWithPosts = await db
+    // Check if any categories have associated blog posts
+    const categoriesWithPosts = await db
       .select({
-        authorId: blogPosts.authorId,
+        categoryId: blogPosts.categoryId,
         count: sql<number>`count(*)`,
       })
       .from(blogPosts)
       .where(
-        sql`${blogPosts.authorId} IN (${sql.join(
+        sql`${blogPosts.categoryId} IN (${sql.join(
           ids.map((id) => sql`${id}`),
           sql`, `
         )})`
       )
-      .groupBy(blogPosts.authorId);
+      .groupBy(blogPosts.categoryId);
 
-    if (authorsWithPosts.length > 0) {
+    if (categoriesWithPosts.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: "Cannot delete authors that have associated blog posts",
+          error: "Cannot delete categories that have associated blog posts",
         },
         { status: 400 }
       );
     }
 
-    // Delete authors
-    await db.delete(authors).where(
-      sql`${authors.id} IN (${sql.join(
+    // Delete categories
+    await db.delete(categories).where(
+      sql`${categories.id} IN (${sql.join(
         ids.map((id) => sql`${id}`),
         sql`, `
       )})`
@@ -288,18 +285,18 @@ export async function DELETE(request: NextRequest) {
     const result: ApiResponse<null> = {
       success: true,
       data: null,
-      message: `Successfully deleted ${ids.length} author(s)`,
+      message: `Successfully deleted ${ids.length} category/categories`,
     };
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error deleting authors:", error);
+    console.error("Error deleting categories:", error);
 
     const result: ApiResponse<null> = {
       success: false,
       data: null,
       error:
-        error instanceof Error ? error.message : "Failed to delete authors",
+        error instanceof Error ? error.message : "Failed to delete categories",
     };
 
     return NextResponse.json(result, { status: 500 });

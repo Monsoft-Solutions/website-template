@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { Author } from "@/lib/types/blog/author.type";
+import type { AdminAuthorsListResponse } from "@/app/api/admin/authors/route";
 
 type UseBlogAuthorsReturn = {
   authors: Author[];
@@ -24,10 +25,11 @@ export function useBlogAuthors(): UseBlogAuthorsReturn {
 
     try {
       const response = await fetch("/api/admin/authors");
-      const result: ApiResponse<Author[]> = await response.json();
+      const result: ApiResponse<AdminAuthorsListResponse> =
+        await response.json();
 
       if (result.success) {
-        setAuthors(result.data);
+        setAuthors(result.data.authors);
       } else {
         setError(result.error || "Failed to fetch authors");
       }

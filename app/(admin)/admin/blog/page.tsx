@@ -102,14 +102,21 @@ export default function AdminBlogListPage() {
         if (categoriesResponse.ok) {
           const categoriesData = await categoriesResponse.json();
           if (categoriesData.success) {
-            setCategories(categoriesData.data.slice(1)); // Remove "All" category
+            // Transform the categories data to match expected format
+            const transformedCategories = categoriesData.data.map(
+              (item: { category: { id: string; name: string } }) => ({
+                id: item.category.id,
+                name: item.category.name,
+              })
+            );
+            setCategories(transformedCategories);
           }
         }
 
         if (authorsResponse.ok) {
           const authorsData = await authorsResponse.json();
           if (authorsData.success) {
-            setAuthors(authorsData.data);
+            setAuthors(authorsData.data.authors);
           }
         }
       } catch (error) {

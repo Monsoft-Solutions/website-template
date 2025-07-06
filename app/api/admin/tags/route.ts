@@ -1,29 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { authors } from "@/lib/db/schema/author.table";
-import { blogPosts } from "@/lib/db/schema/blog-post.table";
+import { tags } from "@/lib/db/schema/tag.table";
+import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 import { eq, ilike, and, or, desc, asc, sql } from "drizzle-orm";
 import type { ApiResponse } from "@/lib/types/api-response.type";
-import type { Author, NewAuthor } from "@/lib/types/blog/author.type";
+import type { Tag, NewTag } from "@/lib/types/blog/tag.type";
 
 /**
- * Admin Authors API Response Types
+ * Admin Tags API Response Types
  */
-export interface AdminAuthorsListResponse {
-  authors: AuthorWithUsage[];
-  totalAuthors: number;
+export interface AdminTagsListResponse {
+  tags: TagWithUsage[];
+  totalTags: number;
   totalPages: number;
   currentPage: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }
 
-export interface AuthorWithUsage extends Author {
+export interface TagWithUsage extends Tag {
   postsCount: number;
 }
 
 /**
- * GET endpoint - Fetch authors with usage statistics and admin filtering
+ * GET endpoint - Fetch tags with usage statistics and admin filtering
  */
 export async function GET(request: NextRequest) {
   try {
@@ -42,9 +42,8 @@ export async function GET(request: NextRequest) {
     if (searchQuery) {
       whereConditions.push(
         or(
-          ilike(authors.name, `%${searchQuery}%`),
-          ilike(authors.email, `%${searchQuery}%`),
-          ilike(authors.bio, `%${searchQuery}%`)
+          ilike(tags.name, `%${searchQuery}%`),
+          ilike(tags.slug, `%${searchQuery}%`)
         )
       );
     }
@@ -55,12 +54,10 @@ export async function GET(request: NextRequest) {
     // Build order by clause
     const orderByField =
       sortBy === "name"
-        ? authors.name
-        : sortBy === "email"
-        ? authors.email
+        ? tags.name
         : sortBy === "postsCount"
         ? sql`posts_count`
-        : authors.createdAt;
+        : tags.createdAt;
 
     const orderByClause =
       sortOrder === "asc" ? asc(orderByField) : desc(orderByField);
@@ -68,65 +65,64 @@ export async function GET(request: NextRequest) {
     // Get total count
     const totalCountResult = await db
       .select({ count: sql<number>`count(*)` })
-      .from(authors)
+      .from(tags)
       .where(whereClause);
 
-    const totalAuthors = totalCountResult[0]?.count || 0;
+    const totalTags = totalCountResult[0]?.count || 0;
 
-    // Get authors with usage statistics
-    const authorsResult = await db
+    // Get tags with usage statistics
+    const tagsResult = await db
       .select({
-        id: authors.id,
-        name: authors.name,
-        email: authors.email,
-        bio: authors.bio,
-        avatarUrl: authors.avatarUrl,
-        createdAt: authors.createdAt,
-        updatedAt: authors.updatedAt,
-        postsCount: sql<number>`count(${blogPosts.id})`.as("posts_count"),
+        id: tags.id,
+        name: tags.name,
+        slug: tags.slug,
+        createdAt: tags.createdAt,
+        postsCount: sql<number>`count(${blogPostsTags.postId})`.as(
+          "posts_count"
+        ),
       })
-      .from(authors)
-      .leftJoin(blogPosts, eq(authors.id, blogPosts.authorId))
+      .from(tags)
+      .leftJoin(blogPostsTags, eq(tags.id, blogPostsTags.tagId))
       .where(whereClause)
-      .groupBy(authors.id)
+      .groupBy(tags.id)
       .orderBy(orderByClause)
       .limit(limit)
       .offset((page - 1) * limit);
 
     // Calculate pagination info
-    const totalPages = Math.ceil(totalAuthors / limit);
+    const totalPages = Math.ceil(totalTags / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    const response: AdminAuthorsListResponse = {
-      authors: authorsResult,
-      totalAuthors,
+    const response: AdminTagsListResponse = {
+      tags: tagsResult,
+      totalTags,
       totalPages,
       currentPage: page,
       hasNextPage,
       hasPreviousPage,
     };
 
-    const result: ApiResponse<AdminAuthorsListResponse> = {
+    const result: ApiResponse<AdminTagsListResponse> = {
       success: true,
       data: response,
     };
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error fetching admin authors:", error);
+    console.error("Error fetching admin tags:", error);
 
-    const result: ApiResponse<AdminAuthorsListResponse> = {
+    const result: ApiResponse<AdminTagsListResponse> = {
       success: false,
       data: {
-        authors: [],
-        totalAuthors: 0,
+        tags: [],
+        totalTags: 0,
         totalPages: 0,
         currentPage: 1,
         hasNextPage: false,
         hasPreviousPage: false,
       },
-      error: error instanceof Error ? error.message : "Failed to fetch authors",
+      error: error instanceof Error ? error.message : "Failed to fetch tags",
     };
 
     return NextResponse.json(result, { status: 500 });
@@ -134,65 +130,63 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST endpoint - Create new author
+ * POST endpoint - Create new tag
  */
 export async function POST(request: NextRequest) {
   try {
-    const data: NewAuthor = await request.json();
+    const data: NewTag = await request.json();
 
     // Validate required fields
-    if (!data.name || !data.email) {
+    if (!data.name || !data.slug) {
       return NextResponse.json(
         {
           success: false,
-          error: "Name and email are required",
-        } as ApiResponse<Author>,
+          error: "Name and slug are required",
+        } as ApiResponse<Tag>,
         { status: 400 }
       );
     }
 
-    // Check if author with same email already exists
-    const existingAuthor = await db
+    // Check if tag with same name or slug already exists
+    const existingTag = await db
       .select()
-      .from(authors)
-      .where(eq(authors.email, data.email))
+      .from(tags)
+      .where(or(eq(tags.name, data.name), eq(tags.slug, data.slug)))
       .limit(1);
 
-    if (existingAuthor.length > 0) {
+    if (existingTag.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: "Author with this email already exists",
-        } as ApiResponse<Author>,
+          error: "Tag with this name or slug already exists",
+        } as ApiResponse<Tag>,
         { status: 409 }
       );
     }
 
-    // Create new author
-    const [newAuthor] = await db
-      .insert(authors)
+    // Create new tag
+    const [newTag] = await db
+      .insert(tags)
       .values({
         name: data.name,
-        email: data.email,
-        bio: data.bio || null,
-        avatarUrl: data.avatarUrl || null,
+        slug: data.slug,
       })
       .returning();
 
-    const result: ApiResponse<Author> = {
+    const result: ApiResponse<Tag> = {
       success: true,
-      data: newAuthor,
-      message: "Author created successfully",
+      data: newTag,
+      message: "Tag created successfully",
     };
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error("Error creating author:", error);
+    console.error("Error creating tag:", error);
 
-    const result: ApiResponse<Author | null> = {
+    const result: ApiResponse<Tag | null> = {
       success: false,
       data: null,
-      error: error instanceof Error ? error.message : "Failed to create author",
+      error: error instanceof Error ? error.message : "Failed to create tag",
     };
 
     return NextResponse.json(result, { status: 500 });
@@ -200,7 +194,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * PATCH endpoint - Bulk update authors
+ * PATCH endpoint - Bulk update tags
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -208,13 +202,13 @@ export async function PATCH(request: NextRequest) {
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid author IDs" },
+        { success: false, error: "Invalid tag IDs" },
         { status: 400 }
       );
     }
 
-    // For now, authors don't have status fields, so we'll just return success
-    // This can be extended when author status fields are added
+    // For now, tags don't have status fields, so we'll just return success
+    // This can be extended when tag status fields are added
     const result: ApiResponse<null> = {
       success: true,
       data: null,
@@ -239,7 +233,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 /**
- * DELETE endpoint - Bulk delete authors
+ * DELETE endpoint - Bulk delete tags
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -247,39 +241,22 @@ export async function DELETE(request: NextRequest) {
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid author IDs" },
+        { success: false, error: "Invalid tag IDs" },
         { status: 400 }
       );
     }
 
-    // Check if any authors have associated blog posts
-    const authorsWithPosts = await db
-      .select({
-        authorId: blogPosts.authorId,
-        count: sql<number>`count(*)`,
-      })
-      .from(blogPosts)
-      .where(
-        sql`${blogPosts.authorId} IN (${sql.join(
-          ids.map((id) => sql`${id}`),
-          sql`, `
-        )})`
-      )
-      .groupBy(blogPosts.authorId);
+    // First, delete blog_posts_tags relationships
+    await db.delete(blogPostsTags).where(
+      sql`${blogPostsTags.tagId} IN (${sql.join(
+        ids.map((id) => sql`${id}`),
+        sql`, `
+      )})`
+    );
 
-    if (authorsWithPosts.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Cannot delete authors that have associated blog posts",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Delete authors
-    await db.delete(authors).where(
-      sql`${authors.id} IN (${sql.join(
+    // Then delete tags
+    await db.delete(tags).where(
+      sql`${tags.id} IN (${sql.join(
         ids.map((id) => sql`${id}`),
         sql`, `
       )})`
@@ -288,18 +265,17 @@ export async function DELETE(request: NextRequest) {
     const result: ApiResponse<null> = {
       success: true,
       data: null,
-      message: `Successfully deleted ${ids.length} author(s)`,
+      message: `Successfully deleted ${ids.length} tag(s)`,
     };
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error deleting authors:", error);
+    console.error("Error deleting tags:", error);
 
     const result: ApiResponse<null> = {
       success: false,
       data: null,
-      error:
-        error instanceof Error ? error.message : "Failed to delete authors",
+      error: error instanceof Error ? error.message : "Failed to delete tags",
     };
 
     return NextResponse.json(result, { status: 500 });
