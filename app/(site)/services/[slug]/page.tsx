@@ -16,14 +16,44 @@ import { ServiceTestimonialSection } from "@/components/services/service-detail/
 import { ServiceFaqSection } from "@/components/services/service-detail/service-faq-section";
 import { ServiceRelatedSection } from "@/components/services/service-detail/service-related-section";
 import { ServiceCtaSection } from "@/components/services/service-detail/service-cta-section";
+import { getServiceBySlug } from "@/lib/api/services.api";
+import type { Metadata } from "next";
+import { generateSeoMetadata } from "@/lib/config/seo";
 
-interface ServicePageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+// Generate dynamic metadata for the service detail page
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const serviceResult = await getServiceBySlug(slug);
+
+  if (!serviceResult || !serviceResult.data) {
+    return {
+      title: "Service Not Found",
+      description: "The requested service could not be found.",
+    };
+  }
+
+  const service = serviceResult.data;
+
+  return generateSeoMetadata({
+    title: service.title,
+    description: service.shortDescription,
+    keywords: [
+      service.title.toLowerCase(),
+      service.category.toLowerCase(),
+      ...(service.technologies || []),
+    ],
+  });
 }
 
-export default async function ServicePage({ params }: ServicePageProps) {
+export default async function ServicePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const baseUrl = getBaseUrl();
 
@@ -31,28 +61,14 @@ export default async function ServicePage({ params }: ServicePageProps) {
 
   try {
     // Fetch the service (SSR)
-    const serviceResponse = await fetch(
-      `${baseUrl}/api/services/${encodeURIComponent(slug)}`,
-      {
-        // Add revalidation for better performance
-        next: { revalidate: 3600 }, // Revalidate every hour
-      }
-    );
 
-    if (serviceResponse.status === 404) {
+    const serviceResponse = await getServiceBySlug(slug);
+
+    if (!serviceResponse || !serviceResponse.data) {
       notFound();
     }
 
-    if (!serviceResponse.ok) {
-      throw new Error(`Failed to fetch service: ${serviceResponse.statusText}`);
-    }
-
-    const serviceResult = await serviceResponse.json();
-    if (!serviceResult.success) {
-      throw new Error("Failed to fetch service");
-    }
-
-    service = serviceResult.data;
+    service = serviceResponse.data;
   } catch (error) {
     console.error("Error fetching service:", error);
     notFound();
@@ -62,42 +78,20 @@ export default async function ServicePage({ params }: ServicePageProps) {
     notFound();
   }
 
-  // Safely access service data with fallbacks
-  const serviceData = {
-    id: service.id || "",
-    title: service.title || "Service",
-    slug: service.slug || "",
-    shortDescription: service.shortDescription || "",
-    fullDescription: service.fullDescription || service.shortDescription || "",
-    timeline: service.timeline || "Contact us for timeline",
-    category: service.category || "General",
-    featuredImage: service.featuredImage || "/images/placeholder-service.jpg",
-    features: service.features || [],
-    benefits: service.benefits || [],
-    process: service.process || [],
-    pricing: service.pricing || [],
-    technologies: service.technologies || [],
-    deliverables: service.deliverables || [],
-    gallery: service.gallery || [],
-    testimonials: service.testimonials,
-    faq: service.faq || [],
-    relatedServices: service.relatedServices || [],
-  };
-
   // Generate structured data
   const serviceStructuredData = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: serviceData.title,
-    description: serviceData.fullDescription,
-    category: serviceData.category,
+    name: service.title,
+    description: service.fullDescription,
+    category: service.category,
     provider: {
       "@type": "Organization",
       name: "SiteWave",
       url: baseUrl,
     },
-    ...(serviceData.pricing.length > 0 && {
-      offers: serviceData.pricing.map((tier) => ({
+    ...(service.pricing.length > 0 && {
+      offers: service.pricing.map((tier) => ({
         "@type": "Offer",
         name: tier.name,
         price: tier.price,
@@ -114,69 +108,65 @@ export default async function ServicePage({ params }: ServicePageProps) {
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
-        <ServiceHeroSection service={serviceData} />
+        <ServiceHeroSection service={service} />
 
         {/* Features Section */}
-        {serviceData.features.length > 0 && (
-          <ServiceFeaturesSection features={serviceData.features} />
+        {service.features.length > 0 && (
+          <ServiceFeaturesSection features={service.features} />
         )}
 
         {/* Benefits Section */}
-        {serviceData.benefits.length > 0 && (
+        {service.benefits.length > 0 && (
           <ServiceBenefitsSection
-            benefits={serviceData.benefits}
+            benefits={service.benefits}
             serviceInfo={{
-              timeline: serviceData.timeline,
-              category: serviceData.category,
-              technologies: serviceData.technologies,
+              timeline: service.timeline,
+              category: service.category,
+              technologies: service.technologies,
             }}
           />
         )}
 
         {/* Process Section */}
-        {serviceData.process.length > 0 && (
-          <ServiceProcessSection process={serviceData.process} />
+        {service.process.length > 0 && (
+          <ServiceProcessSection process={service.process} />
         )}
 
         {/* Technologies Section */}
-        {serviceData.technologies.length > 0 && (
-          <ServiceTechnologiesSection technologies={serviceData.technologies} />
+        {service.technologies.length > 0 && (
+          <ServiceTechnologiesSection technologies={service.technologies} />
         )}
 
         {/* Gallery Section */}
-        {serviceData.gallery.length > 0 && (
-          <ServiceGallerySection gallery={serviceData.gallery} />
+        {service.gallery && service.gallery.length > 0 && (
+          <ServiceGallerySection gallery={service.gallery} />
         )}
 
         {/* Pricing Section */}
-        {serviceData.pricing.length > 0 && (
-          <ServicePricingSection pricing={serviceData.pricing} />
+        {service.pricing.length > 0 && (
+          <ServicePricingSection pricing={service.pricing} />
         )}
 
         {/* Deliverables Section */}
-        {serviceData.deliverables.length > 0 && (
-          <ServiceDeliverablesSection deliverables={serviceData.deliverables} />
+        {service.deliverables.length > 0 && (
+          <ServiceDeliverablesSection deliverables={service.deliverables} />
         )}
 
         {/* Testimonial Section */}
-        {serviceData.testimonials && serviceData.testimonials.length > 0 && (
-          <ServiceTestimonialSection testimonials={serviceData.testimonials} />
+        {service.testimonials && service.testimonials.length > 0 && (
+          <ServiceTestimonialSection testimonials={service.testimonials} />
         )}
 
         {/* FAQ Section */}
-        {serviceData.faq.length > 0 && (
-          <ServiceFaqSection faq={serviceData.faq} />
-        )}
+        {service.faq.length > 0 && <ServiceFaqSection faq={service.faq} />}
 
         {/* Related Services Section */}
-        {serviceData.relatedServices.length > 0 && (
-          <ServiceRelatedSection
-            relatedServices={serviceData.relatedServices}
-          />
+        {service.relatedServices.length > 0 && (
+          <ServiceRelatedSection relatedServices={service.relatedServices} />
         )}
 
         {/* CTA Section */}
-        <ServiceCtaSection serviceTitle={serviceData.title} />
+        <ServiceCtaSection serviceTitle={service.title} />
       </div>
     </>
   );

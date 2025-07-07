@@ -22,10 +22,28 @@ import {
   ChevronRight,
   BookOpen,
 } from "lucide-react";
+import { generateSeoMetadata } from "@/lib/config/seo";
+import { Metadata } from "next";
+import { getBlogPosts } from "@/lib/api/blog.service";
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
   searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ category: string }>;
+}): Promise<Metadata> {
+  const { category } = await params;
+  const categoryName = category.replace(/-/g, " ");
+
+  return generateSeoMetadata({
+    title: `${categoryName} - Blog Category`,
+    description: `Explore all blog posts in the ${categoryName} category. Discover insights, tutorials, and articles about ${categoryName}.`,
+    keywords: [categoryName, "blog", "articles", "category"],
+  });
 }
 
 export default async function CategoryPage({
@@ -48,43 +66,25 @@ export default async function CategoryPage({
   };
   let categoryInfo: { name: string; description?: string } | null = null;
 
-  try {
-    // Get blog posts for this category (SSR)
-    const blogResponse = await fetch(
-      `${baseUrl}/api/blog/posts?categorySlug=${category}&page=${currentPage}&limit=12`,
-      {
-        // Add revalidation for better performance
-        next: { revalidate: 1800 }, // Revalidate every 30 minutes
-      }
-    );
+  const blogResponse = await getBlogPosts({
+    categorySlug: category,
+    page: currentPage,
+    limit: 12,
+  });
 
-    if (!blogResponse.ok) {
-      throw new Error(`Failed to fetch blog posts: ${blogResponse.statusText}`);
-    }
+  blogData = blogResponse;
 
-    const blogResponseData = await blogResponse.json();
-
-    if (!blogResponseData.success) {
-      throw new Error("Failed to fetch blog data");
-    }
-
-    blogData = blogResponseData.data;
-
-    // If no posts found, it might be an invalid category
-    if (blogData.posts.length === 0 && currentPage === 1) {
-      notFound();
-    }
-
-    // Get category info from the first post (if available)
-    if (blogData.posts.length > 0) {
-      categoryInfo = {
-        name: blogData.posts[0].category.name,
-        description: blogData.posts[0].category.description || undefined,
-      };
-    }
-  } catch (error) {
-    console.error("Error fetching blog data:", error);
+  // If no posts found, it might be an invalid category
+  if (blogData.posts.length === 0 && currentPage === 1) {
     notFound();
+  }
+
+  // Get category info from the first post (if available)
+  if (blogData.posts.length > 0) {
+    categoryInfo = {
+      name: blogData.posts[0].category.name,
+      description: blogData.posts[0].category.description || undefined,
+    };
   }
 
   if (!categoryInfo) {

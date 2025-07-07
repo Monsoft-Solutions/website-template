@@ -38,7 +38,7 @@ export function generateSeoMetadata({
   const metadata: Metadata = {
     title: {
       default: finalTitle,
-      template: `%s | ${siteConfig.name}`,
+      template: `%s`,
     },
     description: finalDescription,
     keywords: keywords.join(", "),

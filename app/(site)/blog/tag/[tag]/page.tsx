@@ -25,6 +25,7 @@ import {
   BookOpen,
   Tag,
 } from "lucide-react";
+import { getBlogPosts } from "@/lib/api/blog.service";
 
 interface TagPageProps {
   params: Promise<{ tag: string }>;
@@ -62,22 +63,13 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
   let tagInfo: { name: string } | null = null;
 
   try {
-    // Get blog posts for this tag
-    const blogResponse = await fetch(
-      `${baseUrl}/api/blog/posts?tagSlug=${tag}&page=${currentPage}&limit=12`
-    );
+    const blogResponse = await getBlogPosts({
+      tagSlug: tag,
+      page: currentPage,
+      limit: 12,
+    });
 
-    if (!blogResponse.ok) {
-      throw new Error(`Failed to fetch blog posts: ${blogResponse.statusText}`);
-    }
-
-    const blogResponseData = await blogResponse.json();
-
-    if (!blogResponseData.success) {
-      throw new Error("Failed to fetch blog data");
-    }
-
-    blogData = blogResponseData.data;
+    blogData = blogResponse;
 
     // If no posts found, it might be an invalid tag
     if (blogData.posts.length === 0 && currentPage === 1) {

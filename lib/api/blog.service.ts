@@ -10,6 +10,7 @@ import type {
   BlogListResponse,
 } from "@/lib/types";
 import { eq, desc, and, sql, count, like, or, exists } from "drizzle-orm";
+import { cache } from "react";
 
 /**
  * Calculate estimated reading time based on content length
@@ -131,14 +132,14 @@ export const getBlogPosts = async (
 /**
  * Get a single blog post by slug with all relations
  */
-export const getBlogPostBySlug = async (
-  slug: string
-): Promise<BlogPostWithRelations | null> => {
+export const getBlogPostBySlug = cache(async (slug: string) => {
   const result = await db
     .select({
       post: blogPosts,
       author: authors,
       category: categories,
+      publishedAt: blogPosts.publishedAt,
+      createdAt: blogPosts.createdAt,
     })
     .from(blogPosts)
     .leftJoin(authors, eq(blogPosts.authorId, authors.id))
@@ -166,7 +167,7 @@ export const getBlogPostBySlug = async (
     tags: postTags.map((pt) => pt.tag!),
     readingTime: calculateReadingTime(postData.post.content),
   };
-};
+});
 
 /**
  * Get related blog posts based on category

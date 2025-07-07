@@ -17,7 +17,19 @@ import { requireAdmin } from "@/lib/auth/server";
 import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { AdminServicesListResponse } from "@/lib/hooks/use-admin-services";
-import { buildServiceWithRelations } from "@/lib/api/services.api";
+import {
+  getServiceFeaturesByIds,
+  getServiceBenefitsByIds,
+  getServiceProcessStepsByIds,
+  getServiceTechnologiesByIds,
+  getServiceDeliverablesByIds,
+  getServiceGalleryImagesByIds,
+  getServiceTestimonialsByIds,
+  getServiceFaqsByIds,
+  getRelatedServicesByIds,
+  getServicePricingDataByIds,
+  buildServiceFromMaps,
+} from "@/lib/api/services.api";
 import { notifyContentUpdate } from "@/lib/services/google-indexing.service";
 
 // Types for request data
@@ -250,7 +262,7 @@ export async function GET(request: NextRequest) {
 
     // Parse query parameters
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50); // Reduced from 10 to 20, max 50
     const category = searchParams.get("category") || undefined;
     const searchQuery = searchParams.get("searchQuery") || undefined;
     const sortBy = searchParams.get("sortBy") || "createdAt";
@@ -316,15 +328,53 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset((page - 1) * limit);
 
-    // Build services with relations
-    const servicesWithRelations: ServiceWithRelations[] = [];
+    // Build services with relations using optimized batch approach
+    let servicesWithRelations: ServiceWithRelations[] = [];
 
-    for (const service of servicesResult) {
-      const serviceWithRelations = await buildServiceWithRelations(
-        service.id,
-        service
-      );
-      servicesWithRelations.push(serviceWithRelations);
+    if (servicesResult.length > 0) {
+      const serviceIds = servicesResult.map((s) => s.id);
+
+      // Fetch all related data in parallel using efficient queries
+      const [
+        featuresMap,
+        benefitsMap,
+        processStepsMap,
+        technologiesMap,
+        deliverablesMap,
+        galleryImagesMap,
+        testimonialsMap,
+        faqsMap,
+        relatedServicesMap,
+        pricingData,
+      ] = await Promise.all([
+        getServiceFeaturesByIds(serviceIds),
+        getServiceBenefitsByIds(serviceIds),
+        getServiceProcessStepsByIds(serviceIds),
+        getServiceTechnologiesByIds(serviceIds),
+        getServiceDeliverablesByIds(serviceIds),
+        getServiceGalleryImagesByIds(serviceIds),
+        getServiceTestimonialsByIds(serviceIds),
+        getServiceFaqsByIds(serviceIds),
+        getRelatedServicesByIds(serviceIds),
+        getServicePricingDataByIds(serviceIds),
+      ]);
+
+      // Transform services with their relations
+      servicesWithRelations = servicesResult.map((service) => {
+        return buildServiceFromMaps(
+          service,
+          featuresMap,
+          benefitsMap,
+          processStepsMap,
+          technologiesMap,
+          deliverablesMap,
+          galleryImagesMap,
+          testimonialsMap,
+          faqsMap,
+          relatedServicesMap,
+          pricingData
+        );
+      });
     }
 
     // Calculate pagination info

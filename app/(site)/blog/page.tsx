@@ -1,6 +1,6 @@
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getBaseUrl } from "@/lib/utils/url.util";
-import type { BlogListResponse } from "@/lib/types";
+import type { BlogListOptions, BlogListResponse } from "@/lib/types";
 
 // Import new blog sections
 import { BlogHero } from "@/components/blog/sections/blog-hero";
@@ -11,6 +11,7 @@ import { NewsletterCTA } from "@/components/blog/sections/newsletter-cta";
 
 // Import client component for filters (interactive features only)
 import { BlogFilters } from "@/components/blog/BlogFilters";
+import { getBlogCategories, getBlogPosts } from "@/lib/api/blog.service";
 
 interface BlogPageProps {
   searchParams: Promise<{
@@ -53,36 +54,26 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       params.set("searchQuery", currentSearch);
     }
 
-    // Fetch blog posts (SSR)
-    const blogResponse = await fetch(
-      `${baseUrl}/api/blog/posts?${params.toString()}`,
-      {
-        // Add revalidation for better performance
-        next: { revalidate: 1800 }, // Revalidate every 30 minutes
-      }
-    );
+    const options: BlogListOptions = {
+      page: currentPage,
+      limit: 12,
+      categorySlug: currentCategory,
+      searchQuery: currentSearch,
+      status: "published",
+    };
 
-    if (blogResponse.ok) {
-      const blogResult = await blogResponse.json();
-      if (blogResult.success) {
-        blogData = blogResult.data;
-      }
-    }
+    // Get blog posts
+    const result = await getBlogPosts(options);
+
+    blogData = result;
 
     // Fetch categories with counts (SSR)
-    const categoriesResponse = await fetch(
-      `${baseUrl}/api/blog/categories/with-counts`,
-      {
-        next: { revalidate: 1800 },
-      }
-    );
-
-    if (categoriesResponse.ok) {
-      const categoriesResult = await categoriesResponse.json();
-      if (categoriesResult.success) {
-        categories = categoriesResult.data;
-      }
-    }
+    const categoriesResponse = await getBlogCategories();
+    categories = categoriesResponse.map((category) => ({
+      name: category.category.name,
+      slug: category.category.slug,
+      count: category.postCount,
+    }));
   } catch (error) {
     console.error("Error fetching blog data:", error);
     // Continue with empty data - better than crashing
