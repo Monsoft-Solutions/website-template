@@ -30,6 +30,7 @@ import {
 
 // Import client components for interactive features
 import { BlogPostActions } from "@/components/blog/BlogPostActions";
+import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/api/blog.service";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -39,56 +40,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const baseUrl = getBaseUrl();
 
-  let post: BlogPostWithRelations | null = null;
   let relatedPosts: BlogPostWithRelations[] = [];
 
-  try {
-    // Fetch the blog post (SSR)
-    const postResponse = await fetch(
-      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}`,
-      {
-        // Add revalidation for better performance
-        next: { revalidate: 3600 }, // Revalidate every hour
-      }
-    );
-
-    if (postResponse.status === 404) {
-      notFound();
-    }
-
-    if (!postResponse.ok) {
-      throw new Error(`Failed to fetch blog post: ${postResponse.statusText}`);
-    }
-
-    const postResult = await postResponse.json();
-    if (!postResult.success) {
-      throw new Error("Failed to fetch blog post");
-    }
-
-    post = postResult.data;
-
-    // Fetch related posts (SSR)
-    const relatedResponse = await fetch(
-      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}/related?limit=3`,
-      {
-        next: { revalidate: 3600 },
-      }
-    );
-
-    if (relatedResponse.ok) {
-      const relatedResult = await relatedResponse.json();
-      if (relatedResult.success) {
-        relatedPosts = relatedResult.data;
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching blog post:", error);
-    notFound();
-  }
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
+
+  // Fetch related posts (SSR)
+  const relatedPostsResponse = await getRelatedBlogPosts(post.id, 3);
+
+  relatedPosts = relatedPostsResponse;
 
   return (
     <>

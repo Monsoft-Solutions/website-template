@@ -9,6 +9,8 @@ import { ServicesHeroSection } from "@/components/services/services-hero-section
 import { ServicesGrid } from "@/components/services/services-grid";
 import { WhyChooseUsSection } from "@/components/services/why-choose-us-section";
 import { ServicesCtaSection } from "@/components/services/services-cta-section";
+import { getAllServices } from "@/lib/api/services.api";
+import { getAllServiceCategories } from "@/lib/api/service-categories.api";
 
 export default async function ServicesPage() {
   const baseUrl = getBaseUrl();
@@ -20,38 +22,25 @@ export default async function ServicesPage() {
   let categories: ServiceCategory[] = [];
   let error: string | null = null;
 
-  try {
-    // Fetch services (SSR)
-    const servicesResponse = await fetch(`${baseUrl}/api/services`, {
-      // Add revalidation for better performance
-      next: { revalidate: 1800 }, // Revalidate every 30 minutes
-    });
+  // Fetch services (SSR)
+  // const servicesResponse = await fetch(`${baseUrl}/api/services`, {
+  //   // Add revalidation for better performance
+  //   next: { revalidate: 1800 }, // Revalidate every 30 minutes
+  // });
 
-    if (servicesResponse.ok) {
-      const servicesResult = await servicesResponse.json();
-      if (servicesResult.success) {
-        services = servicesResult.data;
-      }
-    }
+  const servicesResponse = await getAllServices();
 
-    // Fetch service categories (SSR)
-    const categoriesResponse = await fetch(
-      `${baseUrl}/api/services/categories`,
-      {
-        next: { revalidate: 1800 },
-      }
-    );
-
-    if (categoriesResponse.ok) {
-      const categoriesResult = await categoriesResponse.json();
-      if (categoriesResult.success) {
-        categories = categoriesResult.data;
-      }
-    }
-  } catch (fetchError) {
-    console.error("Error fetching services data:", fetchError);
+  if (servicesResponse.success && servicesResponse.data) {
+    services = servicesResponse.data;
+  } else {
     error = "Failed to load services";
-    // Continue with empty data - better than crashing
+  }
+
+  // Fetch service categories (SSR)
+  const categoriesResponse = await getAllServiceCategories();
+
+  if (categoriesResponse.success && categoriesResponse.data) {
+    categories = categoriesResponse.data;
   }
 
   const serviceStructuredData = {

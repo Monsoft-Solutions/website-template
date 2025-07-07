@@ -139,6 +139,8 @@ export const getBlogPostBySlug = async (
       post: blogPosts,
       author: authors,
       category: categories,
+      publishedAt: blogPosts.publishedAt,
+      createdAt: blogPosts.createdAt,
     })
     .from(blogPosts)
     .leftJoin(authors, eq(blogPosts.authorId, authors.id))

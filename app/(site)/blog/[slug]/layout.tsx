@@ -42,12 +42,14 @@ export async function generateMetadata({
       };
     }
 
+    const postDateString = post.publishedAt || post.createdAt;
+
     return generateSeoMetadata({
       title: post.metaTitle || post.title,
       description: post.metaDescription || post.excerpt,
       keywords: post.tags.map((tag: { name: string }) => tag.name),
       type: "article",
-      publishedTime: (post.publishedAt || post.createdAt).toISOString(),
+      publishedTime: postDateString,
       authors: [post.author.name],
       url: `/blog/${post.slug}`,
     });
