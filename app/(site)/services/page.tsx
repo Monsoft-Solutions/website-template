@@ -13,6 +13,8 @@ import { ServicesCtaSection } from "@/components/services/services-cta-section";
 export default async function ServicesPage() {
   const baseUrl = getBaseUrl();
 
+  console.log(`Base URL: ${baseUrl}`);
+
   // Initialize with fallback data
   let services: ServiceWithRelations[] = [];
   let categories: ServiceCategory[] = [];
