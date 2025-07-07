@@ -31,9 +31,38 @@ import {
 // Import client components for interactive features
 import { BlogPostActions } from "@/components/blog/BlogPostActions";
 import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/api/blog.service";
+import { generateSeoMetadata } from "@/lib/config/seo";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const post = await getBlogPostBySlug(slug);
+  if (!post) {
+    return generateSeoMetadata({
+      title: "Blog Post Not Found",
+      description: "The requested blog post could not be found.",
+    });
+  }
+
+  const postDateString = post.publishedAt || post.createdAt;
+
+  return generateSeoMetadata({
+    title: post.metaTitle || post.title,
+    description: post.metaDescription || post.excerpt,
+    keywords: post.tags.map((tag: { name: string }) => tag.name),
+    type: "article",
+    publishedTime: postDateString.toISOString(),
+    authors: [post.author.name],
+    url: `/blog/${post.slug}`,
+  });
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {

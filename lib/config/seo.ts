@@ -38,7 +38,7 @@ export function generateSeoMetadata({
   const metadata: Metadata = {
     title: {
       default: finalTitle,
-      template: `%s | ${siteConfig.name}`,
+      template: `%s`,
     },
     description: finalDescription,
     keywords: keywords.join(", "),
@@ -94,6 +94,8 @@ export function generateSeoMetadata({
     },
     verification: siteConfig.metadata.verification,
   };
+
+  console.log(`Generated SEO metadata for ${title}`, metadata);
 
   return metadata;
 }

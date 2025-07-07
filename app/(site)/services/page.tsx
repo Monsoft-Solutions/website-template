@@ -9,8 +9,24 @@ import { ServicesHeroSection } from "@/components/services/services-hero-section
 import { ServicesGrid } from "@/components/services/services-grid";
 import { WhyChooseUsSection } from "@/components/services/why-choose-us-section";
 import { ServicesCtaSection } from "@/components/services/services-cta-section";
-import { getAllServices } from "@/lib/api/services.api";
+import { getAllServices, getServicesNames } from "@/lib/api/services.api";
 import { getAllServiceCategories } from "@/lib/api/service-categories.api";
+import { generateSeoMetadata } from "@/lib/config/seo";
+
+export async function generateMetadata() {
+  const servicesNames = await getServicesNames();
+
+  if (!servicesNames.success) {
+    return generateSeoMetadata({});
+  }
+
+  return generateSeoMetadata({
+    title: "Our Services | Professional Digital Solutions",
+    description:
+      "Discover our comprehensive range of digital services including web development, mobile apps, UI/UX design, digital consulting, and cloud solutions.",
+    keywords: servicesNames.data,
+  });
+}
 
 export default async function ServicesPage() {
   const baseUrl = getBaseUrl();

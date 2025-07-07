@@ -22,6 +22,22 @@ import {
   FAQ,
 } from "@/lib/types/service-with-relations.type";
 
+export async function getServicesNames(): Promise<ApiResponse<string[]>> {
+  try {
+    const allServices = await db
+      .select({ name: services.title })
+      .from(services);
+    return { success: true, data: allServices.map((s) => s.name) };
+  } catch (error) {
+    console.error("Error fetching services names:", error);
+    return {
+      success: false,
+      data: [],
+      error: "Failed to fetch services names",
+    };
+  }
+}
+
 /**
  * Get all services with their relations
  */
