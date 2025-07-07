@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +11,12 @@ import {
 import {
   Home,
   Search,
-  ArrowLeft,
   Mail,
   Phone,
   HelpCircle,
   FileQuestion,
 } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
 
 // Note: metadata moved to layout or removed since this is now a client component
 
@@ -83,14 +81,7 @@ export default function NotFound() {
                 Go Home
               </Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Go Back
-            </Button>
+            <BackButton />
           </div>
         </div>
       </section>

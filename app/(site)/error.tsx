@@ -17,9 +17,13 @@ import {
   RefreshCw,
   Bug,
   Mail,
-  ArrowLeft,
   ExternalLink,
 } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
+import { isDevelopment } from "@/lib/env-client";
+
+// Force dynamic rendering to avoid build-time Html import issues
+export const dynamic = "force-dynamic";
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -32,7 +36,7 @@ export default function Error({ error, reset }: ErrorProps) {
     console.error("Application Error:", error);
   }, [error]);
 
-  const isDevelopment = process.env.NODE_ENV === "development";
+  // Safer development check that works during build
 
   return (
     <div className="flex flex-col gap-12 py-16">
@@ -62,14 +66,7 @@ export default function Error({ error, reset }: ErrorProps) {
                 Go Home
               </Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Go Back
-            </Button>
+            <BackButton />
           </div>
         </div>
       </section>
@@ -192,13 +189,9 @@ export default function Error({ error, reset }: ErrorProps) {
               </Button>
               <Button variant="outline" asChild>
                 <a
-                  href={`mailto:support@monsoft.com?subject=Error Report&body=Error Details:%0D%0A- Page: ${
-                    typeof window !== "undefined"
-                      ? window.location.href
-                      : "Unknown"
-                  }%0D%0A- Error: ${encodeURIComponent(error.message)}${
-                    error.digest ? `%0D%0A- Digest: ${error.digest}` : ""
-                  }`}
+                  href={`mailto:support@monsoft.com?subject=Error Report&body=Error Details:%0D%0A- Error: ${encodeURIComponent(
+                    error.message
+                  )}${error.digest ? `%0D%0A- Digest: ${error.digest}` : ""}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

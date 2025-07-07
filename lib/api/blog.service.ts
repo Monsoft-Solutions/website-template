@@ -201,6 +201,8 @@ export const getRelatedBlogPosts = async (
     .from(blogPosts)
     .leftJoin(authors, eq(blogPosts.authorId, authors.id))
     .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
+    .leftJoin(blogPostsTags, eq(blogPosts.id, blogPostsTags.postId))
+    .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
     .where(
       and(
         eq(blogPosts.categoryId, categoryId),
@@ -357,4 +359,20 @@ export const getFeaturedBlogPosts = async (
 ): Promise<BlogPostWithRelations[]> => {
   const result = await getBlogPosts({ limit, status: "published" });
   return result.posts;
+};
+
+/**
+ * Get blog posts specifically for the preview section
+ * Returns latest posts with proper fallbacks for images
+ */
+export const getBlogPostsForPreview = async (
+  limit: number = 4
+): Promise<BlogPostWithRelations[]> => {
+  const result = await getBlogPosts({ limit, status: "published" });
+
+  // Ensure all posts have proper image fallbacks and data
+  return result.posts.map((post) => ({
+    ...post,
+    featuredImage: post.featuredImage || null, // Let the component handle the fallback
+  }));
 };
