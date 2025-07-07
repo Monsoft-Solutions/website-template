@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -13,80 +12,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Markdown } from "@/components/ui/markdown";
-import { generateSeoMetadata } from "@/lib/config/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getBaseUrl } from "@/lib/utils/url.util";
-// Import types for API responses
+
+// Import types
 import type { BlogPostWithRelations } from "@/lib/types";
 import { formatDate } from "@/lib/utils/date.util";
 import {
   Calendar,
   Clock,
   ArrowLeft,
-  Share2,
   Bookmark,
   ThumbsUp,
   MessageCircle,
-  Twitter,
-  Facebook,
-  Linkedin,
-  Copy,
   ChevronRight,
 } from "lucide-react";
 
+// Import client components for interactive features
+import { BlogPostActions } from "@/components/blog/BlogPostActions";
+
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateMetadata({
-  params,
-}: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const baseUrl = getBaseUrl();
-
-  try {
-    const response = await fetch(
-      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}`
-    );
-    if (!response.ok) {
-      return generateSeoMetadata({
-        title: "Blog Post Not Found",
-        description: "The requested blog post could not be found.",
-      });
-    }
-
-    const result = await response.json();
-    if (!result.success) {
-      return generateSeoMetadata({
-        title: "Blog Post Not Found",
-        description: "The requested blog post could not be found.",
-      });
-    }
-
-    const post = result.data;
-
-    if (!post) {
-      return {
-        title: "Post Not Found",
-      };
-    }
-
-    return generateSeoMetadata({
-      title: post.metaTitle || post.title,
-      description: post.metaDescription || post.excerpt,
-      keywords: post.tags.map((tag: { name: string }) => tag.name),
-      type: "article",
-      publishedTime: (post.publishedAt || post.createdAt).toISOString(),
-      authors: [post.author.name],
-      url: `/blog/${post.slug}`,
-    });
-  } catch (error) {
-    console.error("Error fetching blog post for metadata:", error);
-    return generateSeoMetadata({
-      title: "Blog Post Not Found",
-      description: "The requested blog post could not be found.",
-    });
-  }
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
@@ -97,9 +43,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   let relatedPosts: BlogPostWithRelations[] = [];
 
   try {
-    // Fetch the blog post
+    // Fetch the blog post (SSR)
     const postResponse = await fetch(
-      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}`
+      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}`,
+      {
+        // Add revalidation for better performance
+        next: { revalidate: 3600 }, // Revalidate every hour
+      }
     );
 
     if (postResponse.status === 404) {
@@ -117,9 +67,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
     post = postResult.data;
 
-    // Fetch related posts
+    // Fetch related posts (SSR)
     const relatedResponse = await fetch(
-      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}/related?limit=3`
+      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}/related?limit=3`,
+      {
+        next: { revalidate: 3600 },
+      }
     );
 
     if (relatedResponse.ok) {
@@ -252,31 +205,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
             )}
 
-            {/* Social Sharing */}
-            <div className="flex items-center justify-between mb-8 p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Share2 className="size-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Share this article</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Twitter className="size-4" />
-                  <span className="sr-only">Share on Twitter</span>
-                </Button>
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Facebook className="size-4" />
-                  <span className="sr-only">Share on Facebook</span>
-                </Button>
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Linkedin className="size-4" />
-                  <span className="sr-only">Share on LinkedIn</span>
-                </Button>
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Copy className="size-4" />
-                  Copy
-                </Button>
-              </div>
-            </div>
+            {/* Social Sharing - Client Component for Interactivity */}
+            <BlogPostActions
+              title={post.title}
+              url={`${baseUrl}/blog/${post.slug}`}
+            />
           </div>
         </section>
 

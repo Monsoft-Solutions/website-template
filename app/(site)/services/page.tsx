@@ -1,9 +1,8 @@
-"use client";
-
 import { JsonLd } from "@/components/seo/JsonLd";
-import { useServices } from "@/lib/hooks/use-services.hook";
-import { useServiceCategories } from "@/lib/hooks/use-service-categories.hook";
+import { getBaseUrl } from "@/lib/utils/url.util";
 import { transformServicesWithRelationsToServices } from "@/lib/utils/service-transform.util";
+import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
+import type { ServiceCategory } from "@/lib/types";
 
 // Import our new service components
 import { ServicesHeroSection } from "@/components/services/services-hero-section";
@@ -11,10 +10,47 @@ import { ServicesGrid } from "@/components/services/services-grid";
 import { WhyChooseUsSection } from "@/components/services/why-choose-us-section";
 import { ServicesCtaSection } from "@/components/services/services-cta-section";
 
-export default function ServicesPage() {
-  const { data: services, isLoading, error } = useServices();
-  const { data: categories, isLoading: categoriesLoading } =
-    useServiceCategories();
+export default async function ServicesPage() {
+  const baseUrl = getBaseUrl();
+
+  // Initialize with fallback data
+  let services: ServiceWithRelations[] = [];
+  let categories: ServiceCategory[] = [];
+  let error: string | null = null;
+
+  try {
+    // Fetch services (SSR)
+    const servicesResponse = await fetch(`${baseUrl}/api/services`, {
+      // Add revalidation for better performance
+      next: { revalidate: 1800 }, // Revalidate every 30 minutes
+    });
+
+    if (servicesResponse.ok) {
+      const servicesResult = await servicesResponse.json();
+      if (servicesResult.success) {
+        services = servicesResult.data;
+      }
+    }
+
+    // Fetch service categories (SSR)
+    const categoriesResponse = await fetch(
+      `${baseUrl}/api/services/categories`,
+      {
+        next: { revalidate: 1800 },
+      }
+    );
+
+    if (categoriesResponse.ok) {
+      const categoriesResult = await categoriesResponse.json();
+      if (categoriesResult.success) {
+        categories = categoriesResult.data;
+      }
+    }
+  } catch (fetchError) {
+    console.error("Error fetching services data:", fetchError);
+    error = "Failed to load services";
+    // Continue with empty data - better than crashing
+  }
 
   const serviceStructuredData = {
     "@context": "https://schema.org",
@@ -24,8 +60,8 @@ export default function ServicesPage() {
       "Comprehensive digital solutions including web development, mobile apps, design, and consulting",
     provider: {
       "@type": "Organization",
-      name: "Your Company Name",
-      url: "https://yoursite.com",
+      name: "SiteWave",
+      url: baseUrl,
     },
     serviceType: services?.map((service) => service.title) || [],
     areaServed: "Global",
@@ -53,11 +89,9 @@ export default function ServicesPage() {
             </div>
 
             <ServicesGrid
-              services={transformServicesWithRelationsToServices(
-                services || []
-              )}
-              categories={categories || []}
-              isLoading={isLoading || categoriesLoading}
+              services={transformServicesWithRelationsToServices(services)}
+              categories={categories}
+              isLoading={false} // No loading state in SSR
               error={error}
             />
           </div>

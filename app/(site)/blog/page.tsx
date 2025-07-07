@@ -1,8 +1,6 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { BlogFilters } from "@/components/blog/BlogFilters";
+import { getBaseUrl } from "@/lib/utils/url.util";
+import type { BlogListResponse } from "@/lib/types";
 
 // Import new blog sections
 import { BlogHero } from "@/components/blog/sections/blog-hero";
@@ -11,70 +9,26 @@ import { CategoryHub } from "@/components/blog/sections/category-hub";
 import { ArticlesGrid } from "@/components/blog/sections/articles-grid";
 import { NewsletterCTA } from "@/components/blog/sections/newsletter-cta";
 
-// Import hooks
-import { useBlogPosts, useBlogCategoriesWithCounts } from "@/lib/hooks";
+// Import client component for filters (interactive features only)
+import { BlogFilters } from "@/components/blog/BlogFilters";
 
-export default function BlogPage() {
-  const searchParams = useSearchParams();
-  const currentPage = parseInt(searchParams.get("page") || "1", 10);
-  const currentCategory = searchParams.get("category") || "all";
-  const currentSearch = searchParams.get("search") || "";
+interface BlogPageProps {
+  searchParams: Promise<{
+    page?: string;
+    category?: string;
+    search?: string;
+  }>;
+}
 
-  // Use hooks to fetch data
-  const {
-    data: blogData,
-    isLoading: blogLoading,
-    error: blogError,
-  } = useBlogPosts({
-    page: currentPage,
-    limit: 12,
-    categorySlug: currentCategory !== "all" ? currentCategory : undefined,
-    searchQuery: currentSearch || undefined,
-  });
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  const { page, category, search } = await searchParams;
+  const currentPage = parseInt(page || "1", 10);
+  const currentCategory = category || "all";
+  const currentSearch = search || "";
+  const baseUrl = getBaseUrl();
 
-  const {
-    categories,
-    isLoading: categoriesLoading,
-    error: categoriesError,
-  } = useBlogCategoriesWithCounts();
-
-  // Loading state
-  if (blogLoading || categoriesLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container py-24">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="animate-pulse">
-              <div className="h-8 bg-muted rounded w-1/3 mx-auto mb-4"></div>
-              <div className="h-4 bg-muted rounded w-2/3 mx-auto"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (blogError || categoriesError) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container py-24">
-          <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">
-              Error Loading Blog
-            </h1>
-            <p className="text-muted-foreground">
-              {blogError || categoriesError}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Fallback for no data
-  const blogPosts = blogData?.posts || [];
-  const paginationData = blogData || {
+  // Initialize with fallback data
+  let blogData: BlogListResponse = {
     posts: [],
     totalPages: 0,
     totalPosts: 0,
@@ -82,9 +36,60 @@ export default function BlogPage() {
     hasNextPage: false,
     hasPreviousPage: false,
   };
+  let categories: Array<{ name: string; slug: string; count: number }> = [];
+
+  try {
+    // Build query parameters
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      limit: "12",
+    });
+
+    if (currentCategory !== "all") {
+      params.set("categorySlug", currentCategory);
+    }
+
+    if (currentSearch) {
+      params.set("searchQuery", currentSearch);
+    }
+
+    // Fetch blog posts (SSR)
+    const blogResponse = await fetch(
+      `${baseUrl}/api/blog/posts?${params.toString()}`,
+      {
+        // Add revalidation for better performance
+        next: { revalidate: 1800 }, // Revalidate every 30 minutes
+      }
+    );
+
+    if (blogResponse.ok) {
+      const blogResult = await blogResponse.json();
+      if (blogResult.success) {
+        blogData = blogResult.data;
+      }
+    }
+
+    // Fetch categories with counts (SSR)
+    const categoriesResponse = await fetch(
+      `${baseUrl}/api/blog/categories/with-counts`,
+      {
+        next: { revalidate: 1800 },
+      }
+    );
+
+    if (categoriesResponse.ok) {
+      const categoriesResult = await categoriesResponse.json();
+      if (categoriesResult.success) {
+        categories = categoriesResult.data;
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching blog data:", error);
+    // Continue with empty data - better than crashing
+  }
 
   // Transform data for our new components
-  const transformedPosts = blogPosts.map((post) => ({
+  const transformedPosts = blogData.posts.map((post) => ({
     id: post.id,
     title: post.title,
     excerpt: post.excerpt,
@@ -101,7 +106,7 @@ export default function BlogPage() {
     featuredImage: post.featuredImage || undefined,
     slug: post.slug,
     featured:
-      blogPosts.indexOf(post) === 0 &&
+      blogData.posts.indexOf(post) === 0 &&
       currentPage === 1 &&
       !currentSearch &&
       currentCategory === "all",
@@ -135,7 +140,7 @@ export default function BlogPage() {
           name: "Blog",
           description:
             "Insights, tutorials, and industry trends in technology and design",
-          url: "https://monsoft.com/blog",
+          url: `${baseUrl}/blog`,
         }}
       />
 
@@ -143,9 +148,9 @@ export default function BlogPage() {
         {/* Hero Section - Only on main page */}
         {showHero && (
           <BlogHero
-            totalPosts={paginationData.totalPosts}
+            totalPosts={blogData.totalPosts}
             totalAuthors={25}
-            totalReads={paginationData.totalPosts * 347} // Estimated reads
+            totalReads={blogData.totalPosts * 347} // Estimated reads
           />
         )}
 
@@ -155,7 +160,7 @@ export default function BlogPage() {
         {/* Category Hub - Only on main page */}
         {showCategories && <CategoryHub categories={transformedCategories} />}
 
-        {/* Search and Filter Section */}
+        {/* Search and Filter Section - Client Component */}
         <section className="py-8 bg-muted/30">
           <div className="container">
             <div className="mx-auto max-w-6xl">
@@ -164,7 +169,7 @@ export default function BlogPage() {
                 currentCategory={currentCategory}
                 currentSearch={currentSearch}
                 currentPage={currentPage}
-                totalPages={paginationData.totalPages}
+                totalPages={blogData.totalPages}
               />
             </div>
           </div>
@@ -177,7 +182,7 @@ export default function BlogPage() {
           description={getGridDescription(
             currentSearch,
             currentCategory,
-            paginationData.totalPosts
+            blogData.totalPosts
           )}
           showHeader={isFiltered}
           className={

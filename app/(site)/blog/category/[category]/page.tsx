@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -12,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { generateSeoMetadata } from "@/lib/config/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { BlogListResponse } from "@/lib/types";
 import { formatDate } from "@/lib/utils/date.util";
@@ -28,19 +26,6 @@ import {
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
   searchParams: Promise<{ page?: string }>;
-}
-
-export async function generateMetadata({
-  params,
-}: CategoryPageProps): Promise<Metadata> {
-  const { category } = await params;
-  const categoryName = category.replace(/-/g, " ");
-
-  return generateSeoMetadata({
-    title: `${categoryName} - Blog Category`,
-    description: `Explore all blog posts in the ${categoryName} category. Discover insights, tutorials, and articles about ${categoryName}.`,
-    keywords: [categoryName, "blog", "articles", "category"],
-  });
 }
 
 export default async function CategoryPage({
@@ -64,9 +49,13 @@ export default async function CategoryPage({
   let categoryInfo: { name: string; description?: string } | null = null;
 
   try {
-    // Get blog posts for this category
+    // Get blog posts for this category (SSR)
     const blogResponse = await fetch(
-      `${baseUrl}/api/blog/posts?categorySlug=${category}&page=${currentPage}&limit=12`
+      `${baseUrl}/api/blog/posts?categorySlug=${category}&page=${currentPage}&limit=12`,
+      {
+        // Add revalidation for better performance
+        next: { revalidate: 1800 }, // Revalidate every 30 minutes
+      }
     );
 
     if (!blogResponse.ok) {

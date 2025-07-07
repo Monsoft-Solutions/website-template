@@ -1,10 +1,7 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { useService } from "@/lib/hooks/use-services.hook";
-import { clientEnv } from "@/lib/env-client";
+import { getBaseUrl } from "@/lib/utils/url.util";
+import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 
 // Import the new service detail components
 import { ServiceHeroSection } from "@/components/services/service-detail/service-hero-section";
@@ -20,48 +17,49 @@ import { ServiceFaqSection } from "@/components/services/service-detail/service-
 import { ServiceRelatedSection } from "@/components/services/service-detail/service-related-section";
 import { ServiceCtaSection } from "@/components/services/service-detail/service-cta-section";
 
-// Loading and error components
-import { ServicePageSkeleton } from "@/components/services/service-detail/service-page-skeleton";
-import { ServiceError } from "@/components/services/service-detail/service-error";
-
 interface ServicePageProps {
   params: Promise<{
     slug: string;
   }>;
 }
 
-export default function ServicePage({ params }: ServicePageProps) {
-  const [slug, setSlug] = useState<string>("");
-  const { data: service, isLoading, error } = useService(slug);
-  const router = useRouter();
+export default async function ServicePage({ params }: ServicePageProps) {
+  const { slug } = await params;
+  const baseUrl = getBaseUrl();
 
-  useEffect(() => {
-    async function resolveParams() {
-      try {
-        const resolvedParams = await params;
-        setSlug(resolvedParams.slug);
-      } catch (error) {
-        console.error("Failed to resolve params:", error);
-        router.push("/services");
+  let service: ServiceWithRelations | null = null;
+
+  try {
+    // Fetch the service (SSR)
+    const serviceResponse = await fetch(
+      `${baseUrl}/api/services/${encodeURIComponent(slug)}`,
+      {
+        // Add revalidation for better performance
+        next: { revalidate: 3600 }, // Revalidate every hour
       }
+    );
+
+    if (serviceResponse.status === 404) {
+      notFound();
     }
 
-    resolveParams();
-  }, [params, router]);
+    if (!serviceResponse.ok) {
+      throw new Error(`Failed to fetch service: ${serviceResponse.statusText}`);
+    }
 
-  // Show loading state
-  if (!slug || (slug && isLoading)) {
-    return <ServicePageSkeleton />;
+    const serviceResult = await serviceResponse.json();
+    if (!serviceResult.success) {
+      throw new Error("Failed to fetch service");
+    }
+
+    service = serviceResult.data;
+  } catch (error) {
+    console.error("Error fetching service:", error);
+    notFound();
   }
 
-  // Handle error state
-  if (error || !service) {
-    return (
-      <ServiceError
-        error={error || "Service not found"}
-        onRetry={() => window.location.reload()}
-      />
-    );
+  if (!service) {
+    notFound();
   }
 
   // Safely access service data with fallbacks
@@ -95,8 +93,8 @@ export default function ServicePage({ params }: ServicePageProps) {
     category: serviceData.category,
     provider: {
       "@type": "Organization",
-      name: clientEnv.NEXT_PUBLIC_SITE_NAME || "SiteWave",
-      url: clientEnv.NEXT_PUBLIC_SITE_URL,
+      name: "SiteWave",
+      url: baseUrl,
     },
     ...(serviceData.pricing.length > 0 && {
       offers: serviceData.pricing.map((tier) => ({
