@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { getBaseUrl } from "@/lib/utils/url.util";
-import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
+import { getServiceBySlug } from "@/lib/api/services.api";
 
 interface ServiceLayoutProps {
   children: React.ReactNode;
@@ -13,33 +13,19 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const baseUrl = getBaseUrl();
 
   try {
-    // Fetch service data for metadata
-    const response = await fetch(
-      `${baseUrl}/api/services/${encodeURIComponent(slug)}`,
-      {
-        next: { revalidate: 3600 },
-      }
-    );
+    const serviceResponse = await getServiceBySlug(slug);
+    const baseUrl = getBaseUrl();
 
-    if (!response.ok) {
+    if (!serviceResponse || !serviceResponse.data) {
       return {
         title: "Service Not Found",
         description: "The requested service could not be found.",
       };
     }
 
-    const result = await response.json();
-    if (!result.success) {
-      return {
-        title: "Service Not Found",
-        description: "The requested service could not be found.",
-      };
-    }
-
-    const service: ServiceWithRelations = result.data;
+    const service = serviceResponse.data;
 
     const title = `${service.title} | SiteWave Services`;
     const description =

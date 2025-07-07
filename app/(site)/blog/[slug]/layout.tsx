@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { generateSeoMetadata } from "@/lib/config/seo";
-import { getBaseUrl } from "@/lib/utils/url.util";
+import { getBlogPostBySlug } from "@/lib/api/blog.service";
 
 interface BlogPostLayoutProps {
   children: React.ReactNode;
@@ -13,33 +13,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const baseUrl = getBaseUrl();
 
   try {
-    const response = await fetch(
-      `${baseUrl}/api/blog/posts/${encodeURIComponent(slug)}`
-    );
-    if (!response.ok) {
-      return generateSeoMetadata({
-        title: "Blog Post Not Found",
-        description: "The requested blog post could not be found.",
-      });
-    }
-
-    const result = await response.json();
-    if (!result.success) {
-      return generateSeoMetadata({
-        title: "Blog Post Not Found",
-        description: "The requested blog post could not be found.",
-      });
-    }
-
-    const post = result.data;
-
+    const post = await getBlogPostBySlug(slug);
     if (!post) {
-      return {
-        title: "Post Not Found",
-      };
+      return generateSeoMetadata({
+        title: "Blog Post Not Found",
+        description: "The requested blog post could not be found.",
+      });
     }
 
     const postDateString = post.publishedAt || post.createdAt;
@@ -49,7 +30,7 @@ export async function generateMetadata({
       description: post.metaDescription || post.excerpt,
       keywords: post.tags.map((tag: { name: string }) => tag.name),
       type: "article",
-      publishedTime: postDateString,
+      publishedTime: postDateString.toISOString(),
       authors: [post.author.name],
       url: `/blog/${post.slug}`,
     });
