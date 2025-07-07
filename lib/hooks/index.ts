@@ -2,6 +2,7 @@
 export { useBlogPosts } from "./use-blog-posts.hook";
 export { useBlogPost } from "./use-blog-post.hook";
 export { useBlogCategories } from "./use-blog-categories.hook";
+export { useBlogCategoriesWithCounts } from "./use-blog-categories-with-counts.hook";
 export { useBlogTags } from "./use-blog-tags.hook";
 
 // Analytics hooks

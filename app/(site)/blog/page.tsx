@@ -1,50 +1,80 @@
-import { Metadata } from "next";
-import { generateSeoMetadata } from "@/lib/config/seo";
+"use client";
+
+import { useSearchParams } from "next/navigation";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { BlogFilters } from "@/components/blog/BlogFilters";
-import { getBaseUrl } from "@/lib/utils/url.util";
+
 // Import new blog sections
 import { BlogHero } from "@/components/blog/sections/blog-hero";
 import { FeaturedArticles } from "@/components/blog/sections/featured-articles";
 import { CategoryHub } from "@/components/blog/sections/category-hub";
 import { ArticlesGrid } from "@/components/blog/sections/articles-grid";
 import { NewsletterCTA } from "@/components/blog/sections/newsletter-cta";
-// Import types for API responses
-import type { BlogPostWithRelations, BlogListResponse } from "@/lib/types";
 
-interface BlogPageProps {
-  searchParams: Promise<{
-    page?: string;
-    category?: string;
-    search?: string;
-  }>;
-}
+// Import hooks
+import { useBlogPosts, useBlogCategoriesWithCounts } from "@/lib/hooks";
 
-export const metadata: Metadata = generateSeoMetadata({
-  title: "Blog",
-  description:
-    "Discover insights, tutorials, and industry trends. Stay updated with our latest articles on technology, design, and digital innovation.",
-  keywords: [
-    "blog",
-    "articles",
-    "tutorials",
-    "technology",
-    "design",
-    "insights",
-  ],
-});
+export default function BlogPage() {
+  const searchParams = useSearchParams();
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const currentCategory = searchParams.get("category") || "all";
+  const currentSearch = searchParams.get("search") || "";
 
-export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const params = await searchParams;
-  const currentPage = parseInt(params.page || "1", 10);
-  const currentCategory = params.category || "all";
-  const currentSearch = params.search || "";
-  const baseUrl = getBaseUrl();
+  // Use hooks to fetch data
+  const {
+    data: blogData,
+    isLoading: blogLoading,
+    error: blogError,
+  } = useBlogPosts({
+    page: currentPage,
+    limit: 12,
+    categorySlug: currentCategory !== "all" ? currentCategory : undefined,
+    searchQuery: currentSearch || undefined,
+  });
 
-  // Initialize with fallback data
-  let blogPosts: BlogPostWithRelations[] = [];
-  let categories: Array<{ name: string; slug: string; count: number }> = [];
-  let blogData: BlogListResponse = {
+  const {
+    categories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useBlogCategoriesWithCounts();
+
+  // Loading state
+  if (blogLoading || categoriesLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="animate-pulse">
+              <div className="h-8 bg-muted rounded w-1/3 mx-auto mb-4"></div>
+              <div className="h-4 bg-muted rounded w-2/3 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (blogError || categoriesError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <h1 className="text-2xl font-bold text-destructive mb-4">
+              Error Loading Blog
+            </h1>
+            <p className="text-muted-foreground">
+              {blogError || categoriesError}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback for no data
+  const blogPosts = blogData?.posts || [];
+  const paginationData = blogData || {
     posts: [],
     totalPages: 0,
     totalPosts: 0,
@@ -52,57 +82,6 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
     hasNextPage: false,
     hasPreviousPage: false,
   };
-
-  try {
-    // Build API URL with search parameters
-    const apiParams = new URLSearchParams();
-    apiParams.set("limit", "12");
-    apiParams.set("page", currentPage.toString());
-
-    if (currentCategory && currentCategory !== "all") {
-      apiParams.set("categorySlug", currentCategory);
-    }
-
-    if (currentSearch) {
-      apiParams.set("searchQuery", currentSearch);
-    }
-
-    // Get blog posts and categories from the API
-    const [blogResponse, categoriesResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/blog/posts?${apiParams.toString()}`),
-      fetch(`${baseUrl}/api/blog/categories`),
-    ]);
-
-    if (!blogResponse.ok) {
-      throw new Error(`Failed to fetch blog posts: ${blogResponse.statusText}`);
-    }
-
-    if (!categoriesResponse.ok) {
-      throw new Error(
-        `Failed to fetch categories: ${categoriesResponse.statusText}`
-      );
-    }
-
-    const blogResponseData = await blogResponse.json();
-    const categoriesResponseData = await categoriesResponse.json();
-
-    if (!blogResponseData.success || !categoriesResponseData.success) {
-      throw new Error("Failed to fetch blog data");
-    }
-
-    blogData = blogResponseData.data;
-    blogPosts = blogData.posts;
-    categories = categoriesResponseData.data.map(
-      (c: { category: { name: string; slug: string }; postCount: number }) => ({
-        name: c.category.name,
-        slug: c.category.slug,
-        count: c.postCount,
-      })
-    );
-  } catch (error) {
-    console.error("Error fetching blog data:", error);
-    // Fallback data is already set above
-  }
 
   // Transform data for our new components
   const transformedPosts = blogPosts.map((post) => ({
@@ -164,9 +143,9 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         {/* Hero Section - Only on main page */}
         {showHero && (
           <BlogHero
-            totalPosts={blogData.totalPosts}
+            totalPosts={paginationData.totalPosts}
             totalAuthors={25}
-            totalReads={blogData.totalPosts * 347} // Estimated reads
+            totalReads={paginationData.totalPosts * 347} // Estimated reads
           />
         )}
 
@@ -185,7 +164,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                 currentCategory={currentCategory}
                 currentSearch={currentSearch}
                 currentPage={currentPage}
-                totalPages={blogData.totalPages}
+                totalPages={paginationData.totalPages}
               />
             </div>
           </div>
@@ -198,7 +177,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           description={getGridDescription(
             currentSearch,
             currentCategory,
-            blogData.totalPosts
+            paginationData.totalPosts
           )}
           showHeader={isFiltered}
           className={
