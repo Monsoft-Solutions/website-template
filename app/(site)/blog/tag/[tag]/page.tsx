@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { clientEnv } from "@/lib/env-client";
+import { getBaseUrl } from "@/lib/utils/url.util";
 import {
   Card,
   CardContent,
@@ -29,12 +29,6 @@ import {
 interface TagPageProps {
   params: Promise<{ tag: string }>;
   searchParams: Promise<{ page?: string }>;
-}
-
-function getBaseUrl() {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return clientEnv.NEXT_PUBLIC_SITE_URL;
 }
 
 export async function generateMetadata({

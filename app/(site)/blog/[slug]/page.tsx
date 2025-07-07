@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Markdown } from "@/components/ui/markdown";
 import { generateSeoMetadata } from "@/lib/config/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { getBaseUrl } from "@/lib/utils/url.util";
 // Import types for API responses
 import type { BlogPostWithRelations } from "@/lib/types";
 import { formatDate } from "@/lib/utils/date.util";
@@ -35,13 +36,6 @@ import {
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
-}
-
-// Helper function to get the base URL for API calls during SSR
-function getBaseUrl() {
-  if (typeof window !== "undefined") return ""; // Browser should use relative URL
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // Vercel
-  return "http://localhost:3000"; // Local development
 }
 
 export async function generateMetadata({
