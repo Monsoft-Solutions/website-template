@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -48,6 +49,11 @@ const navItems: NavItem[] = [
     title: "Analytics",
     href: "/admin/analytics",
     icon: BarChart3,
+  },
+  {
+    title: "AI Creator",
+    href: "/admin/ai/creator",
+    icon: Sparkles,
   },
   {
     title: "Blog Posts",
