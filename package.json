@@ -18,6 +18,9 @@
     "git:setup-hooks": "tsx scripts/setup-git-hooks.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.0-beta.4",
+    "@ai-sdk/openai": "^2.0.0-beta.5",
+    "@ai-sdk/react": "^2.0.0-beta.9",
     "@better-fetch/fetch": "^1.1.18",
     "@hookform/resolvers": "^5.1.1",
     "@monsoft/google-indexing": "^0.4.0",
@@ -34,6 +37,7 @@
     "@react-spring/web": "^10.0.1",
     "@types/react-image-gallery": "^1.2.4",
     "@vercel/blob": "^1.1.1",
+    "ai": "^5.0.0-beta.9",
     "better-auth": "^1.2.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

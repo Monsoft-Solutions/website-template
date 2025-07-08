@@ -131,6 +131,13 @@ lib/
 │   │   ├── model-manager.ts
 │   │   ├── message-handler.ts
 │   │   └── transport.ts
+│   ├── prompts/
+│   │   ├── blog-post.prompt.ts
+│   │   ├── service-description.prompt.ts
+│   │   ├── page-content.prompt.ts
+│   │   ├── email-template.prompt.ts
+│   │   ├── marketing-copy.prompt.ts
+│   │   └── index.ts
 │   ├── content/
 │   │   ├── creator.ts
 │   │   ├── refiner.ts
@@ -152,6 +159,194 @@ lib/
 │   │   └── site-tools.ts
 │   └── index.ts
 ```
+
+---
+
+## Prompts System Architecture
+
+The AI library implements a centralized prompts system that separates AI prompts from business logic. This approach provides better maintainability, reusability, and consistency across all AI operations.
+
+### Prompts Directory Structure
+
+All prompts are organized in the `lib/ai/prompts/` directory:
+
+```
+lib/ai/prompts/
+├── blog-post.prompt.ts
+├── service-description.prompt.ts
+├── page-content.prompt.ts
+├── email-template.prompt.ts
+├── marketing-copy.prompt.ts
+├── content-improvement.prompt.ts
+├── seo-optimization.prompt.ts
+├── readability-enhancement.prompt.ts
+└── index.ts
+```
+
+### Prompt Function Specifications
+
+Each prompt file follows a consistent pattern:
+
+#### 1. TypeScript Interface
+
+Each prompt file exports a TypeScript interface defining the parameters:
+
+```typescript
+export interface PromptNamePromptParams {
+  requiredParam: string;
+  optionalParam?: string;
+  arrayParam: string[];
+}
+```
+
+#### 2. Prompt Function
+
+Each prompt file exports a function that takes parameters and returns a formatted markdown string:
+
+```typescript
+export function promptNamePrompt(params: PromptNamePromptParams): string {
+  return `# Prompt Title
+
+## Parameters
+- **Required Parameter**: ${params.requiredParam}
+- **Optional Parameter**: ${params.optionalParam || "Default value"}
+
+## Instructions
+Detailed instructions in markdown format...
+
+## Requirements
+- Requirement 1
+- Requirement 2
+
+## Output Format
+Expected output format...`;
+}
+```
+
+#### 3. Raw Markdown Format
+
+All prompts use raw markdown format with:
+
+- **Headers** for section organization
+- **Bold text** for parameter labels and emphasis
+- **Bullet points** for lists and requirements
+- **Code blocks** for examples when needed
+- **Template literals** for parameter interpolation
+
+### Available Prompts
+
+#### Content Creation Prompts
+
+**Blog Post Prompt (`blog-post.prompt.ts`)**
+
+- **Interface**: `BlogPostPromptParams`
+- **Function**: `blogPostPrompt(params)`
+- **Purpose**: Generate comprehensive blog posts with SEO optimization
+
+**Service Description Prompt (`service-description.prompt.ts`)**
+
+- **Interface**: `ServiceDescriptionPromptParams`
+- **Function**: `serviceDescriptionPrompt(params)`
+- **Purpose**: Create compelling service descriptions that convert
+
+**Page Content Prompt (`page-content.prompt.ts`)**
+
+- **Interface**: `PageContentPromptParams`
+- **Function**: `pageContentPrompt(params)`
+- **Purpose**: Generate high-quality page content for various page types
+
+**Email Template Prompt (`email-template.prompt.ts`)**
+
+- **Interface**: `EmailTemplatePromptParams`
+- **Function**: `emailTemplatePrompt(params)`
+- **Purpose**: Create professional email templates
+
+**Marketing Copy Prompt (`marketing-copy.prompt.ts`)**
+
+- **Interface**: `MarketingCopyPromptParams`
+- **Function**: `marketingCopyPrompt(params)`
+- **Purpose**: Generate compelling marketing copy for various formats
+
+#### Content Refinement Prompts
+
+**Content Improvement Prompt (`content-improvement.prompt.ts`)**
+
+- **Interface**: `ContentImprovementPromptParams`
+- **Function**: `contentImprovementPrompt(params)`
+- **Purpose**: Improve existing content quality and effectiveness
+- **Parameters**:
+  - `originalContent`: Content to improve
+  - `improvements`: Array of improvement requirements
+  - `tone`: Target tone (optional)
+  - `targetAudience`: Target audience (optional)
+  - `maintainStructure`: Whether to preserve original structure
+
+**SEO Optimization Prompt (`seo-optimization.prompt.ts`)**
+
+- **Interface**: `SeoOptimizationPromptParams`
+- **Function**: `seoOptimizationPrompt(params)`
+- **Purpose**: Optimize content for search engines while maintaining readability
+- **Parameters**:
+  - `originalContent`: Content to optimize
+  - `targetKeywords`: Array of target keywords
+  - `primaryKeyword`: Primary keyword (optional)
+  - `metaDescriptionRequired`: Include meta description
+  - `headingOptimization`: Optimize headings
+  - `targetAudience`: Target audience (optional)
+  - `competitorAnalysis`: Competitor keywords (optional)
+
+**Readability Enhancement Prompt (`readability-enhancement.prompt.ts`)**
+
+- **Interface**: `ReadabilityEnhancementPromptParams`
+- **Function**: `readabilityEnhancementPrompt(params)`
+- **Purpose**: Improve content readability and accessibility
+- **Parameters**:
+  - `originalContent`: Content to enhance
+  - `targetReadingLevel`: Target reading level (elementary, middle-school, high-school, college, professional)
+  - `targetAudience`: Target audience (optional)
+  - `specificImprovements`: Specific improvements requested (optional)
+  - `maintainTechnicalTerms`: Preserve technical terms
+  - `includeReadabilityScore`: Include readability score
+
+### Naming Conventions
+
+Following the project's TypeScript naming conventions:
+
+- **Files**: `kebab-case` with `.prompt.ts` suffix
+- **Interfaces**: `PascalCase` with `PromptParams` suffix
+- **Functions**: `camelCase` with `Prompt` suffix
+- **Parameters**: `camelCase` for all parameter names
+
+### Usage Example
+
+```typescript
+import { blogPostPrompt } from "../prompts";
+
+const prompt = blogPostPrompt({
+  topic: "AI in Web Development",
+  keywords: ["artificial intelligence", "web development", "automation"],
+  tone: "professional",
+  length: "medium",
+  audience: "web developers",
+});
+
+// Use the prompt with AI SDK
+const result = await generateText({
+  model: modelManager.getModel(),
+  prompt,
+  temperature: 0.7,
+});
+```
+
+### Benefits
+
+1. **Maintainability**: Centralized prompt management
+2. **Consistency**: Standardized prompt format and structure
+3. **Reusability**: Prompts can be used across different components
+4. **Type Safety**: TypeScript interfaces ensure correct parameter usage
+5. **Documentation**: Self-documenting prompts with clear requirements
+6. **Testability**: Prompts can be unit tested independently
+7. **Collaboration**: Non-technical team members can easily modify prompts
 
 ---
 
@@ -366,18 +561,33 @@ export class ContentCreator {
 }
 ```
 
-#### Step 2.2: Content Refiner
+#### Step 2.2: Content Refiner ✅ **COMPLETED**
 
 - **Duration**: 3 days
 - **Deliverables**:
-  - Content improvement tools
-  - SEO optimization
-  - Readability enhancement
+  - ✅ Content improvement tools
+  - ✅ SEO optimization
+  - ✅ Readability enhancement
+
+**Implementation Details:**
+
+Created three new prompt files:
+
+- `content-improvement.prompt.ts` - Comprehensive content quality improvements
+- `seo-optimization.prompt.ts` - SEO-focused content optimization
+- `readability-enhancement.prompt.ts` - Readability and accessibility improvements
+
+**ContentRefiner Class Methods:**
 
 ```typescript
 // lib/ai/content/refiner.ts
 import { generateText } from "ai";
 import { ModelManager } from "../core/model-manager";
+import {
+  contentImprovementPrompt,
+  seoOptimizationPrompt,
+  readabilityEnhancementPrompt,
+} from "../prompts";
 
 export class ContentRefiner {
   private modelManager: ModelManager;
@@ -386,42 +596,35 @@ export class ContentRefiner {
     this.modelManager = new ModelManager();
   }
 
-  async improveContent(content: string, improvements: string[]) {
-    const result = await generateText({
-      model: this.modelManager.getModel(),
-      prompt: `Improve the following content based on these requirements:
-      ${improvements.map((imp) => `- ${imp}`).join("\n")}
-      
-      Original content:
-      ${content}
-      
-      Provide the improved version while maintaining the original structure and key points.`,
-    });
+  // Individual improvement methods
+  async improveContent(originalContent: string, improvements: string[], options?: {...}): Promise<string>
+  async optimizeForSEO(originalContent: string, targetKeywords: string[], options?: {...}): Promise<string>
+  async enhanceReadability(originalContent: string, options?: {...}): Promise<string>
 
-    return result.text;
-  }
+  // Comprehensive refinement
+  async refineContent(originalContent: string, refinementOptions: {...}): Promise<{
+    finalContent: string;
+    refinementSteps: string[];
+  }>
 
-  async optimizeForSEO(content: string, targetKeywords: string[]) {
-    const result = await generateText({
-      model: this.modelManager.getModel(),
-      prompt: `Optimize this content for SEO with target keywords: ${targetKeywords.join(
-        ", "
-      )}
-      
-      Original content:
-      ${content}
-      
-      Requirements:
-      - Natural keyword integration
-      - Improved headings structure
-      - Better meta description
-      - Enhanced readability`,
-    });
-
-    return result.text;
-  }
+  // Content analysis
+  async analyzeContent(content: string, options?: {...}): Promise<{
+    suggestions: string[];
+    estimatedReadingLevel: string;
+    improvementPriority: ("readability" | "seo" | "engagement" | "structure")[];
+  }>
 }
 ```
+
+**Key Features:**
+
+- **Modular Approach**: Separate methods for different types of improvements
+- **Comprehensive Refinement**: `refineContent()` combines multiple improvement types
+- **Content Analysis**: `analyzeContent()` provides improvement suggestions
+- **Flexible Options**: Each method supports various customization options
+- **Reading Level Control**: Target specific reading levels (elementary to professional)
+- **SEO Optimization**: Natural keyword integration and meta description generation
+- **Prompt-Based**: Uses the new centralized prompts system
 
 ### Phase 3: Chat System & Virtual Assistant (Weeks 5-6)
 
