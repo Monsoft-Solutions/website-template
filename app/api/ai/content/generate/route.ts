@@ -7,14 +7,6 @@ import type {
   ContentGenerationResponse,
 } from "@/lib/types/ai/content-generation.type";
 
-interface ExtendedContentGenerationRequest extends ContentGenerationRequest {
-  pageType?: string;
-  copyType?: "headline" | "social-post" | "ad-copy" | "landing-page";
-  includeSubject?: boolean;
-  includeCallToAction?: boolean;
-  keyBenefits?: string[];
-}
-
 /**
  * POST /api/ai/content/generate - Generate content using AI
  */
@@ -23,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Require admin authentication for AI content generation
     await requireAdmin();
 
-    const body: ExtendedContentGenerationRequest = await request.json();
+    const body: ContentGenerationRequest = await request.json();
 
     // Validate required fields
     if (!body.type || !body.topic) {

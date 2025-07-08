@@ -64,6 +64,21 @@ export type ContentGenerationRequest = {
   audience?: string;
   customInstructions?: string;
   service?: ServiceDescriptionInput;
+  // Service description specific
+  includeCallToAction?: boolean;
+  // Page content specific
+  pageType?:
+    | "homepage"
+    | "about"
+    | "contact"
+    | "landing"
+    | "product"
+    | "general";
+  // Email template specific
+  includeSubject?: boolean;
+  // Marketing copy specific
+  copyType?: "headline" | "social-post" | "ad-copy" | "landing-page";
+  keyBenefits?: string[];
 };
 
 /**
