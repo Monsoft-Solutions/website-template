@@ -4,10 +4,10 @@ import { Copy, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import type { BlogPost } from "@/lib/types/ai/content-generation.type";
+import type { BlogPost, Service } from "@/lib/types/ai/content-generation.type";
 
 interface GeneratedContentDisplayProps {
-  content: string | BlogPost | null;
+  content: BlogPost | Service | string | null;
   metadata?: {
     wordCount: number;
     generationTime: number;
@@ -18,6 +18,25 @@ interface GeneratedContentDisplayProps {
   contentType: string;
 }
 
+// Type guards to determine content type
+const isBlogPost = (
+  content: BlogPost | Service | string
+): content is BlogPost => {
+  return (
+    typeof content === "object" && "content" in content && "excerpt" in content
+  );
+};
+
+const isService = (
+  content: BlogPost | Service | string
+): content is Service => {
+  return (
+    typeof content === "object" &&
+    "fullDescription" in content &&
+    "shortDescription" in content
+  );
+};
+
 export function GeneratedContentDisplay({
   content,
   metadata,
@@ -27,10 +46,14 @@ export function GeneratedContentDisplay({
   const handleCopy = async () => {
     if (!content) return;
 
-    const textToCopy =
-      typeof content === "string"
-        ? content
-        : `# ${content.title}\n\n${content.content}`;
+    let textToCopy = "";
+    if (typeof content === "string") {
+      textToCopy = content;
+    } else if (isBlogPost(content)) {
+      textToCopy = `# ${content.title}\n\n${content.content}`;
+    } else if (isService(content)) {
+      textToCopy = `# ${content.title}\n\n${content.fullDescription}`;
+    }
 
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -43,10 +66,14 @@ export function GeneratedContentDisplay({
   const handleDownload = () => {
     if (!content) return;
 
-    const downloadContent =
-      typeof content === "string"
-        ? content
-        : `# ${content.title}\n\n${content.content}`;
+    let downloadContent = "";
+    if (typeof content === "string") {
+      downloadContent = content;
+    } else if (isBlogPost(content)) {
+      downloadContent = `# ${content.title}\n\n${content.content}`;
+    } else if (isService(content)) {
+      downloadContent = `# ${content.title}\n\n${content.fullDescription}`;
+    }
 
     const blob = new Blob([downloadContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
@@ -129,7 +156,7 @@ export function GeneratedContentDisplay({
               {content}
             </pre>
           </div>
-        ) : (
+        ) : isBlogPost(content) ? (
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold mb-2">Title</h3>
@@ -158,7 +185,7 @@ export function GeneratedContentDisplay({
               <div>
                 <h3 className="font-semibold mb-2">Tags</h3>
                 <div className="flex flex-wrap gap-2">
-                  {content.tags.map((tag, index) => (
+                  {content.tags.map((tag: string, index: number) => (
                     <Badge key={index} variant="outline">
                       {tag}
                     </Badge>
@@ -176,7 +203,67 @@ export function GeneratedContentDisplay({
               </div>
             )}
           </div>
-        )}
+        ) : isService(content) ? (
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Title</h3>
+              <div className="p-3 bg-muted/50 rounded-lg border">
+                {content.title}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">Short Description</h3>
+              <div className="p-3 bg-muted/50 rounded-lg border">
+                {content.shortDescription}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">Full Description</h3>
+              <div className="prose dark:prose-invert max-w-none">
+                <div className="p-4 bg-muted/50 rounded-lg border text-sm whitespace-pre-wrap">
+                  {content.fullDescription}
+                </div>
+              </div>
+            </div>
+
+            {content.features && content.features.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Features</h3>
+                <div className="flex flex-wrap gap-2">
+                  {content.features.map((feature: string, index: number) => (
+                    <Badge key={index} variant="outline">
+                      {feature}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {content.benefits && content.benefits.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Benefits</h3>
+                <div className="flex flex-wrap gap-2">
+                  {content.benefits.map((benefit: string, index: number) => (
+                    <Badge key={index} variant="secondary">
+                      {benefit}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {content.metaDescription && (
+              <div>
+                <h3 className="font-semibold mb-2">Meta Description</h3>
+                <div className="p-3 bg-muted/50 rounded-lg border text-sm">
+                  {content.metaDescription}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

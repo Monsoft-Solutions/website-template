@@ -3,6 +3,7 @@ import { ModelManager } from "../core/model-manager";
 import {
   BlogPostSchema,
   BlogPost,
+  Service,
   ContentGenerationRequest,
   ContentGenerationResponse,
   ServiceDescriptionInput,
@@ -212,19 +213,20 @@ export class ContentCreator {
   async generateContent(
     request: ContentGenerationRequest
   ): Promise<ContentGenerationResponse> {
-    const startTime = Date.now();
-    let content: string | BlogPost;
-    const tokensUsed = 0;
+    let content: string;
+    let structuredData: BlogPost | Service | undefined;
 
     try {
       switch (request.type) {
         case "blog-post":
-          content = await this.generateBlogPost(
+          const blogPost = await this.generateBlogPost(
             request.topic,
             request.keywords,
             request.tone,
             { length: request.length, audience: request.audience }
           );
+          content = `# ${blogPost.title}\n\n${blogPost.excerpt}\n\n${blogPost.content}`;
+          structuredData = blogPost;
           break;
 
         case "service-description":
@@ -274,18 +276,16 @@ export class ContentCreator {
           throw new Error(`Unsupported content type: ${request.type}`);
       }
 
-      const generationTime = Date.now() - startTime;
-      const wordCount =
-        typeof content === "string"
-          ? content.split(/\s+/).length
-          : content.content.split(/\s+/).length;
+      const wordCount = content.split(/\s+/).length;
 
       return {
         content,
-        wordCount,
-        generationTime,
-        model: this.modelManager.getModelConfig().provider,
-        tokensUsed, // TODO: Implement actual token counting
+        metadata: {
+          contentType: request.type,
+          wordCount,
+          estimatedReadingTime: Math.ceil(wordCount / 200),
+          structuredData,
+        },
       };
     } catch (error) {
       console.error("Content generation failed:", error);

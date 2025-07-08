@@ -6,6 +6,9 @@
 // Blog Post Prompt
 export { blogPostPrompt, type BlogPostPromptParams } from "./blog-post.prompt";
 
+// Service Prompt (for structured generation)
+export { servicePrompt, type ServicePromptParams } from "./service.prompt";
+
 // Service Description Prompt
 export {
   serviceDescriptionPrompt,

@@ -51,9 +51,10 @@ const navItems: NavItem[] = [
     icon: BarChart3,
   },
   {
-    title: "AI Creator",
-    href: "/admin/ai/creator",
+    title: "AI Content Generator",
+    href: "/admin/ai/content-generator",
     icon: Sparkles,
+    badge: "Enhanced",
   },
   {
     title: "Blog Posts",

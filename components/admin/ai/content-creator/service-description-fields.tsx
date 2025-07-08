@@ -100,17 +100,87 @@ export function ServiceDescriptionFields({
         />
       </FormFieldWithError>
 
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="include-cta"
-          checked={data.includeCallToAction}
-          onCheckedChange={(checked) =>
-            onChange({ includeCallToAction: checked as boolean })
-          }
+      <FormFieldWithError
+        label="Featured Image"
+        error={errors.featuredImage?.message}
+        description="URL for the service featured image"
+      >
+        <Input
+          type="url"
+          placeholder="https://example.com/image.jpg"
+          value={data.featuredImage || ""}
+          onChange={(e) => onChange({ featuredImage: e.target.value })}
+          className={errors.featuredImage ? "border-destructive" : ""}
         />
-        <Label htmlFor="include-cta" className="text-sm font-medium">
-          Include call-to-action
-        </Label>
+      </FormFieldWithError>
+
+      <div className="space-y-3">
+        <Label className="text-sm font-medium">Generation Options</Label>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="include-cta"
+            checked={data.includeCallToAction}
+            onCheckedChange={(checked) =>
+              onChange({ includeCallToAction: checked as boolean })
+            }
+          />
+          <Label htmlFor="include-cta" className="text-sm">
+            Include call-to-action
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="include-pricing"
+            checked={data.includePricingTiers}
+            onCheckedChange={(checked) =>
+              onChange({ includePricingTiers: checked as boolean })
+            }
+          />
+          <Label htmlFor="include-pricing" className="text-sm">
+            Include pricing tiers
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="include-process"
+            checked={data.includeProcessSteps}
+            onCheckedChange={(checked) =>
+              onChange({ includeProcessSteps: checked as boolean })
+            }
+          />
+          <Label htmlFor="include-process" className="text-sm">
+            Include process steps
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="include-faq"
+            checked={data.includeFAQ}
+            onCheckedChange={(checked) =>
+              onChange({ includeFAQ: checked as boolean })
+            }
+          />
+          <Label htmlFor="include-faq" className="text-sm">
+            Include FAQ section
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="include-testimonials"
+            checked={data.includeTestimonials}
+            onCheckedChange={(checked) =>
+              onChange({ includeTestimonials: checked as boolean })
+            }
+          />
+          <Label htmlFor="include-testimonials" className="text-sm">
+            Include testimonials
+          </Label>
+        </div>
       </div>
     </div>
   );

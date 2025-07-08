@@ -63,11 +63,11 @@ export const serviceDescriptionFormSchema = baseContentSchema.extend({
   serviceFeatures: z
     .array(z.string().min(1, "Feature cannot be empty"))
     .min(1, validationMessages.minItems("Features", 1))
-    .max(10, "Maximum 10 features allowed"),
+    .max(15, "Maximum 15 features allowed"),
   serviceBenefits: z
     .array(z.string().min(1, "Benefit cannot be empty"))
     .min(1, validationMessages.minItems("Benefits", 1))
-    .max(10, "Maximum 10 benefits allowed"),
+    .max(15, "Maximum 15 benefits allowed"),
   serviceTargetAudience: z
     .string()
     .min(1, validationMessages.required("Target audience"))
@@ -81,6 +81,14 @@ export const serviceDescriptionFormSchema = baseContentSchema.extend({
     .max(300, validationMessages.max("Competitive advantage", 300))
     .optional(),
   includeCallToAction: z.boolean().default(false),
+  includePricingTiers: z.boolean().default(true),
+  includeProcessSteps: z.boolean().default(true),
+  includeFAQ: z.boolean().default(true),
+  includeTestimonials: z.boolean().default(false),
+  featuredImage: z
+    .string()
+    .url("Featured image must be a valid URL")
+    .optional(),
 });
 
 // Page content schema

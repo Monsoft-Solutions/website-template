@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { experimental_useObject as useObject } from "@ai-sdk/react";
+import { useCompletion } from "@ai-sdk/react";
 import {
   Card,
   CardContent,
@@ -10,27 +12,88 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAIContentGeneration } from "@/hooks/useAIContentGeneration";
 import { ContentConfigurationPanel } from "@/components/admin/ai/content-creator/content-configuration-panel";
-import { GeneratedContentDisplay } from "@/components/admin/ai/content-creator/generated-content-display";
+import { StreamingContentDisplay } from "@/components/admin/ai/content-creator/streaming-content-display";
+import { BlogPostSchema } from "@/lib/types/ai/content-generation.type";
 import type { ContentGenerationRequest } from "@/lib/types/ai/content-generation.type";
 
-export default function AICreatorPage() {
-  const {
-    generateContent,
-    isGenerating,
-    generatedContent,
-    error,
-    progress,
-    metadata,
-  } = useAIContentGeneration();
+interface PartialBlogObject {
+  title?: string;
+  content?: string;
+  excerpt?: string;
+  tags?: string[];
+  metaDescription?: string;
+  slug?: string;
+  category?: string;
+}
 
+// Type-safe conversion function for AI SDK partial object to PartialBlogObject
+const convertToPartialBlogObject = (obj: unknown): PartialBlogObject | null => {
+  if (!obj) return null;
+
+  const blogObj = obj as PartialBlogObject;
+  return {
+    title: blogObj.title || undefined,
+    content: blogObj.content || undefined,
+    excerpt: blogObj.excerpt || undefined,
+    tags: blogObj.tags || undefined,
+    metaDescription: blogObj.metaDescription || undefined,
+    slug: blogObj.slug || undefined,
+    category: blogObj.category || undefined,
+  };
+};
+
+export default function AICreatorPage() {
   const [currentContentType, setCurrentContentType] = useState("blog-post");
+
+  // Use AI SDK hooks for streaming
+  const {
+    object: blogObject,
+    submit: submitBlogPost,
+    isLoading: isBlogLoading,
+    error: blogError,
+  } = useObject({
+    api: "/api/ai/content/stream-object",
+    schema: BlogPostSchema,
+  });
+
+  const {
+    completion,
+    complete: submitCompletion,
+    isLoading: isCompletionLoading,
+    error: completionError,
+  } = useCompletion({
+    api: "/api/ai/content/stream-text",
+    fetch: (url, options) => {
+      console.log(url, options);
+      return fetch(url, options);
+    },
+  });
 
   const handleGenerate = async (request: ContentGenerationRequest) => {
     setCurrentContentType(request.type);
-    await generateContent(request);
+
+    if (request.type === "blog-post") {
+      // Use object streaming for blog posts
+      await submitBlogPost(request);
+    } else {
+      // Use completion streaming for other content types
+      await submitCompletion("", {
+        body: request,
+      });
+    }
   };
+
+  // Determine which content and metadata to show
+  const isGenerating = isBlogLoading || isCompletionLoading;
+  const error = blogError || completionError;
+  const generatedContent =
+    currentContentType === "blog-post"
+      ? blogObject || null
+      : completion || null;
+
+  // Calculate progress based on content availability
+  const progress = isGenerating ? (generatedContent ? 80 : 40) : 100;
 
   return (
     <div className="h-full p-6">
@@ -49,7 +112,8 @@ export default function AICreatorPage() {
           </div>
           <p className="text-muted-foreground">
             Generate high-quality content using advanced AI models. Create blog
-            posts, service descriptions, marketing copy, and more.
+            posts, service descriptions, marketing copy, and more with real-time
+            streaming.
           </p>
         </motion.div>
 
@@ -87,15 +151,22 @@ export default function AICreatorPage() {
               <CardHeader>
                 <CardTitle>Generated Content</CardTitle>
                 <CardDescription>
-                  Your AI-generated content will appear here
+                  Your AI-generated content appears here in real-time
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
-                <GeneratedContentDisplay
-                  content={generatedContent}
-                  metadata={metadata}
-                  error={error}
+                <StreamingContentDisplay
+                  content={
+                    currentContentType === "blog-post" ? null : completion
+                  }
+                  blogObject={
+                    currentContentType === "blog-post"
+                      ? convertToPartialBlogObject(blogObject)
+                      : null
+                  }
                   contentType={currentContentType}
+                  isGenerating={isGenerating}
+                  error={error?.message || null}
                 />
               </CardContent>
             </Card>
