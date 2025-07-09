@@ -144,12 +144,19 @@ export default function EditBlogPostPage() {
     <div className="h-full overflow-auto">
       <PageHeader
         title={`Edit: ${blogPost.title}`}
-        description="Modify and update your blog post"
+        description={
+          blogPost.status === "draft"
+            ? "This blog post is currently in draft status. Make your changes and publish when ready."
+            : "Modify and update your blog post"
+        }
         breadcrumbs={[
           { label: "Blog Posts", href: "/admin/blog" },
           { label: blogPost.title, href: `/admin/blog/${postId}` },
           { label: "Edit", active: true },
         ]}
+        badge={
+          blogPost.status.charAt(0).toUpperCase() + blogPost.status.slice(1)
+        }
         actions={
           <Button
             variant="outline"
@@ -163,6 +170,20 @@ export default function EditBlogPostPage() {
       />
 
       <div className="p-6">
+        {/* Show welcome message for newly created draft blog posts */}
+        {blogPost.status === "draft" && (
+          <div className="mb-6">
+            <Alert className="border-blue-200 bg-blue-50">
+              <AlertDescription className="text-blue-800">
+                <strong>Welcome to your new AI-generated blog post!</strong>{" "}
+                This post has been created as a draft. Review the content,
+                upload a custom featured image, and make any adjustments before
+                publishing.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <BlogPostForm
           mode="edit"
           initialData={blogPost}
