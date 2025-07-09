@@ -12,7 +12,10 @@ import path from "path";
 // Configuration for page discovery
 const pageConfig = {
   // Directories to exclude (in addition to dynamic routes and api)
-  excludeDirs: ["_app", "_document", "_error"],
+  excludeDirs: ["_app", "_document", "_error", "auth", "api"],
+
+  // Route groups to exclude entirely (admin pages)
+  excludeRouteGroups: ["(admin)"],
 
   // Priority rules - first matching rule wins
   priorityRules: [
@@ -31,6 +34,11 @@ const pageConfig = {
   ],
 };
 
+// Function to check if a directory is a route group
+function isRouteGroup(dirName: string): boolean {
+  return dirName.startsWith("(") && dirName.endsWith(")");
+}
+
 // Function to recursively find all page.tsx files
 function findStaticPages(dir: string, relativePath: string = ""): string[] {
   const pages: string[] = [];
@@ -43,19 +51,32 @@ function findStaticPages(dir: string, relativePath: string = ""): string[] {
       const stat = fs.statSync(fullPath);
 
       if (stat.isDirectory()) {
-        // Skip directories that start with _ or are dynamic routes (contain brackets)
+        // Skip directories that start with _ or are dynamic routes (contain brackets but not route groups)
         if (
           item.startsWith("_") ||
-          item.includes("[") ||
-          item === "api" ||
+          (item.includes("[") && !isRouteGroup(item)) ||
           pageConfig.excludeDirs.includes(item)
         ) {
           continue;
         }
 
-        // Recursively search subdirectories
-        const subPath = relativePath ? `${relativePath}/${item}` : item;
-        pages.push(...findStaticPages(fullPath, subPath));
+        // Skip excluded route groups entirely (like admin)
+        if (
+          isRouteGroup(item) &&
+          pageConfig.excludeRouteGroups.includes(item)
+        ) {
+          continue;
+        }
+
+        // Handle route groups - process their contents but don't include the group name in the path
+        if (isRouteGroup(item)) {
+          // For route groups, use the current relativePath without adding the group name
+          pages.push(...findStaticPages(fullPath, relativePath));
+        } else {
+          // For regular directories, add them to the path
+          const subPath = relativePath ? `${relativePath}/${item}` : item;
+          pages.push(...findStaticPages(fullPath, subPath));
+        }
       } else if (item === "page.tsx" || item === "page.js") {
         // Found a page file
         pages.push(relativePath);
