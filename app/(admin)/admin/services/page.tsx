@@ -56,6 +56,7 @@ export default function AdminServicesListPage() {
   const [limit, setLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -64,15 +65,26 @@ export default function AdminServicesListPage() {
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
 
   // Fetch services using the custom hook
-  const { services, totalServices, currentPage, isLoading, error, refetch } =
-    useAdminServices({
-      page,
-      limit,
-      searchQuery: searchQuery || undefined,
-      category: categoryFilter !== "all" ? categoryFilter : undefined,
-      sortBy: sortBy as "title" | "createdAt" | "category" | "timeline",
-      sortOrder,
-    });
+  const {
+    services: allServices,
+    totalServices,
+    currentPage,
+    isLoading,
+    error,
+    refetch,
+  } = useAdminServices({
+    page,
+    limit,
+    searchQuery: searchQuery || undefined,
+    category: categoryFilter !== "all" ? categoryFilter : undefined,
+    sortBy: sortBy as "title" | "createdAt" | "category" | "timeline",
+    sortOrder,
+  });
+
+  // Filter services by status on the client side
+  const services = allServices.filter(
+    (service) => statusFilter === "all" || service.status === statusFilter
+  );
 
   // Handle bulk actions
   const handleBulkAction = async (action: "archive" | "delete") => {
@@ -138,6 +150,7 @@ export default function AdminServicesListPage() {
   const clearFilters = () => {
     setSearchQuery("");
     setCategoryFilter("all");
+    setStatusFilter("all");
     setSortBy("createdAt");
     setSortOrder("desc");
     setPage(1);
@@ -158,6 +171,27 @@ export default function AdminServicesListPage() {
         className={categoryStyles[category] || "bg-gray-100 text-gray-800"}
       >
         {category}
+      </Badge>
+    );
+  };
+
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    const statusStyles: Record<string, string> = {
+      draft: "bg-yellow-100 text-yellow-800",
+      published: "bg-green-100 text-green-800",
+      archived: "bg-gray-100 text-gray-800",
+    };
+
+    const statusLabels: Record<string, string> = {
+      draft: "Draft",
+      published: "Published",
+      archived: "Archived",
+    };
+
+    return (
+      <Badge className={statusStyles[status] || "bg-gray-100 text-gray-800"}>
+        {statusLabels[status] || status}
       </Badge>
     );
   };
@@ -193,7 +227,12 @@ export default function AdminServicesListPage() {
       sortable: true,
       render: (title: unknown, service: ServiceWithRelations) => (
         <div className="space-y-1">
-          <div className="font-medium line-clamp-1">{String(title)}</div>
+          <button
+            className="font-medium line-clamp-1 text-left hover:text-primary transition-colors cursor-pointer"
+            onClick={() => router.push(`/admin/services/${service.id}/edit`)}
+          >
+            {String(title)}
+          </button>
           <div className="text-sm text-muted-foreground line-clamp-2">
             {service.shortDescription}
           </div>
@@ -210,6 +249,12 @@ export default function AdminServicesListPage() {
           {getCategoryBadge(String(category))}
         </div>
       ),
+    },
+    {
+      key: "status" as keyof ServiceWithRelations,
+      label: "Status",
+      sortable: true,
+      render: (status: unknown) => getStatusBadge(String(status)),
     },
     {
       key: "timeline" as keyof ServiceWithRelations,
@@ -335,7 +380,7 @@ export default function AdminServicesListPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
             <div className="lg:col-span-2">
               <Label htmlFor="search">Search</Label>
@@ -365,6 +410,22 @@ export default function AdminServicesListPage() {
                   <SelectItem value="Consulting">Consulting</SelectItem>
                   <SelectItem value="Marketing">Marketing</SelectItem>
                   <SelectItem value="Support">Support</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>

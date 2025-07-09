@@ -25,6 +25,7 @@ export const transformServiceWithRelationsToService = (
     deliverables: serviceWithRelations.deliverables,
     timeline: serviceWithRelations.timeline,
     category: serviceWithRelations.category,
+    status: serviceWithRelations.status,
     featuredImage: serviceWithRelations.featuredImage,
     gallery: serviceWithRelations.gallery,
     testimonials: serviceWithRelations.testimonials,

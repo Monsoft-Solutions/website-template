@@ -67,6 +67,7 @@ interface ServiceCreateData {
   fullDescription: string;
   timeline: string;
   category: "Development" | "Design" | "Consulting" | "Marketing" | "Support";
+  status: "draft" | "published" | "archived";
   featuredImage: string;
   features?: string[];
   benefits?: string[];
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
         fullDescription: data.fullDescription,
         timeline: data.timeline,
         category: data.category,
+        status: data.status,
         featuredImage: data.featuredImage,
       })
       .returning();

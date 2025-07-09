@@ -145,12 +145,17 @@ export default function EditServicePage() {
     <div className="h-full overflow-auto">
       <PageHeader
         title={`Edit: ${service.title}`}
-        description="Modify and update your service information"
+        description={
+          service.status === "draft"
+            ? "This service is currently in draft status. Make your changes and publish when ready."
+            : "Modify and update your service information"
+        }
         breadcrumbs={[
           { label: "Services", href: "/admin/services" },
           { label: service.title, href: `/admin/services/${serviceId}` },
           { label: "Edit", active: true },
         ]}
+        badge={service.status.charAt(0).toUpperCase() + service.status.slice(1)}
         actions={
           <Button
             variant="outline"
@@ -164,6 +169,20 @@ export default function EditServicePage() {
       />
 
       <div className="p-6">
+        {/* Show welcome message for newly created draft services */}
+        {service.status === "draft" && (
+          <div className="mb-6">
+            <Alert className="border-blue-200 bg-blue-50">
+              <AlertDescription className="text-blue-800">
+                <strong>Welcome to your new AI-generated service!</strong> This
+                service has been created as a draft. Review the content, upload
+                a custom featured image, and make any adjustments before
+                publishing.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <ServiceForm
           mode="edit"
           initialData={service}

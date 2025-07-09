@@ -6,6 +6,13 @@ import { AIProvider, AIModelConfig } from "@/lib/types/ai/ai-config.type";
  * Model configuration mapping
  */
 export const MODEL_CONFIG: Record<string, AIModelConfig> = {
+  "claude-sonnet-4-20250514": {
+    provider: "anthropic",
+    maxTokens: 4000,
+    temperature: 0.7,
+    capabilities: ["text", "analysis", "reasoning", "code"],
+    costPer1kTokens: 0.003,
+  },
   "claude-3-5-sonnet-20241022": {
     provider: "anthropic",
     maxTokens: 4000,

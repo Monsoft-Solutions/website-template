@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
           timeline: serviceData.timeline,
           category: serviceData.category,
           featuredImage: serviceData.featuredImage,
+          status: "draft",
         })
         .returning({
           id: services.id,

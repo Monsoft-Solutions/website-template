@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -19,7 +20,6 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ContentConfigurationPanel } from "./content-creator/content-configuration-panel";
 import { AIBlogPostSavePanel } from "./content-creator/ai-blog-post-save-panel";
-import { AIServiceSavePanel } from "./content-creator/ai-service-save-panel";
 import {
   BlogPostSchema,
   ServiceSchema,
@@ -40,6 +40,7 @@ interface SavedContentInfo {
 }
 
 export function UnifiedAIContentGenerator() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("generate");
   const [currentContentType, setCurrentContentType] =
     useState<ContentType>("blog-post");
@@ -76,18 +77,102 @@ export function UnifiedAIContentGenerator() {
   const currentObject =
     currentContentType === "blog-post" ? blogObject : serviceObject;
 
+  // Auto-save service and redirect to edit page
+  const handleAutoSaveService = useCallback(
+    async (service: Service) => {
+      try {
+        toast.loading("Saving service as draft...", { id: "auto-save" });
+
+        const saveRequest = {
+          // Core service information
+          title: service.title,
+          shortDescription: service.shortDescription,
+          fullDescription: service.fullDescription,
+          timeline: service.timeline,
+          category: service.category,
+          featuredImage:
+            "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=400&fit=crop&crop=center", // Default service image
+          slug: service.slug,
+
+          // Structured arrays for related data
+          features: service.features || [],
+          benefits: service.benefits || [],
+          deliverables: service.deliverables || [],
+          technologies: service.technologies || [],
+
+          // Complex structured data
+          process: service.process || [],
+          pricing: service.pricing || [],
+          faq: service.faq || [],
+          testimonials: service.testimonials || [],
+
+          // Marketing and positioning
+          targetAudience: service.targetAudience,
+          competitiveAdvantage: service.competitiveAdvantage,
+          callToAction: service.callToAction,
+
+          // SEO and content
+          metaDescription: service.metaDescription,
+          metaTitle: service.metaTitle,
+
+          // Additional content
+          galleryImages: service.galleryImages || [],
+          relatedServices: service.relatedServices || [],
+        };
+
+        const response = await fetch("/api/ai/content/save-service", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(saveRequest),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Failed to save service");
+        }
+
+        if (result.data) {
+          toast.success("Service saved as draft! Opening edit page...", {
+            id: "auto-save",
+          });
+          // Navigate to edit page
+          router.push(`/admin/services/${result.data.id}/edit`);
+        }
+      } catch (error) {
+        console.error("Auto-save error:", error);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save service",
+          { id: "auto-save" }
+        );
+        // Fall back to showing the review tab if auto-save fails
+        setGeneratedContent(service);
+        setActiveTab("review");
+      }
+    },
+    [router]
+  );
+
   // Handle completion of generation
   useEffect(() => {
     if (!isGenerating && currentObject) {
-      setGeneratedContent(currentObject as BlogPost | Service);
-      setActiveTab("review");
-      toast.success(
-        `${
-          currentContentType === "blog-post" ? "Blog post" : "Service"
-        } generated successfully!`
-      );
+      if (currentContentType === "service-description") {
+        // For services, automatically save and redirect
+        handleAutoSaveService(currentObject as Service);
+      } else {
+        // For other content types, show review tab
+        setGeneratedContent(currentObject as BlogPost | Service);
+        setActiveTab("review");
+        toast.success(
+          `${
+            currentContentType === "blog-post" ? "Blog post" : "Service"
+          } generated successfully!`
+        );
+      }
     }
-  }, [isGenerating, currentObject, currentContentType]);
+  }, [isGenerating, currentObject, currentContentType, handleAutoSaveService]);
 
   const handleGenerate = async (request: ContentGenerationRequest) => {
     setCurrentContentType(request.type);
@@ -110,8 +195,15 @@ export function UnifiedAIContentGenerator() {
   };
 
   const handleContentSaved = (id: string, slug: string) => {
-    setSavedContentInfo({ id, slug, type: currentContentType });
-    setActiveTab("saved");
+    if (currentContentType === "service-description") {
+      // For services, redirect to edit page immediately
+      toast.success("Service saved as draft! Redirecting to edit page...");
+      router.push(`/admin/services/${id}/edit`);
+    } else {
+      // For other content types (like blog posts), show the saved tab
+      setSavedContentInfo({ id, slug, type: currentContentType });
+      setActiveTab("saved");
+    }
   };
 
   const handleStartNew = () => {
@@ -142,7 +234,8 @@ export function UnifiedAIContentGenerator() {
       label: "Review & Save",
       icon: FileText,
       description: "Review generated content and save to database",
-      disabled: !generatedContent,
+      disabled:
+        !generatedContent || currentContentType === "service-description",
     },
     {
       id: "saved" as const,
@@ -380,8 +473,8 @@ export function UnifiedAIContentGenerator() {
           </div>
           <p className="text-muted-foreground">
             Generate high-quality content using AI with real-time streaming.
-            Create blog posts, service descriptions, and more with database
-            integration.
+            Blog posts can be reviewed before saving, while services are
+            automatically saved as drafts and opened for editing.
           </p>
         </motion.div>
 
@@ -464,6 +557,12 @@ export function UnifiedAIContentGenerator() {
                           ? "blog post"
                           : "service description"}{" "}
                         with AI... {progress}%
+                        {currentContentType === "service-description" &&
+                          progress === 100 && (
+                            <span className="block mt-1 text-blue-600">
+                              Auto-saving as draft and opening edit page...
+                            </span>
+                          )}
                       </p>
                     </div>
                   )}
@@ -476,26 +575,20 @@ export function UnifiedAIContentGenerator() {
           </div>
         )}
 
-        {/* Review Tab */}
-        {activeTab === "review" && generatedContent && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {currentContentType === "blog-post" && (
+        {/* Review Tab - Only for blog posts, services auto-save and redirect */}
+        {activeTab === "review" &&
+          generatedContent &&
+          currentContentType === "blog-post" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <AIBlogPostSavePanel
                 blogPost={generatedContent as BlogPost}
                 onSaved={handleContentSaved}
               />
-            )}
-            {currentContentType === "service-description" && (
-              <AIServiceSavePanel
-                service={generatedContent as Service}
-                onSaved={handleContentSaved}
-              />
-            )}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
         {/* Saved Tab */}
         {activeTab === "saved" && savedContentInfo && (
@@ -572,7 +665,7 @@ export function UnifiedAIContentGenerator() {
                       <Button
                         onClick={() =>
                           window.open(
-                            `/admin/services/${savedContentInfo.id}`,
+                            `/admin/services/${savedContentInfo.id}/edit`,
                             "_blank"
                           )
                         }

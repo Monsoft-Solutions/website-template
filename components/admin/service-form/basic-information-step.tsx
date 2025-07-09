@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { ServiceImageUploader } from "./service-image-uploader";
 import type { BasicInformationStepProps } from "./types";
+import { serviceStatusSchema } from "@/lib/types/enums/service-status.enum";
 
 export const BasicInformationStep = ({
   form,
@@ -116,6 +117,32 @@ export const BasicInformationStep = ({
           {form.formState.errors.category && (
             <p className="text-sm text-destructive mt-1">
               {form.formState.errors.category.message}
+            </p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="status">Status *</Label>
+          <Controller
+            name="status"
+            control={form.control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceStatusSchema.options.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {form.formState.errors.status && (
+            <p className="text-sm text-destructive mt-1">
+              {form.formState.errors.status.message}
             </p>
           )}
         </div>

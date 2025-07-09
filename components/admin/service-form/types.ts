@@ -67,6 +67,7 @@ export const serviceFormSchema = z.object({
     )
     .optional(),
   relatedServices: z.array(z.string()).optional(),
+  status: z.enum(["draft", "published", "archived"]),
 });
 
 export type ServiceFormData = z.infer<typeof serviceFormSchema>;

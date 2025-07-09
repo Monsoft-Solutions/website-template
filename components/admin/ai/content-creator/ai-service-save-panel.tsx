@@ -85,7 +85,7 @@ export function AIServiceSavePanel({
       }
 
       if (result.data) {
-        toast.success("Service saved successfully!");
+        toast.success("Service saved as draft successfully!");
         onSaved?.(result.data.id, result.data.slug);
       }
     } catch (err) {
@@ -383,7 +383,7 @@ export function AIServiceSavePanel({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Save className="w-5 h-5" />
-            Save to Database
+            Save as Draft to Database
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -466,24 +466,30 @@ export function AIServiceSavePanel({
             <Button
               onClick={handleSave}
               disabled={!isFormValid}
-              className="min-w-[120px]"
+              className="min-w-[140px]"
             >
               {isSaving ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Saving...
+                  Saving as Draft...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Service
+                  Save as Draft
                 </>
               )}
             </Button>
           </div>
 
-          <div className="text-xs text-muted-foreground">
-            * Required fields must be filled before saving
+          <div className="space-y-2">
+            <div className="text-xs text-muted-foreground">
+              * Required fields must be filled before saving
+            </div>
+            <div className="text-xs text-muted-foreground bg-blue-50 border border-blue-200 rounded p-2">
+              <strong>Note:</strong> This service will be saved as a draft. You
+              can continue editing it after saving and publish it when ready.
+            </div>
           </div>
         </CardContent>
       </Card>
