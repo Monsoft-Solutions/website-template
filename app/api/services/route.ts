@@ -8,5 +8,14 @@ export async function GET() {
   const result = await getAllServices();
 
   const status = result.success ? 200 : 500;
-  return NextResponse.json(result, { status });
+
+  const response = NextResponse.json(result, { status });
+
+  // Add cache headers
+  response.headers.set(
+    "Cache-Control",
+    "public, max-age=3600, stale-while-revalidate=86400"
+  );
+
+  return response;
 }

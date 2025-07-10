@@ -13,6 +13,9 @@ import { getAllServices, getServicesNames } from "@/lib/api/services.api";
 import { getAllServiceCategories } from "@/lib/api/service-categories.api";
 import { generateSeoMetadata } from "@/lib/config/seo";
 
+// Force dynamic rendering to ensure revalidation works
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   const servicesNames = await getServicesNames();
 

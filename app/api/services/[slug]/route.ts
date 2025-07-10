@@ -40,5 +40,15 @@ export async function GET(
     ? 404
     : 500;
 
-  return NextResponse.json(result, { status });
+  const response = NextResponse.json(result, { status });
+
+  // Add cache headers
+  if (result.success) {
+    response.headers.set(
+      "Cache-Control",
+      "public, max-age=3600, stale-while-revalidate=86400"
+    );
+  }
+
+  return response;
 }

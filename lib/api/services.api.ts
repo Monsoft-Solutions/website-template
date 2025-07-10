@@ -1,4 +1,5 @@
-import { eq, asc, inArray, and } from "drizzle-orm";
+import { eq, asc, and, inArray } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { services } from "@/lib/db/schema/service.table";
 import { serviceFeatures } from "@/lib/db/schema/service-feature.table";
@@ -9,18 +10,12 @@ import { servicePricingFeatures } from "@/lib/db/schema/service-pricing-feature.
 import { serviceTechnologies } from "@/lib/db/schema/service-technology.table";
 import { serviceDeliverables } from "@/lib/db/schema/service-deliverable.table";
 import { serviceGalleryImages } from "@/lib/db/schema/service-gallery-image.table";
-import { serviceFaqs } from "@/lib/db/schema/service-faq.table";
 import { serviceTestimonials } from "@/lib/db/schema/service-testimonial.table";
+import { serviceFaqs } from "@/lib/db/schema/service-faq.table";
 import { serviceRelated } from "@/lib/db/schema/service-related.table";
-import { ApiResponse } from "@/lib/types/api-response.type";
-import { ServiceCategory } from "@/lib/types/service-category.type";
-import {
-  ServiceWithRelations,
-  ProcessStep,
-  PricingTier,
-  Testimonial,
-  FAQ,
-} from "@/lib/types/service-with-relations.type";
+import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
+import type { ApiResponse } from "@/lib/types/api-response.type";
+import type { ServiceCategory } from "@/lib/types/service-category.type";
 
 export async function getServicesNames(): Promise<ApiResponse<string[]>> {
   try {
@@ -42,15 +37,180 @@ export async function getServicesNames(): Promise<ApiResponse<string[]>> {
 /**
  * Get all services with their relations - optimized version
  */
-export async function getAllServices(): Promise<
-  ApiResponse<ServiceWithRelations[]>
-> {
+export const getAllServices = unstable_cache(
+  async (): Promise<ApiResponse<ServiceWithRelations[]>> => {
+    try {
+      // Get all services first
+      const allServices = await db
+        .select()
+        .from(services)
+        .where(eq(services.status, "published"))
+        .orderBy(asc(services.createdAt));
+
+      if (allServices.length === 0) {
+        return { success: true, data: [] };
+      }
+
+      const serviceIds = allServices.map((s) => s.id);
+
+      // Fetch all related data in parallel using efficient queries
+      const [
+        featuresMap,
+        benefitsMap,
+        processStepsMap,
+        technologiesMap,
+        deliverablesMap,
+        galleryImagesMap,
+        testimonialsMap,
+        faqsMap,
+        relatedServicesMap,
+        pricingData,
+      ] = await Promise.all([
+        getServiceFeaturesByIds(serviceIds),
+        getServiceBenefitsByIds(serviceIds),
+        getServiceProcessStepsByIds(serviceIds),
+        getServiceTechnologiesByIds(serviceIds),
+        getServiceDeliverablesByIds(serviceIds),
+        getServiceGalleryImagesByIds(serviceIds),
+        getServiceTestimonialsByIds(serviceIds),
+        getServiceFaqsByIds(serviceIds),
+        getRelatedServicesByIds(serviceIds),
+        getServicePricingDataByIds(serviceIds),
+      ]);
+
+      // Transform services with their relations
+      const transformedServices: ServiceWithRelations[] = allServices.map(
+        (service) => {
+          return buildServiceFromMaps(
+            service,
+            featuresMap,
+            benefitsMap,
+            processStepsMap,
+            technologiesMap,
+            deliverablesMap,
+            galleryImagesMap,
+            testimonialsMap,
+            faqsMap,
+            relatedServicesMap,
+            pricingData
+          );
+        }
+      );
+
+      return {
+        success: true,
+        data: transformedServices,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: [],
+        error:
+          error instanceof Error ? error.message : "Failed to fetch services",
+      };
+    }
+  },
+  ["getAllServices"],
+  {
+    tags: ["services"],
+    revalidate: 3600, // Cache for 1 hour
+  }
+);
+
+/**
+ * Get a service by slug with all its relations
+ */
+export const getServiceBySlug = unstable_cache(
+  async (slug: string): Promise<ApiResponse<ServiceWithRelations | null>> => {
+    try {
+      // Get the service by slug
+      const [service] = await db
+        .select()
+        .from(services)
+        .where(and(eq(services.slug, slug), eq(services.status, "published")))
+        .limit(1);
+
+      if (!service) {
+        return {
+          success: false,
+          data: null,
+          error: "Service not found",
+        };
+      }
+
+      // Build the complete service with all relations
+      const [
+        featuresMap,
+        benefitsMap,
+        processStepsMap,
+        technologiesMap,
+        deliverablesMap,
+        galleryImagesMap,
+        testimonialsMap,
+        faqsMap,
+        relatedServicesMap,
+        pricingData,
+      ] = await Promise.all([
+        getServiceFeaturesByIds([service.id]),
+        getServiceBenefitsByIds([service.id]),
+        getServiceProcessStepsByIds([service.id]),
+        getServiceTechnologiesByIds([service.id]),
+        getServiceDeliverablesByIds([service.id]),
+        getServiceGalleryImagesByIds([service.id]),
+        getServiceTestimonialsByIds([service.id]),
+        getServiceFaqsByIds([service.id]),
+        getRelatedServicesByIds([service.id]),
+        getServicePricingDataByIds([service.id]),
+      ]);
+
+      const serviceWithRelations = buildServiceFromMaps(
+        service,
+        featuresMap,
+        benefitsMap,
+        processStepsMap,
+        technologiesMap,
+        deliverablesMap,
+        galleryImagesMap,
+        testimonialsMap,
+        faqsMap,
+        relatedServicesMap,
+        pricingData
+      );
+
+      return {
+        success: true,
+        data: serviceWithRelations,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        error:
+          error instanceof Error ? error.message : "Failed to fetch service",
+      };
+    }
+  },
+  ["getServiceBySlug"],
+  {
+    tags: ["services"],
+    revalidate: 3600, // Cache for 1 hour
+  }
+);
+
+/**
+ * Get services by category - optimized version
+ */
+export async function getServicesByCategory(
+  category: ServiceCategory
+): Promise<ApiResponse<ServiceWithRelations[]>> {
   try {
-    // Get all services first
+    // Get all services in the category
     const allServices = await db
       .select()
       .from(services)
-      .where(eq(services.status, "published"))
+      .where(
+        and(eq(services.category, category), eq(services.status, "published"))
+      )
       .orderBy(asc(services.createdAt));
 
     if (allServices.length === 0) {
@@ -113,160 +273,6 @@ export async function getAllServices(): Promise<
       data: [],
       error:
         error instanceof Error ? error.message : "Failed to fetch services",
-    };
-  }
-}
-
-/**
- * Get a service by slug with all relations - optimized version
- */
-export async function getServiceBySlug(
-  slug: string
-): Promise<ApiResponse<ServiceWithRelations | null>> {
-  try {
-    const [service] = await db
-      .select()
-      .from(services)
-      .where(eq(services.slug, slug))
-      .limit(1);
-
-    if (!service) {
-      return {
-        success: false,
-        data: null,
-        error: "Service not found",
-      };
-    }
-
-    // Use the optimized single service fetching
-    const [
-      featuresMap,
-      benefitsMap,
-      processStepsMap,
-      technologiesMap,
-      deliverablesMap,
-      galleryImagesMap,
-      testimonialsMap,
-      faqsMap,
-      relatedServicesMap,
-      pricingData,
-    ] = await Promise.all([
-      getServiceFeaturesByIds([service.id]),
-      getServiceBenefitsByIds([service.id]),
-      getServiceProcessStepsByIds([service.id]),
-      getServiceTechnologiesByIds([service.id]),
-      getServiceDeliverablesByIds([service.id]),
-      getServiceGalleryImagesByIds([service.id]),
-      getServiceTestimonialsByIds([service.id]),
-      getServiceFaqsByIds([service.id]),
-      getRelatedServicesByIds([service.id]),
-      getServicePricingDataByIds([service.id]),
-    ]);
-
-    const transformedService = buildServiceFromMaps(
-      service,
-      featuresMap,
-      benefitsMap,
-      processStepsMap,
-      technologiesMap,
-      deliverablesMap,
-      galleryImagesMap,
-      testimonialsMap,
-      faqsMap,
-      relatedServicesMap,
-      pricingData
-    );
-
-    return {
-      success: true,
-      data: transformedService,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      data: null,
-      error: error instanceof Error ? error.message : "Failed to fetch service",
-    };
-  }
-}
-
-/**
- * Get services by category - optimized version
- */
-export async function getServicesByCategory(
-  category: ServiceCategory
-): Promise<ApiResponse<ServiceWithRelations[]>> {
-  try {
-    const categoryServices = await db
-      .select()
-      .from(services)
-      .where(
-        and(eq(services.category, category), eq(services.status, "published"))
-      )
-      .orderBy(asc(services.createdAt));
-
-    if (categoryServices.length === 0) {
-      return { success: true, data: [] };
-    }
-
-    const serviceIds = categoryServices.map((s) => s.id);
-
-    // Fetch all related data in parallel using efficient queries
-    const [
-      featuresMap,
-      benefitsMap,
-      processStepsMap,
-      technologiesMap,
-      deliverablesMap,
-      galleryImagesMap,
-      testimonialsMap,
-      faqsMap,
-      relatedServicesMap,
-      pricingData,
-    ] = await Promise.all([
-      getServiceFeaturesByIds(serviceIds),
-      getServiceBenefitsByIds(serviceIds),
-      getServiceProcessStepsByIds(serviceIds),
-      getServiceTechnologiesByIds(serviceIds),
-      getServiceDeliverablesByIds(serviceIds),
-      getServiceGalleryImagesByIds(serviceIds),
-      getServiceTestimonialsByIds(serviceIds),
-      getServiceFaqsByIds(serviceIds),
-      getRelatedServicesByIds(serviceIds),
-      getServicePricingDataByIds(serviceIds),
-    ]);
-
-    // Transform services with their relations
-    const transformedServices: ServiceWithRelations[] = categoryServices.map(
-      (service) => {
-        return buildServiceFromMaps(
-          service,
-          featuresMap,
-          benefitsMap,
-          processStepsMap,
-          technologiesMap,
-          deliverablesMap,
-          galleryImagesMap,
-          testimonialsMap,
-          faqsMap,
-          relatedServicesMap,
-          pricingData
-        );
-      }
-    );
-
-    return {
-      success: true,
-      data: transformedServices,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      data: [],
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch services by category",
     };
   }
 }
@@ -507,22 +513,24 @@ export function buildServiceFromMaps(
   const servicePricingTiers = pricingData.pricingTiers.filter(
     (t) => t.serviceId === serviceId
   );
-  const pricing: PricingTier[] = servicePricingTiers.map((tier) => {
-    const tierFeatures = pricingData.pricingFeatures
-      .filter((f) => f.pricingTierId === tier.id)
-      .map((f) => f.feature);
+  const pricing: ServiceWithRelations["pricing"] = servicePricingTiers.map(
+    (tier) => {
+      const tierFeatures = pricingData.pricingFeatures
+        .filter((f) => f.pricingTierId === tier.id)
+        .map((f) => f.feature);
 
-    return {
-      name: tier.name,
-      price: tier.price,
-      description: tier.description,
-      popular: tier.popular || undefined,
-      features: tierFeatures,
-    };
-  });
+      return {
+        name: tier.name,
+        price: tier.price,
+        description: tier.description,
+        popular: tier.popular || undefined,
+        features: tierFeatures,
+      };
+    }
+  );
 
   // Transform process steps
-  const process: ProcessStep[] = processSteps.map((step) => ({
+  const process: ServiceWithRelations["process"] = processSteps.map((step) => ({
     step: step.step,
     title: step.title,
     description: step.description,
@@ -530,17 +538,16 @@ export function buildServiceFromMaps(
   }));
 
   // Transform testimonials
-  const transformedTestimonials: Testimonial[] = testimonials.map(
-    (testimonial) => ({
+  const transformedTestimonials: ServiceWithRelations["testimonials"] =
+    testimonials.map((testimonial) => ({
       quote: testimonial.quote,
       author: testimonial.author,
       company: testimonial.company,
       avatar: testimonial.avatar || undefined,
-    })
-  );
+    }));
 
   // Transform FAQs
-  const faq: FAQ[] = faqs.map((f) => ({
+  const faq: ServiceWithRelations["faq"] = faqs.map((f) => ({
     question: f.question,
     answer: f.answer,
   }));
