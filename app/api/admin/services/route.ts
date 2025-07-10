@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, asc, desc, and, or, ilike, sql } from "drizzle-orm";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { services } from "@/lib/db/schema/service.table";
 import { serviceFeatures } from "@/lib/db/schema/service-feature.table";
@@ -230,6 +231,11 @@ export async function POST(request: NextRequest) {
 
     // Notify Google about the new service (async - doesn't block response)
     notifyContentUpdate("service", data.slug, "URL_UPDATED");
+
+    // Invalidate services cache
+    revalidateTag("services");
+    revalidatePath("/services");
+    revalidatePath("/api/services");
 
     const result: ApiResponse<{ id: string }> = {
       success: true,
@@ -483,6 +489,11 @@ export async function DELETE(request: NextRequest) {
     for (const id of ids) {
       await deleteServiceWithRelations(id);
     }
+
+    // Invalidate services cache
+    revalidateTag("services");
+    revalidatePath("/services");
+    revalidatePath("/api/services");
 
     const result: ApiResponse<null> = {
       success: true,

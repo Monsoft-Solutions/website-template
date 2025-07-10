@@ -26,6 +26,9 @@ import { generateSeoMetadata } from "@/lib/config/seo";
 import { Metadata } from "next";
 import { getBlogPosts } from "@/lib/api/blog.service";
 
+// Force dynamic rendering for cache invalidation
+export const dynamic = "force-dynamic";
+
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
   searchParams: Promise<{ page?: string }>;

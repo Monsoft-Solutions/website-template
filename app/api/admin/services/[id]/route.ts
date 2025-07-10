@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { services } from "@/lib/db/schema/service.table";
 import { serviceFeatures } from "@/lib/db/schema/service-feature.table";
@@ -306,6 +307,12 @@ export async function PUT(
     // Notify Google about the service update (async - doesn't block response)
     notifyContentUpdate("service", data.slug, "URL_UPDATED");
 
+    // Invalidate services cache
+    revalidateTag("services");
+    revalidatePath("/services");
+    revalidatePath("/api/services");
+    revalidatePath(`/services/${data.slug}`);
+
     const result: ApiResponse<{ id: string }> = {
       success: true,
       data: { id },
@@ -366,6 +373,12 @@ export async function DELETE(
 
     // Notify Google about the service deletion (async - doesn't block response)
     notifyContentUpdate("service", existingService.slug, "URL_DELETED");
+
+    // Invalidate services cache
+    revalidateTag("services");
+    revalidatePath("/services");
+    revalidatePath("/api/services");
+    revalidatePath(`/services/${existingService.slug}`);
 
     const result: ApiResponse<null> = {
       success: true,

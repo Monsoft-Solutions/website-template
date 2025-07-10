@@ -10,7 +10,7 @@ import type {
   BlogListResponse,
 } from "@/lib/types";
 import { eq, desc, and, sql, count, like, or, exists } from "drizzle-orm";
-import { cache } from "react";
+import { unstable_cache } from "next/cache";
 
 /**
  * Calculate estimated reading time based on content length
@@ -26,284 +26,320 @@ const calculateReadingTime = (content: string): number => {
 /**
  * Get published blog posts with filtering, search, and pagination
  */
-export const getBlogPosts = async (
-  options: BlogListOptions = {}
-): Promise<BlogListResponse> => {
-  const {
-    page = 1,
-    limit = 10,
-    status = "published",
-    categorySlug,
-    tagSlug,
-    searchQuery,
-  } = options;
+export const getBlogPosts = unstable_cache(
+  async (options: BlogListOptions = {}): Promise<BlogListResponse> => {
+    const {
+      page = 1,
+      limit = 10,
+      status = "published",
+      categorySlug,
+      tagSlug,
+      searchQuery,
+    } = options;
 
-  const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-  // Build where conditions
-  const conditions = [eq(blogPosts.status, status)];
+    // Build where conditions
+    const conditions = [eq(blogPosts.status, status)];
 
-  // Add category filter
-  if (categorySlug && categorySlug !== "all") {
-    conditions.push(eq(categories.slug, categorySlug));
-  }
+    // Add category filter
+    if (categorySlug && categorySlug !== "all") {
+      conditions.push(eq(categories.slug, categorySlug));
+    }
 
-  // Add search filter
-  if (searchQuery) {
-    const searchTerm = `%${searchQuery}%`;
-    conditions.push(
-      or(
-        like(blogPosts.title, searchTerm),
-        like(blogPosts.excerpt, searchTerm),
-        like(blogPosts.content, searchTerm)
-      )!
-    );
-  }
+    // Add search filter
+    if (searchQuery) {
+      const searchTerm = `%${searchQuery}%`;
+      conditions.push(
+        or(
+          like(blogPosts.title, searchTerm),
+          like(blogPosts.excerpt, searchTerm),
+          like(blogPosts.content, searchTerm)
+        )!
+      );
+    }
 
-  // Add tag filter
-  if (tagSlug) {
-    conditions.push(
-      exists(
-        db
-          .select({ id: blogPostsTags.postId })
+    // Add tag filter
+    if (tagSlug) {
+      conditions.push(
+        exists(
+          db
+            .select({ id: blogPostsTags.postId })
+            .from(blogPostsTags)
+            .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
+            .where(
+              and(
+                eq(blogPostsTags.postId, blogPosts.id),
+                eq(tags.slug, tagSlug)
+              )
+            )
+        )
+      );
+    }
+
+    // Get posts with basic joins
+    const postsResult = await db
+      .select({
+        post: blogPosts,
+        author: authors,
+        category: categories,
+      })
+      .from(blogPosts)
+      .leftJoin(authors, eq(blogPosts.authorId, authors.id))
+      .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
+      .where(and(...conditions))
+      .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count with same conditions
+    const totalCountResult = await db
+      .select({ count: count() })
+      .from(blogPosts)
+      .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
+      .where(and(...conditions));
+
+    const totalPosts = totalCountResult[0]?.count || 0;
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    // Get tags for each post
+    const postsWithTags = await Promise.all(
+      postsResult.map(async (result) => {
+        const postTags = await db
+          .select({ tag: tags })
           .from(blogPostsTags)
           .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
-          .where(
-            and(eq(blogPostsTags.postId, blogPosts.id), eq(tags.slug, tagSlug))
-          )
-      )
+          .where(eq(blogPostsTags.postId, result.post.id));
+
+        return {
+          ...result.post,
+          author: result.author!,
+          category: result.category!,
+          tags: postTags.map((pt) => pt.tag!),
+          readingTime: calculateReadingTime(result.post.content),
+        };
+      })
     );
+
+    return {
+      posts: postsWithTags,
+      totalPosts,
+      totalPages,
+      currentPage: page,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+  },
+  ["getBlogPosts"],
+  {
+    tags: ["blog"],
+    revalidate: 3600, // Cache for 1 hour
   }
-
-  // Get posts with basic joins
-  const postsResult = await db
-    .select({
-      post: blogPosts,
-      author: authors,
-      category: categories,
-    })
-    .from(blogPosts)
-    .leftJoin(authors, eq(blogPosts.authorId, authors.id))
-    .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
-    .where(and(...conditions))
-    .orderBy(desc(blogPosts.publishedAt), desc(blogPosts.createdAt))
-    .limit(limit)
-    .offset(offset);
-
-  // Get total count with same conditions
-  const totalCountResult = await db
-    .select({ count: count() })
-    .from(blogPosts)
-    .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
-    .where(and(...conditions));
-
-  const totalPosts = totalCountResult[0]?.count || 0;
-  const totalPages = Math.ceil(totalPosts / limit);
-
-  // Get tags for each post
-  const postsWithTags = await Promise.all(
-    postsResult.map(async (result) => {
-      const postTags = await db
-        .select({ tag: tags })
-        .from(blogPostsTags)
-        .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
-        .where(eq(blogPostsTags.postId, result.post.id));
-
-      return {
-        ...result.post,
-        author: result.author!,
-        category: result.category!,
-        tags: postTags.map((pt) => pt.tag!),
-        readingTime: calculateReadingTime(result.post.content),
-      };
-    })
-  );
-
-  return {
-    posts: postsWithTags,
-    totalPosts,
-    totalPages,
-    currentPage: page,
-    hasNextPage: page < totalPages,
-    hasPreviousPage: page > 1,
-  };
-};
+);
 
 /**
  * Get a single blog post by slug with all relations
  */
-export const getBlogPostBySlug = cache(async (slug: string) => {
-  const result = await db
-    .select({
-      post: blogPosts,
-      author: authors,
-      category: categories,
-      publishedAt: blogPosts.publishedAt,
-      createdAt: blogPosts.createdAt,
-    })
-    .from(blogPosts)
-    .leftJoin(authors, eq(blogPosts.authorId, authors.id))
-    .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
-    .where(and(eq(blogPosts.slug, slug), eq(blogPosts.status, "published")))
-    .limit(1);
+export const getBlogPostBySlug = unstable_cache(
+  async (slug: string): Promise<BlogPostWithRelations | null> => {
+    const result = await db
+      .select({
+        post: blogPosts,
+        author: authors,
+        category: categories,
+        publishedAt: blogPosts.publishedAt,
+        createdAt: blogPosts.createdAt,
+      })
+      .from(blogPosts)
+      .leftJoin(authors, eq(blogPosts.authorId, authors.id))
+      .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
+      .where(and(eq(blogPosts.slug, slug), eq(blogPosts.status, "published")))
+      .limit(1);
 
-  if (result.length === 0) {
-    return null;
+    if (result.length === 0) {
+      return null;
+    }
+
+    const postData = result[0];
+
+    // Get tags for the post
+    const postTags = await db
+      .select({ tag: tags })
+      .from(blogPostsTags)
+      .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
+      .where(eq(blogPostsTags.postId, postData.post.id));
+
+    return {
+      ...postData.post,
+      author: postData.author!,
+      category: postData.category!,
+      tags: postTags.map((pt) => pt.tag!),
+      readingTime: calculateReadingTime(postData.post.content),
+    };
+  },
+  ["getBlogPostBySlug"],
+  {
+    tags: ["blog"],
+    revalidate: 3600, // Cache for 1 hour
   }
-
-  const postData = result[0];
-
-  // Get tags for the post
-  const postTags = await db
-    .select({ tag: tags })
-    .from(blogPostsTags)
-    .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
-    .where(eq(blogPostsTags.postId, postData.post.id));
-
-  return {
-    ...postData.post,
-    author: postData.author!,
-    category: postData.category!,
-    tags: postTags.map((pt) => pt.tag!),
-    readingTime: calculateReadingTime(postData.post.content),
-  };
-});
+);
 
 /**
  * Get related blog posts based on category
  */
-export const getRelatedBlogPosts = async (
-  postId: string,
-  limit: number = 3
-): Promise<BlogPostWithRelations[]> => {
-  // First get the current post's category
-  const currentPost = await db
-    .select({
-      categoryId: blogPosts.categoryId,
-    })
-    .from(blogPosts)
-    .where(eq(blogPosts.id, postId))
-    .limit(1);
+export const getRelatedBlogPosts = unstable_cache(
+  async (
+    postId: string,
+    limit: number = 3
+  ): Promise<BlogPostWithRelations[]> => {
+    // First get the current post's category
+    const currentPost = await db
+      .select({
+        categoryId: blogPosts.categoryId,
+      })
+      .from(blogPosts)
+      .where(eq(blogPosts.id, postId))
+      .limit(1);
 
-  if (currentPost.length === 0) {
-    return [];
-  }
+    if (currentPost.length === 0) {
+      return [];
+    }
 
-  const categoryId = currentPost[0].categoryId;
+    const categoryId = currentPost[0].categoryId;
 
-  // Get posts from the same category, excluding the current post
-  const relatedPosts = await db
-    .select({
-      post: blogPosts,
-      author: authors,
-      category: categories,
-    })
-    .from(blogPosts)
-    .leftJoin(authors, eq(blogPosts.authorId, authors.id))
-    .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
-    .leftJoin(blogPostsTags, eq(blogPosts.id, blogPostsTags.postId))
-    .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
-    .where(
-      and(
-        eq(blogPosts.categoryId, categoryId),
-        eq(blogPosts.status, "published"),
-        sql`${blogPosts.id} != ${postId}`
+    // Get posts from the same category, excluding the current post
+    const relatedPosts = await db
+      .select({
+        post: blogPosts,
+        author: authors,
+        category: categories,
+      })
+      .from(blogPosts)
+      .leftJoin(authors, eq(blogPosts.authorId, authors.id))
+      .leftJoin(categories, eq(blogPosts.categoryId, categories.id))
+      .leftJoin(blogPostsTags, eq(blogPosts.id, blogPostsTags.postId))
+      .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
+      .where(
+        and(
+          eq(blogPosts.categoryId, categoryId),
+          eq(blogPosts.status, "published"),
+          sql`${blogPosts.id} != ${postId}`
+        )
       )
-    )
-    .orderBy(desc(blogPosts.publishedAt))
-    .limit(limit);
+      .orderBy(desc(blogPosts.publishedAt))
+      .limit(limit);
 
-  // Get tags for each related post
-  const postsWithTags = await Promise.all(
-    relatedPosts.map(async (result) => {
-      const postTags = await db
-        .select({ tag: tags })
-        .from(blogPostsTags)
-        .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
-        .where(eq(blogPostsTags.postId, result.post.id));
+    // Get tags for each related post
+    const postsWithTags = await Promise.all(
+      relatedPosts.map(async (result) => {
+        const postTags = await db
+          .select({ tag: tags })
+          .from(blogPostsTags)
+          .leftJoin(tags, eq(blogPostsTags.tagId, tags.id))
+          .where(eq(blogPostsTags.postId, result.post.id));
 
-      return {
-        ...result.post,
-        author: result.author!,
-        category: result.category!,
-        tags: postTags.map((pt) => pt.tag!),
-        readingTime: calculateReadingTime(result.post.content),
-      };
-    })
-  );
+        return {
+          ...result.post,
+          author: result.author!,
+          category: result.category!,
+          tags: postTags.map((pt) => pt.tag!),
+          readingTime: calculateReadingTime(result.post.content),
+        };
+      })
+    );
 
-  return postsWithTags;
-};
+    return postsWithTags;
+  },
+  ["getRelatedBlogPosts"],
+  {
+    tags: ["blog"],
+    revalidate: 3600, // Cache for 1 hour
+  }
+);
 
 /**
  * Get all categories with post counts
  */
-export const getBlogCategories = async () => {
-  const categoriesResult = await db
-    .select({
-      category: categories,
-      postCount: count(blogPosts.id),
-    })
-    .from(categories)
-    .leftJoin(
-      blogPosts,
-      and(
-        eq(categories.id, blogPosts.categoryId),
-        eq(blogPosts.status, "published")
+export const getBlogCategories = unstable_cache(
+  async () => {
+    const categoriesResult = await db
+      .select({
+        category: categories,
+        postCount: count(blogPosts.id),
+      })
+      .from(categories)
+      .leftJoin(
+        blogPosts,
+        and(
+          eq(categories.id, blogPosts.categoryId),
+          eq(blogPosts.status, "published")
+        )
       )
-    )
-    .groupBy(categories.id)
-    .orderBy(categories.name);
+      .groupBy(categories.id)
+      .orderBy(categories.name);
 
-  // Get total posts count
-  const totalPostsResult = await db
-    .select({ count: count() })
-    .from(blogPosts)
-    .where(eq(blogPosts.status, "published"));
+    // Get total posts count
+    const totalPostsResult = await db
+      .select({ count: count() })
+      .from(blogPosts)
+      .where(eq(blogPosts.status, "published"));
 
-  const totalPosts = totalPostsResult[0]?.count || 0;
+    const totalPosts = totalPostsResult[0]?.count || 0;
 
-  // Add "All" category at the beginning
-  return [
-    {
-      category: {
-        id: "all",
-        name: "All",
-        slug: "all",
-        description: "All blog posts",
-        createdAt: new Date(),
-        updatedAt: new Date(),
+    // Add "All" category at the beginning
+    return [
+      {
+        category: {
+          id: "all",
+          name: "All",
+          slug: "all",
+          description: "All blog posts",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        postCount: totalPosts,
       },
-      postCount: totalPosts,
-    },
-    ...categoriesResult,
-  ];
-};
+      ...categoriesResult,
+    ];
+  },
+  ["getBlogCategories"],
+  {
+    tags: ["blog"],
+    revalidate: 3600, // Cache for 1 hour
+  }
+);
 
 /**
  * Get all tags with post counts
  */
-export const getBlogTags = async () => {
-  const tagsResult = await db
-    .select({
-      tag: tags,
-      postCount: count(blogPosts.id),
-    })
-    .from(tags)
-    .leftJoin(blogPostsTags, eq(tags.id, blogPostsTags.tagId))
-    .leftJoin(
-      blogPosts,
-      and(
-        eq(blogPostsTags.postId, blogPosts.id),
-        eq(blogPosts.status, "published")
+export const getBlogTags = unstable_cache(
+  async () => {
+    const tagsResult = await db
+      .select({
+        tag: tags,
+        postCount: count(blogPosts.id),
+      })
+      .from(tags)
+      .leftJoin(blogPostsTags, eq(tags.id, blogPostsTags.tagId))
+      .leftJoin(
+        blogPosts,
+        and(
+          eq(blogPostsTags.postId, blogPosts.id),
+          eq(blogPosts.status, "published")
+        )
       )
-    )
-    .groupBy(tags.id)
-    .having(sql`count(${blogPosts.id}) > 0`)
-    .orderBy(desc(count(blogPosts.id)), tags.name);
+      .groupBy(tags.id)
+      .having(sql`count(${blogPosts.id}) > 0`)
+      .orderBy(desc(count(blogPosts.id)), tags.name);
 
-  return tagsResult;
-};
+    return tagsResult;
+  },
+  ["getBlogTags"],
+  {
+    tags: ["blog"],
+    revalidate: 3600, // Cache for 1 hour
+  }
+);
 
 /**
  * Get posts by category slug

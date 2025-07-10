@@ -33,6 +33,9 @@ import { BlogPostActions } from "@/components/blog/BlogPostActions";
 import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/api/blog.service";
 import { generateSeoMetadata } from "@/lib/config/seo";
 
+// Force dynamic rendering for cache invalidation
+export const dynamic = "force-dynamic";
+
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }

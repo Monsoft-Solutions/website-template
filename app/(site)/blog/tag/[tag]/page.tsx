@@ -27,6 +27,9 @@ import {
 } from "lucide-react";
 import { getBlogPosts } from "@/lib/api/blog.service";
 
+// Force dynamic rendering for cache invalidation
+export const dynamic = "force-dynamic";
+
 interface TagPageProps {
   params: Promise<{ tag: string }>;
   searchParams: Promise<{ page?: string }>;

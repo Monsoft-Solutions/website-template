@@ -57,10 +57,18 @@ export async function GET(request: NextRequest) {
     // Get blog posts
     const result = await getBlogPosts(options);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: result,
     } as ApiResponse<BlogListResponse>);
+
+    // Add cache headers
+    response.headers.set(
+      "Cache-Control",
+      "public, max-age=3600, stale-while-revalidate=86400"
+    );
+
+    return response;
   } catch (error) {
     console.error("Error fetching blog posts:", error);
     return NextResponse.json(

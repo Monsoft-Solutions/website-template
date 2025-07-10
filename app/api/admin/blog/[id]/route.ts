@@ -6,6 +6,7 @@ import { categories } from "@/lib/db/schema/category.table";
 import { tags } from "@/lib/db/schema/tag.table";
 import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 import { eq, and } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { BlogPostWithRelations } from "@/lib/types/blog-post-with-relations.type";
@@ -206,6 +207,9 @@ export async function PUT(
     // Notify Google about the blog post update (async - doesn't block response)
     notifyContentUpdate("blog_post", data.slug, "URL_UPDATED");
 
+    // Invalidate blog cache
+    revalidateTag("blog");
+
     return NextResponse.json({
       success: true,
       data: null,
@@ -278,6 +282,9 @@ export async function DELETE(
 
     // Notify Google about the blog post deletion (async - doesn't block response)
     notifyContentUpdate("blog_post", postToDelete.slug, "URL_DELETED");
+
+    // Invalidate blog cache
+    revalidateTag("blog");
 
     return NextResponse.json({
       success: true,

@@ -13,6 +13,9 @@ import { NewsletterCTA } from "@/components/blog/sections/newsletter-cta";
 import { BlogFilters } from "@/components/blog/BlogFilters";
 import { getBlogCategories, getBlogPosts } from "@/lib/api/blog.service";
 
+// Force dynamic rendering for cache invalidation
+export const dynamic = "force-dynamic";
+
 interface BlogPageProps {
   searchParams: Promise<{
     page?: string;
