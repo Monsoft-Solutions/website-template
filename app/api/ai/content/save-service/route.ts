@@ -258,6 +258,7 @@ export async function POST(request: NextRequest) {
     const response: ServiceSaveResponse = {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
+      data: null,
     };
 
     return NextResponse.json(response, { status: 500 });

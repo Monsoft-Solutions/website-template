@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ApiResponse } from "../api-response.type";
 
 /**
  * Available content types for AI generation
@@ -203,25 +204,15 @@ export type ServiceSaveRequest = z.infer<typeof ServiceSaveRequestSchema>;
 /**
  * Response types for save operations
  */
-export interface BlogPostSaveResponse {
-  success: boolean;
-  data?: {
-    id: string;
-    slug: string;
-  } | null;
-  error?: string;
-  message?: string;
-}
+export type BlogPostSaveResponse = ApiResponse<{
+  id: string;
+  slug: string;
+} | null>;
 
-export interface ServiceSaveResponse {
-  success: boolean;
-  data?: {
-    id: string;
-    slug: string;
-  } | null;
-  error?: string;
-  message?: string;
-}
+export type ServiceSaveResponse = ApiResponse<{
+  id: string;
+  slug: string;
+} | null>;
 
 /**
  * Service description input

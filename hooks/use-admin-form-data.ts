@@ -1,19 +1,17 @@
 import { useState, useEffect } from "react";
-
-interface Author {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
+import type { ApiResponse } from "@/lib/types/api-response.type";
+import type {
+  AdminAuthorsListResponse,
+  AuthorWithUsage,
+} from "@/app/api/admin/authors/route";
+import type {
+  AdminCategoriesListResponse,
+  CategoryWithUsage,
+} from "@/app/api/admin/categories/route";
 
 interface AdminFormDataResult {
-  authors: Author[];
-  categories: Category[];
+  authors: AuthorWithUsage[];
+  categories: CategoryWithUsage[];
   isLoading: boolean;
   error: string | null;
 }
@@ -22,8 +20,8 @@ interface AdminFormDataResult {
  * Hook to fetch authors and categories for admin forms
  */
 export function useAdminFormData(): AdminFormDataResult {
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [authors, setAuthors] = useState<AuthorWithUsage[]>([]);
+  const [categories, setCategories] = useState<CategoryWithUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,24 +36,96 @@ export function useAdminFormData(): AdminFormDataResult {
           fetch("/api/admin/categories"),
         ]);
 
-        if (!authorsResponse.ok || !categoriesResponse.ok) {
-          throw new Error("Failed to fetch form data");
+        // Check if the HTTP responses are OK first
+        if (!authorsResponse.ok) {
+          throw new Error(
+            `Failed to fetch authors: HTTP ${authorsResponse.status} ${authorsResponse.statusText}`
+          );
         }
 
-        const [authorsData, categoriesData] = await Promise.all([
-          authorsResponse.json(),
-          categoriesResponse.json(),
-        ]);
-
-        if (authorsData.success) {
-          setAuthors(authorsData.data.authors || []);
+        if (!categoriesResponse.ok) {
+          throw new Error(
+            `Failed to fetch categories: HTTP ${categoriesResponse.status} ${categoriesResponse.statusText}`
+          );
         }
 
-        if (categoriesData.success) {
-          setCategories(categoriesData.data.categories || []);
+        // Parse JSON responses as ApiResponse types
+        let authorsData: ApiResponse<AdminAuthorsListResponse>;
+        let categoriesData: ApiResponse<AdminCategoriesListResponse>;
+
+        try {
+          authorsData = await authorsResponse.json();
+        } catch (parseError) {
+          throw new Error(
+            `Failed to parse authors response: ${
+              parseError instanceof Error ? parseError.message : "Invalid JSON"
+            }`
+          );
         }
+
+        try {
+          categoriesData = await categoriesResponse.json();
+        } catch (parseError) {
+          throw new Error(
+            `Failed to parse categories response: ${
+              parseError instanceof Error ? parseError.message : "Invalid JSON"
+            }`
+          );
+        }
+
+        // Validate API response structure
+        if (typeof authorsData.success !== "boolean") {
+          throw new Error(
+            "Authors API response is malformed: missing or invalid 'success' field"
+          );
+        }
+
+        if (typeof categoriesData.success !== "boolean") {
+          throw new Error(
+            "Categories API response is malformed: missing or invalid 'success' field"
+          );
+        }
+
+        // Check API success status and handle specific failures
+        if (!authorsData.success) {
+          throw new Error(
+            `Authors API returned failure: ${
+              authorsData.error || "Unknown error from authors endpoint"
+            }`
+          );
+        }
+
+        if (!categoriesData.success) {
+          throw new Error(
+            `Categories API returned failure: ${
+              categoriesData.error || "Unknown error from categories endpoint"
+            }`
+          );
+        }
+
+        // Validate data structure
+        if (!authorsData.data || !Array.isArray(authorsData.data.authors)) {
+          throw new Error(
+            "Authors API response is malformed: invalid data structure"
+          );
+        }
+
+        if (
+          !categoriesData.data ||
+          !Array.isArray(categoriesData.data.categories)
+        ) {
+          throw new Error(
+            "Categories API response is malformed: invalid data structure"
+          );
+        }
+
+        // Set the data with proper typing
+        setAuthors(authorsData.data.authors);
+        setCategories(categoriesData.data.categories);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load data");
+        setError(
+          err instanceof Error ? err.message : "Failed to load admin form data"
+        );
         console.error("Failed to fetch admin form data:", err);
       } finally {
         setIsLoading(false);

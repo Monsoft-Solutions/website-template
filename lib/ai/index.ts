@@ -9,8 +9,11 @@ export { ModelManager, MODEL_CONFIG } from "./core/model-manager";
 export { MessageHandler } from "./core/message-handler";
 export {
   AITransport,
-  AITransportFactory,
   createAITransport,
+  createChatTransport,
+  createAgentTransport,
+  createContentTransport,
+  createImageTransport,
 } from "./core/transport";
 
 // Content Creation and Refinement

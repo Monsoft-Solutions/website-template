@@ -87,15 +87,18 @@ export class AITransport {
           break;
         }
 
-        // Wait before retry (except on last attempt)
+        // Wait before retry with exponential backoff (except on last attempt)
         if (attempt < this.maxRetries) {
-          await this.delay(this.retryDelay * attempt);
+          const backoffDelay = this.retryDelay * Math.pow(2, attempt - 1);
+          await this.delay(Math.min(backoffDelay, 30000)); // Cap at 30 seconds
         }
       }
     }
+    const finalError =
+      lastError || new Error("Operation failed after all retries");
 
     // All retries failed
-    this.onError?.(lastError!);
+    this.onError?.(finalError);
     this.onFinish?.();
     throw lastError;
   }
@@ -160,52 +163,50 @@ export function createAITransport(
 /**
  * Transport factory for different AI endpoints
  */
-export class AITransportFactory {
-  /**
-   * Create transport for chat endpoint
-   */
-  static createChatTransport(
-    config: Partial<AITransportConfig> = {}
-  ): AITransport {
-    return createAITransport({
-      api: "/api/ai/chat",
-      ...config,
-    });
-  }
+/**
+ * Create transport for chat endpoint
+ */
+export function createChatTransport(
+  config: Partial<AITransportConfig> = {}
+): AITransport {
+  return createAITransport({
+    api: "/api/ai/chat",
+    ...config,
+  });
+}
 
-  /**
-   * Create transport for content generation endpoint
-   */
-  static createContentTransport(
-    config: Partial<AITransportConfig> = {}
-  ): AITransport {
-    return createAITransport({
-      api: "/api/ai/content/generate",
-      ...config,
-    });
-  }
+/**
+ * Create transport for content generation endpoint
+ */
+export function createContentTransport(
+  config: Partial<AITransportConfig> = {}
+): AITransport {
+  return createAITransport({
+    api: "/api/ai/content/generate",
+    ...config,
+  });
+}
 
-  /**
-   * Create transport for image generation endpoint
-   */
-  static createImageTransport(
-    config: Partial<AITransportConfig> = {}
-  ): AITransport {
-    return createAITransport({
-      api: "/api/ai/images/generate",
-      ...config,
-    });
-  }
+/**
+ * Create transport for image generation endpoint
+ */
+export function createImageTransport(
+  config: Partial<AITransportConfig> = {}
+): AITransport {
+  return createAITransport({
+    api: "/api/ai/images/generate",
+    ...config,
+  });
+}
 
-  /**
-   * Create transport for agents endpoint
-   */
-  static createAgentTransport(
-    config: Partial<AITransportConfig> = {}
-  ): AITransport {
-    return createAITransport({
-      api: "/api/ai/agents",
-      ...config,
-    });
-  }
+/**
+ * Create transport for agents endpoint
+ */
+export function createAgentTransport(
+  config: Partial<AITransportConfig> = {}
+): AITransport {
+  return createAITransport({
+    api: "/api/ai/agents",
+    ...config,
+  });
 }
