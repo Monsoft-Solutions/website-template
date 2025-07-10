@@ -33,6 +33,8 @@
 - 🔐 **Authentication & Authorization** - Better Auth with role-based access control (Admin, Editor, Viewer)
 - 📊 **Dashboard Analytics** - Real-time metrics, charts, and performance insights
 - 📝 **Content Management** - Full CRUD operations for blog posts and services
+- 🤖 **AI Content Generator** - Comprehensive AI-powered content creation with auto-save to drafts
+- 🔧 **Content Refinement** - AI-powered content improvement, SEO optimization, and readability enhancement
 - 📬 **Contact Submissions** - Workflow management with status tracking (New → Read → Responded)
 - 👥 **User Management** - Invitation-only registration system with role management
 - 🔍 **Google Indexing** - Automatic Search Console notifications and manual re-indexing
@@ -60,6 +62,17 @@
 - 📱 **Real User Monitoring** - Page load performance and resource timing analysis
 - 🚨 **Error Tracking** - Automatic error reporting and performance issue detection
 - 🔗 **Social Sharing** - Track social media shares and external link clicks
+
+### AI-Powered Features
+
+- 🤖 **AI Content Creation** - Generate high-quality blog posts and service descriptions with AI
+- 🎯 **Structured Generation** - Type-safe content generation using Zod schemas and streaming objects
+- ✨ **Auto-Save Drafts** - Generated content automatically saved as drafts with seamless editing workflow
+- 🔧 **Content Refinement** - AI-powered content improvement for SEO, readability, and engagement
+- 📝 **Smart Prompts System** - Centralized, maintainable prompt templates for consistent AI outputs
+- 🎨 **Multiple AI Models** - Support for both Anthropic Claude and OpenAI GPT models with fallback
+- 📊 **Real-time Generation** - Live streaming of AI content generation with progress indicators
+- 🔍 **Content Analysis** - AI-powered content evaluation with improvement suggestions
 
 ### Technical Features
 
@@ -89,6 +102,7 @@
 - **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
 - **Authentication:** [Better Auth](https://www.better-auth.com/)
 - **Forms:** [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
+- **AI Integration:** [AI SDK 5 Beta](https://sdk.vercel.ai/) + [Anthropic Claude](https://www.anthropic.com/) + [OpenAI GPT](https://openai.com/)
 - **Analytics:** [Next.js Third Parties](https://nextjs.org/docs/app/guides/third-party-libraries) (Google Analytics 4)
 - **Charts:** [Recharts](https://recharts.org/)
 - **Markdown:** [React Markdown](https://github.com/remarkjs/react-markdown) + [Gray Matter](https://github.com/jonschlinkert/gray-matter)
@@ -155,6 +169,13 @@ EMAIL_PASS=your-app-password
 # Google Search Console (Optional - for instant indexing)
 GOOGLE_CLIENT_EMAIL=your-service-account@project.iam.gserviceaccount.com
 GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+
+# AI Configuration (Optional - for AI content generation)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+AI_DEFAULT_MODEL=claude-3-5-sonnet-20241022
+AI_FALLBACK_MODEL=gpt-4o
+AI_CONTENT_GENERATION_ENABLED=true
 
 # Analytics (Optional)
 NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX
@@ -251,6 +272,10 @@ site-wave-website/
 │   │   ├── DataTable.tsx     # Admin data tables
 │   │   ├── BlogPostForm.tsx  # Blog post form
 │   │   ├── ServiceForm.tsx   # Service form
+│   │   ├── ai/               # AI-specific admin components
+│   │   │   ├── unified-ai-content-generator.tsx # Main AI content creation interface
+│   │   │   ├── content-creator/ # AI content creation components
+│   │   │   └── content-refiner/ # AI content refinement components
 │   │   └── ...               # Other admin components
 │   ├── analytics/            # Analytics components and tracking
 │   ├── blog/                 # Blog-specific components with analytics
@@ -260,6 +285,19 @@ site-wave-website/
 │   └── ui/                   # shadcn/ui components
 │
 ├── lib/                      # Utilities and configurations
+│   ├── ai/                   # AI library and integrations
+│   │   ├── core/             # Core AI functionality
+│   │   │   ├── model-manager.ts # AI model management
+│   │   │   └── ...           # Other core components
+│   │   ├── content/          # AI content generation
+│   │   │   ├── creator.ts    # Content creation engine
+│   │   │   └── refiner.ts    # Content refinement engine
+│   │   ├── prompts/          # Centralized AI prompts
+│   │   │   ├── blog-post.prompt.ts # Blog post generation prompts
+│   │   │   ├── service.prompt.ts   # Service generation prompts
+│   │   │   ├── content-improvement.prompt.ts # Content refinement prompts
+│   │   │   └── ...           # Other prompt templates
+│   │   └── index.ts          # AI library exports
 │   ├── api/                  # API client functions
 │   ├── auth/                 # Authentication configuration
 │   │   ├── auth.ts           # Better Auth config
@@ -274,9 +312,12 @@ site-wave-website/
 │   │   └── seed/             # Database seeders
 │   ├── hooks/                # Custom React hooks
 │   │   ├── use-admin-*.ts    # Admin-specific hooks
+│   │   ├── use-ai-*.ts       # AI-specific hooks
 │   │   └── ...               # Other hooks
 │   ├── types/                # TypeScript type definitions
 │   │   ├── auth.type.ts      # Authentication types
+│   │   ├── ai/               # AI-specific types
+│   │   │   └── content-generation.type.ts # AI content generation types
 │   │   └── ...               # Other type definitions
 │   └── utils/                # Utility functions
 │       └── analytics.ts      # Google Analytics tracking utilities
@@ -534,7 +575,9 @@ The Site Wave template includes a comprehensive admin area for content managemen
 ### Key Features
 
 - **📊 Dashboard** - Analytics overview with key metrics and charts
+- **🤖 AI Content Generator** - Advanced AI-powered content creation with streaming generation
 - **📝 Content Management** - Full CRUD operations for blog posts and services
+- **🔧 Content Refinement** - AI-powered content improvement and optimization
 - **📬 Contact Management** - Review and manage contact form submissions
 - **👥 User Management** - Invitation-only registration with role-based access
 - **🔍 SEO Tools** - Google indexing notifications and SEO optimization
@@ -553,9 +596,41 @@ The Site Wave template includes a comprehensive admin area for content managemen
    - Sign in with admin credentials
    - Start managing your content
 
+### AI Content Generator
+
+The AI Content Generator is a powerful feature that leverages AI SDK 5 Beta to create high-quality content:
+
+#### **Supported Content Types**
+
+- **Blog Posts** - SEO-optimized articles with structured metadata
+- **Service Descriptions** - Comprehensive service offerings with pricing and features
+
+#### **Key Features**
+
+- **Real-time Streaming** - Watch content generate live with progress indicators
+- **Auto-Save Drafts** - Generated content automatically saved and opens in edit mode
+- **Type-Safe Generation** - Structured content using Zod schemas for consistency
+- **Multiple AI Models** - Supports both Anthropic Claude and OpenAI GPT models
+- **Smart Prompts** - Centralized prompt templates for consistent, high-quality outputs
+
+#### **How to Use**
+
+1. **Navigate to AI Generator**: Go to `/admin/ai/content-generator`
+2. **Select Content Type**: Choose between blog post or service description
+3. **Fill Generation Form**: Provide topic, keywords, tone, and other parameters
+4. **Watch Live Generation**: Content streams in real-time with progress tracking
+5. **Auto-Save & Edit**: Generated content automatically saves as draft and opens in editor
+
+#### **Content Refinement**
+
+- **SEO Optimization** - Improve keyword density and search optimization
+- **Readability Enhancement** - Adjust content for target reading levels
+- **Content Analysis** - AI-powered suggestions for improvement
+
 ### Admin Routes
 
 - `/admin` - Main dashboard with analytics and quick actions
+- `/admin/ai/content-generator` - AI-powered content creation with streaming generation
 - `/admin/blog` - Blog post management (create, edit, delete)
 - `/admin/services` - Service management with multi-step forms
 - `/admin/contact-submissions` - Contact form submissions workflow
@@ -576,6 +651,8 @@ The Site Wave template includes a comprehensive admin area for content managemen
 For comprehensive admin area documentation, see:
 
 - [Admin Area Documentation](docs/admin-area.md)
+- [AI Content Generator Guide](docs/ai-content-generator.md)
+- [AI Setup Guide](docs/ai-setup-guide.md)
 - [User Registration Guide](docs/USER_REGISTRATION.md)
 - [Environment Configuration](docs/environment-configuration.md)
 
@@ -638,6 +715,15 @@ For comprehensive admin area documentation, see:
 - **Permission Errors**: Verify user role in database and restart application
 - **Session Issues**: Clear browser cookies and ensure session tables exist
 - **Admin Access**: Confirm middleware is protecting `/admin/*` routes correctly
+
+**AI Content Generation Issues**
+
+- **API Key Problems**: Verify `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` are set correctly
+- **Model Access**: Ensure API keys have access to Claude 3.5 Sonnet or GPT-4o models
+- **Generation Failures**: Check network connectivity and API rate limits
+- **Streaming Issues**: Verify browser supports Server-Sent Events and EventSource
+- **Auto-Save Failures**: Check database connection and admin permissions
+- **Content Quality**: Adjust prompts in `lib/ai/prompts/` for better outputs
 
 ## 🤝 Contributing
 

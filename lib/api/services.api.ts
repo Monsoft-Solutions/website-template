@@ -1,4 +1,4 @@
-import { eq, asc, inArray } from "drizzle-orm";
+import { eq, asc, inArray, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { services } from "@/lib/db/schema/service.table";
 import { serviceFeatures } from "@/lib/db/schema/service-feature.table";
@@ -26,7 +26,8 @@ export async function getServicesNames(): Promise<ApiResponse<string[]>> {
   try {
     const allServices = await db
       .select({ name: services.title })
-      .from(services);
+      .from(services)
+      .where(eq(services.status, "published"));
     return { success: true, data: allServices.map((s) => s.name) };
   } catch (error) {
     console.error("Error fetching services names:", error);
@@ -49,6 +50,7 @@ export async function getAllServices(): Promise<
     const allServices = await db
       .select()
       .from(services)
+      .where(eq(services.status, "published"))
       .orderBy(asc(services.createdAt));
 
     if (allServices.length === 0) {
@@ -198,7 +200,9 @@ export async function getServicesByCategory(
     const categoryServices = await db
       .select()
       .from(services)
-      .where(eq(services.category, category))
+      .where(
+        and(eq(services.category, category), eq(services.status, "published"))
+      )
       .orderBy(asc(services.createdAt));
 
     if (categoryServices.length === 0) {

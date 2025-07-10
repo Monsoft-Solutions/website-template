@@ -3,6 +3,7 @@ import type { ProcessStep } from "./process-step.type";
 import type { PricingTier } from "./pricing-tier.type";
 import type { FAQ } from "./faq.type";
 import type { Testimonial } from "./testimonial.type";
+import { ServiceStatus } from "./enums";
 
 /**
  * Represents a complete service offering with all its details
@@ -44,4 +45,6 @@ export type Service = {
   readonly faq: readonly FAQ[];
   /** Array of related service slugs */
   readonly relatedServices: readonly string[];
+  /** Status of the service */
+  readonly status: ServiceStatus;
 };

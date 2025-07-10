@@ -54,6 +54,7 @@ interface ServiceUpdateData {
   fullDescription: string;
   timeline: string;
   category: "Development" | "Design" | "Consulting" | "Marketing" | "Support";
+  status: "draft" | "published" | "archived";
   featuredImage: string;
   features?: string[];
   benefits?: string[];
@@ -171,6 +172,7 @@ export async function PUT(
         fullDescription: data.fullDescription,
         timeline: data.timeline,
         category: data.category,
+        status: data.status,
         featuredImage: data.featuredImage,
         updatedAt: new Date(),
       })

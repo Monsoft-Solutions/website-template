@@ -78,6 +78,7 @@ export function ServiceForm({
         initialData?.relatedServices?.map((rs) =>
           typeof rs === "string" ? rs : rs.id
         ) || [],
+      status: initialData?.status || "published",
     },
   });
 
