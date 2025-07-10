@@ -59,10 +59,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       console.warn("Failed to record blog post view:", error);
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: post,
     } as ApiResponse<BlogPostWithRelations>);
+
+    // Add cache headers
+    response.headers.set(
+      "Cache-Control",
+      "public, max-age=3600, stale-while-revalidate=86400"
+    );
+
+    return response;
   } catch (error) {
     console.error("Error fetching blog post:", error);
     return NextResponse.json(

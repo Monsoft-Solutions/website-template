@@ -6,6 +6,7 @@ import { categories } from "@/lib/db/schema/category.table";
 import { tags } from "@/lib/db/schema/tag.table";
 import { blogPostsTags } from "@/lib/db/schema/blog-post-tag.table";
 import { and, eq, or, like, desc, count, exists, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type { BlogPostWithRelations } from "@/lib/types/blog-post-with-relations.type";
@@ -310,7 +311,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Notify Google about the new blog post (async - doesn't block response)
-    notifyContentUpdate("blog_post", data.slug, "URL_UPDATED");
+    if (data.status === "published") {
+      notifyContentUpdate("blog_post", data.slug, "URL_UPDATED");
+    }
+
+    // Invalidate blog cache
+    revalidateTag("blog");
 
     return NextResponse.json({
       success: true,
@@ -367,6 +373,9 @@ export async function DELETE(request: NextRequest) {
         sql`, `
       )})`
     );
+
+    // Invalidate blog cache
+    revalidateTag("blog");
 
     return NextResponse.json({
       success: true,
@@ -451,24 +460,8 @@ export async function PATCH(request: NextRequest) {
         )})`
       );
 
-    // Notify Google about bulk blog post updates (async - doesn't block response)
-    if (action === "publish" || action === "unpublish") {
-      // Get the slugs of the updated posts to notify Google
-      const updatedPosts = await db
-        .select({ slug: blogPosts.slug })
-        .from(blogPosts)
-        .where(
-          sql`${blogPosts.id} IN (${sql.join(
-            ids.map((id) => sql`${id}`),
-            sql`, `
-          )})`
-        );
-
-      // Notify Google about each updated post
-      for (const post of updatedPosts) {
-        notifyContentUpdate("blog_post", post.slug, "URL_UPDATED");
-      }
-    }
+    // Invalidate blog cache
+    revalidateTag("blog");
 
     return NextResponse.json({
       success: true,
