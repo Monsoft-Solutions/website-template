@@ -9,6 +9,7 @@ import {
 } from "@/lib/utils/contact-form-validation";
 import { ApiResponse } from "@/lib/types/api-response.type";
 import { ContactSubmissionResponse } from "@/lib/types/contact-submission.type";
+import { emailService } from "@/lib/services/email.service";
 
 // Rate limiting storage (in production, use Redis or a database)
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
@@ -183,8 +184,72 @@ export async function POST(request: NextRequest) {
 
     console.log(`New contact submission from ${email} (ID: ${submission.id})`);
 
-    // TODO: Send email notification to admin
-    // This would be implemented with your email service (Resend, NodeMailer, etc.)
+    // Send confirmation email to user and notification to admins
+    const emailPromises = [
+      emailService.sendTemplatedEmail(
+        "contact-form-confirmation",
+        {
+          senderName: name,
+          senderEmail: email,
+          subject: subject || "General Inquiry",
+          message,
+          submittedAt: new Date().toISOString(),
+          companyName: "Site Wave",
+          supportEmail: "support@monsoftlabs.com",
+          siteUrl: "https://sitewave.com",
+        },
+        {
+          to: email,
+          subject: "We've received your message - Thank you!",
+          from: "support@monsoftlabs.com",
+        }
+      ),
+      emailService.sendTemplatedEmail(
+        "contact-form-notification",
+        {
+          senderName: name,
+          senderEmail: email,
+          subject: subject || "General Inquiry",
+          message,
+          submittedAt: new Date().toISOString(),
+          companyName: "Site Wave",
+          supportEmail: "support@monsoftlabs.com",
+          siteUrl: "https://sitewave.com",
+          ipAddress: clientIp !== "unknown" ? clientIp : undefined,
+          userAgent: userAgent || undefined,
+        },
+        {
+          to: "hello@sitewavefl.com",
+          subject: "New contact form submission",
+          from: "support@monsoftlabs.com",
+        }
+      ),
+    ];
+
+    // Send emails in parallel (don't wait for completion to avoid blocking the response)
+    Promise.all(emailPromises)
+      .then(([confirmationResult, notificationResult]) => {
+        if (confirmationResult.success) {
+          console.log(`Confirmation email sent to ${email}`);
+        } else {
+          console.error(
+            `Failed to send confirmation email to ${email}:`,
+            confirmationResult.error
+          );
+        }
+
+        if (notificationResult.success) {
+          console.log(`Notification email sent to admins`);
+        } else {
+          console.error(
+            `Failed to send notification email to admins:`,
+            notificationResult.error
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error sending emails:", error);
+      });
 
     const response: ApiResponse<ContactSubmissionResponse> = {
       success: true,

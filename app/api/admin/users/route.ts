@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { user as users } from "@/lib/db/schema/auth-schema";
 import { eq, and, or, desc, asc, sql, ilike } from "drizzle-orm";
-import { requireAdmin } from "@/lib/auth/server";
+import { requireAdmin, getCurrentUser } from "@/lib/auth/server";
 import { UserRole } from "@/lib/types/auth.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
+import { emailService } from "@/lib/services/email.service";
+import { emailConfig, templateConfigs } from "@/lib/config/email.config";
 
 /**
  * Admin users list response type
@@ -104,10 +106,10 @@ export async function GET(request: NextRequest) {
       sortBy === "name"
         ? users.name
         : sortBy === "email"
-        ? users.email
-        : sortBy === "role"
-        ? users.role
-        : users.createdAt;
+          ? users.email
+          : sortBy === "role"
+            ? users.role
+            : users.createdAt;
 
     const orderByClause =
       sortOrder === "asc" ? asc(orderByField) : desc(orderByField);
@@ -272,10 +274,50 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
+    // Send invitation email
+    try {
+      // Get current admin user for invitation details
+      const currentUser = await getCurrentUser();
+
+      if (currentUser) {
+        // Calculate expiration date
+        const expiresAt = new Date();
+        expiresAt.setHours(
+          expiresAt.getHours() + templateConfigs.userInvitation.expirationHours
+        );
+
+        // Create invitation URL
+        const invitationUrl = `${emailConfig.baseUrl}/auth/register?email=${encodeURIComponent(newUser.email)}`;
+
+        // Send invitation email
+        await emailService.sendTemplatedEmail(
+          "user-invitation",
+          {
+            recipientName: newUser.name,
+            inviterName: currentUser.name,
+            inviterEmail: currentUser.email,
+            invitationUrl,
+            role: newUser.role,
+            expiresAt: expiresAt.toISOString(),
+            companyName: "Site Wave",
+            supportEmail: emailConfig.defaultFromEmail,
+            siteUrl: emailConfig.baseUrl,
+          },
+          {
+            to: newUser.email,
+            from: emailConfig.defaultFromEmail || "support@monsoftlabs.com",
+          }
+        );
+      }
+    } catch (emailError) {
+      // Log email error but don't fail the user creation
+      console.error("Failed to send invitation email:", emailError);
+    }
+
     const result: ApiResponse<typeof newUser> = {
       success: true,
       data: newUser,
-      message: "User created successfully",
+      message: "User created successfully and invitation email sent",
     };
 
     return NextResponse.json(result);
