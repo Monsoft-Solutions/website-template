@@ -25,6 +25,7 @@ import {
   X,
   MessageSquare,
   Sparkles,
+  ImageIcon,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -65,6 +66,11 @@ const navItems: NavItem[] = [
     title: "Services",
     href: "/admin/services",
     icon: Briefcase,
+  },
+  {
+    title: "Gallery",
+    href: "/admin/gallery",
+    icon: ImageIcon,
   },
   {
     title: "Categories",

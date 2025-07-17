@@ -20,6 +20,9 @@ import { user as users } from "./auth-schema";
 import { session as sessions, account as accounts } from "./auth-schema";
 import { adminActivityLogs } from "./admin-activity-log.table";
 import { viewTracking } from "./view-tracking.table";
+import { galleryImages } from "./gallery-image.table";
+import { galleryGroups } from "./gallery-group.table";
+import { galleryImageGroups } from "./gallery-image-group.table";
 
 /**
  * Database relations definitions
@@ -234,3 +237,35 @@ export const viewTrackingRelations = relations(viewTracking, ({ one }) => ({
     references: [services.id],
   }),
 }));
+
+// Gallery Relations
+
+export const galleryImagesRelations = relations(galleryImages, ({ many }) => ({
+  imageGroups: many(galleryImageGroups),
+  coverForGroups: many(galleryGroups),
+}));
+
+export const galleryGroupsRelations = relations(
+  galleryGroups,
+  ({ many, one }) => ({
+    imageGroups: many(galleryImageGroups),
+    coverImage: one(galleryImages, {
+      fields: [galleryGroups.coverImageId],
+      references: [galleryImages.id],
+    }),
+  })
+);
+
+export const galleryImageGroupsRelations = relations(
+  galleryImageGroups,
+  ({ one }) => ({
+    image: one(galleryImages, {
+      fields: [galleryImageGroups.imageId],
+      references: [galleryImages.id],
+    }),
+    group: one(galleryGroups, {
+      fields: [galleryImageGroups.groupId],
+      references: [galleryGroups.id],
+    }),
+  })
+);

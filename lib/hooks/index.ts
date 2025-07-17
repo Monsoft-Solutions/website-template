@@ -7,3 +7,7 @@ export { useBlogTags } from "./use-blog-tags.hook";
 
 // Analytics hooks
 export { useAnalytics, useRecordView } from "./use-analytics.hook";
+
+// Gallery hooks
+export { useAdminGallery } from "./use-admin-gallery";
+export { useAdminGalleryGroups } from "./use-admin-gallery-groups";
