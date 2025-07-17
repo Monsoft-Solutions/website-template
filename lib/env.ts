@@ -41,6 +41,12 @@ type EnvSchema = {
 
   // Analytics (if needed)
   GOOGLE_ANALYTICS_ID?: string;
+
+  // OpenAI
+  OPENAI_API_KEY: string;
+
+  // Anthropic
+  ANTHROPIC_API_KEY: string;
 };
 
 /**
@@ -50,6 +56,8 @@ const REQUIRED_ENV_VARS: (keyof EnvSchema)[] = [
   "DATABASE_URL",
   "NODE_ENV",
   "NEXT_PUBLIC_SITE_URL",
+  "OPENAI_API_KEY",
+  "ANTHROPIC_API_KEY",
 ];
 
 /**
@@ -132,6 +140,10 @@ const validateEnv = (): EnvSchema => {
 
     // Analytics
     GOOGLE_ANALYTICS_ID: env.GOOGLE_ANALYTICS_ID,
+
+    // AI API Keys
+    OPENAI_API_KEY: env.OPENAI_API_KEY!,
+    ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY!,
   };
 };
 

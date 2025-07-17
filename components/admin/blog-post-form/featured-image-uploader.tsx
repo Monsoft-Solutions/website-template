@@ -5,14 +5,25 @@ import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Upload, Link, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { AIImageGenerator } from "./ai-image-generator";
 
 interface FeaturedImageUploaderProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
   error?: string;
+  // New props for AI generation
+  blogTitle?: string;
+  blogContent?: string;
+  blogExcerpt?: string;
+  // New props for blog post updating
+  blogPostId?: string;
+  mode?: "create" | "edit";
+  onBlogPostUpdate?: (blogPostId: string, imageUrl: string) => Promise<void>;
 }
 
 /**
@@ -24,8 +35,16 @@ export function FeaturedImageUploader({
   onChange,
   disabled = false,
   error,
+  blogTitle = "",
+  blogContent = "",
+  blogExcerpt = "",
+  blogPostId,
+  mode,
+  onBlogPostUpdate,
 }: FeaturedImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [activeTab, setActiveTab] = useState("upload");
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,83 +96,174 @@ export function FeaturedImageUploader({
     }
   };
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
+  // Handle URL input
+  const handleUrlSubmit = () => {
+    if (!urlInput.trim()) {
+      toast.error("Please enter a valid URL");
+      return;
+    }
+
+    try {
+      new URL(urlInput); // Validate URL
+      onChange(urlInput);
+      setUrlInput("");
+      toast.success("Image URL set successfully!");
+    } catch {
+      toast.error("Please enter a valid URL");
+    }
   };
 
+  // Handle removing current image
   const handleRemoveImage = () => {
     onChange("");
+    toast.success("Image removed");
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={handleFileUpload}
-          disabled={disabled || isUploading}
-          className="hidden"
-          id="featured-image-upload"
-        />
-        <Label
-          htmlFor="featured-image-upload"
-          className="cursor-pointer flex-1"
-        >
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            disabled={disabled || isUploading}
-            asChild
-          >
-            <span>
-              <Upload className="w-4 h-4 mr-2" />
-              {isUploading ? "Uploading..." : "Upload Image"}
-            </span>
-          </Button>
-        </Label>
-      </div>
+      <Label>Featured Image</Label>
 
-      <div className="space-y-2">
-        <Label htmlFor="featured-image-url">Image URL</Label>
-        <Input
-          id="featured-image-url"
-          value={value}
-          onChange={handleUrlChange}
-          placeholder="https://example.com/image.jpg"
-          disabled={disabled}
-          className={error ? "border-destructive" : ""}
-        />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </div>
-
-      {value && (
-        <div className="relative">
-          <Image
-            src={value}
-            alt="Featured"
-            width={400}
-            height={128}
-            className="w-full h-32 object-cover rounded border"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              toast.error("Failed to load image");
-            }}
-          />
-          <Button
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger
+            value="upload"
+            className="flex items-center gap-2"
             type="button"
-            variant="destructive"
-            size="sm"
-            className="absolute top-2 right-2"
-            onClick={handleRemoveImage}
-            disabled={disabled}
           >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+            <Upload className="h-4 w-4" />
+            Upload
+          </TabsTrigger>
+          <TabsTrigger
+            value="url"
+            className="flex items-center gap-2"
+            type="button"
+          >
+            <Link className="h-4 w-4" />
+            URL
+          </TabsTrigger>
+          <TabsTrigger
+            value="ai"
+            className="flex items-center gap-2"
+            type="button"
+          >
+            <Sparkles className="h-4 w-4" />
+            AI Generate
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upload" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label
+                    htmlFor="file-upload"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/75 transition-colors"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG, WEBP up to 5MB
+                      </p>
+                    </div>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={disabled || isUploading}
+                    />
+                  </label>
+                </div>
+                {isUploading && (
+                  <p className="text-sm text-center text-muted-foreground">
+                    Uploading image...
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="url" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="image-url">Image URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="image-url"
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      disabled={disabled}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleUrlSubmit}
+                      disabled={disabled || !urlInput.trim()}
+                    >
+                      Set
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai">
+          <AIImageGenerator
+            title={blogTitle}
+            content={blogContent}
+            excerpt={blogExcerpt}
+            onImageAccepted={onChange}
+            disabled={disabled}
+            blogPostId={blogPostId}
+            mode={mode}
+            onBlogPostUpdate={onBlogPostUpdate}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Current Image Preview */}
+      {value && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Current Featured Image</Label>
+                <Button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  variant="destructive"
+                  size="sm"
+                  disabled={disabled}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                <Image
+                  src={value}
+                  alt="Featured image preview"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
