@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { uploadToBlob } from "@/lib/utils/blob-upload";
+import { useAdminGalleryGroups } from "@/lib/hooks/use-admin-gallery-groups";
 import {
   Upload,
   X,
@@ -27,11 +27,19 @@ interface UploadFile {
   status: "pending" | "uploading" | "success" | "error";
   progress: number;
   error?: string;
+  name: string;
+  altText: string;
+  description: string;
   result?: {
     url: string;
     pathname: string;
     size: number;
     contentType: string;
+    galleryImage: {
+      id: string;
+      name: string;
+      originalUrl: string;
+    };
   };
 }
 
@@ -52,6 +60,14 @@ export function GalleryUpload({
 }: GalleryUploadProps) {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const defaultMetadata = {
+    isAvailable: true,
+    isFeatured: false,
+  };
+
+  // Load gallery groups
+  const { groups, isLoading: groupsLoading } = useAdminGalleryGroups();
 
   // Accepted file types (matching blob upload service)
   const acceptedTypes = {
@@ -89,6 +105,9 @@ export function GalleryUpload({
         preview: URL.createObjectURL(file),
         status: "pending" as const,
         progress: 0,
+        name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for default name
+        altText: `Image: ${file.name}`, // Default alt text
+        description: "", // Default empty description
       }));
 
       setFiles((prev) => [...prev, ...newFiles]);
@@ -141,11 +160,33 @@ export function GalleryUpload({
         );
       }, 200);
 
-      // Upload to blob storage
-      uploadToBlob(uploadFile.file, {
-        folder: "gallery", // Use gallery folder instead of blog
-        contentType: uploadFile.file.type,
+      // Upload via API endpoint with metadata
+      const formData = new FormData();
+      formData.append("file", uploadFile.file);
+      formData.append("name", uploadFile.name);
+      formData.append("altText", uploadFile.altText);
+      formData.append("description", uploadFile.description);
+      formData.append("groupIds", JSON.stringify(selectedGroups));
+      formData.append("isAvailable", defaultMetadata.isAvailable.toString());
+      formData.append("isFeatured", defaultMetadata.isFeatured.toString());
+
+      fetch("/api/admin/gallery/upload", {
+        method: "POST",
+        body: formData,
       })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`Upload failed with status ${response.status}`);
+          }
+
+          const result = await response.json();
+
+          if (!result.success) {
+            throw new Error(result.error || "Upload failed");
+          }
+
+          return result.data;
+        })
         .then((result) => {
           clearInterval(progressInterval);
           const updatedFile: UploadFile = {
@@ -241,6 +282,59 @@ export function GalleryUpload({
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
             </Button>
+          </div>
+
+          {/* Group Selection */}
+          <div className="space-y-3">
+            <div>
+              <h4 className="text-sm font-medium mb-2">Assign to Groups</h4>
+              <p className="text-xs text-muted-foreground mb-3">
+                Select one or more groups to organize your images
+              </p>
+            </div>
+
+            {groupsLoading ? (
+              <div className="text-sm text-muted-foreground">
+                Loading groups...
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {groups.map((group) => (
+                  <label
+                    key={group.id}
+                    className={cn(
+                      "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors",
+                      selectedGroups.includes(group.id)
+                        ? "border-primary bg-primary/5"
+                        : "border-muted hover:border-primary/50"
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                      checked={selectedGroups.includes(group.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedGroups((prev) => [...prev, group.id]);
+                        } else {
+                          setSelectedGroups((prev) =>
+                            prev.filter((id) => id !== group.id)
+                          );
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">{group.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {selectedGroups.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Images will be added to {selectedGroups.length} group
+                {selectedGroups.length !== 1 ? "s" : ""}
+              </div>
+            )}
           </div>
 
           {/* Dropzone */}

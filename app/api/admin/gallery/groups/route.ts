@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { galleryGroups } from "@/lib/db/schema/gallery-group.table";
 import { galleryImages } from "@/lib/db/schema/gallery-image.table";
 import { galleryImageGroups } from "@/lib/db/schema/gallery-image-group.table";
-import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
+import { eq, and, or, ilike, desc, asc, sql, inArray } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth/server";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import type {
@@ -134,15 +134,16 @@ export async function GET(request: NextRequest) {
       .offset(offset);
 
     // Get cover images for groups that have them
-    const groupIds = groupsResult.map((item) => item.group.id);
+    const coverImageIds = groupsResult
+      .map((item) => item.group.coverImageId)
+      .filter((id): id is string => id !== null);
+
     const coverImages =
-      groupIds.length > 0
+      coverImageIds.length > 0
         ? await db
             .select()
             .from(galleryImages)
-            .where(
-              sql`${galleryImages.id} IN (SELECT cover_image_id FROM gallery_groups WHERE id = ANY(${groupIds}) AND cover_image_id IS NOT NULL)`
-            )
+            .where(inArray(galleryImages.id, coverImageIds))
         : [];
 
     // Build response with cover image information

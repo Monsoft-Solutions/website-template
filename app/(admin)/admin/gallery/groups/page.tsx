@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -15,8 +14,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { GalleryGroupForm } from "@/components/admin/gallery/GalleryGroupForm";
 import type { GalleryGroupWithImages } from "@/lib/types/gallery-with-relations.type";
+import type { GalleryGroup } from "@/lib/types/gallery-group.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
+import { AdminGalleryGroupsListResponse } from "@/app/api/admin/gallery/groups/route";
 import { Plus, Folder, Image, Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import NextImage from "next/image";
 
@@ -25,12 +27,13 @@ import NextImage from "next/image";
  * Manage gallery groups/categories for organizing images
  */
 export default function AdminGalleryGroupsPage() {
-  const router = useRouter();
-
   const [groups, setGroups] = useState<GalleryGroupWithImages[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<GalleryGroup | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch gallery groups
   useEffect(() => {
@@ -43,7 +46,7 @@ export default function AdminGalleryGroupsPage() {
       setError(null);
 
       const response = await fetch("/api/admin/gallery/groups");
-      const result: ApiResponse<GalleryGroupWithImages[]> =
+      const result: ApiResponse<AdminGalleryGroupsListResponse> =
         await response.json();
 
       if (!response.ok) {
@@ -51,7 +54,7 @@ export default function AdminGalleryGroupsPage() {
       }
 
       if (result.data) {
-        setGroups(result.data);
+        setGroups(result.data.groups || []);
       }
     } catch (err) {
       const errorMessage =
@@ -61,6 +64,84 @@ export default function AdminGalleryGroupsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle group creation
+  const handleCreateGroup = async (data: {
+    name: string;
+    slug: string;
+    description?: string;
+    displayOrder: number;
+    isActive: boolean;
+  }) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/admin/gallery/groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result: ApiResponse<GalleryGroup> = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create group");
+      }
+
+      toast.success("Group created successfully!");
+      setIsCreateDialogOpen(false);
+      fetchGroups();
+    } catch (error) {
+      console.error("Error creating group:", error);
+      throw error; // Re-throw to let form handle the error
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle group editing
+  const handleEditGroup = async (data: {
+    name: string;
+    slug: string;
+    description?: string;
+    displayOrder: number;
+    isActive: boolean;
+  }) => {
+    if (!editingGroup) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(
+        `/api/admin/gallery/groups/${editingGroup.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result: ApiResponse<GalleryGroup> = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update group");
+      }
+
+      toast.success("Group updated successfully!");
+      setIsEditDialogOpen(false);
+      setEditingGroup(null);
+      fetchGroups();
+    } catch (error) {
+      console.error("Error updating group:", error);
+      throw error; // Re-throw to let form handle the error
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle opening edit dialog
+  const handleOpenEditDialog = (group: GalleryGroupWithImages) => {
+    setEditingGroup(group);
+    setIsEditDialogOpen(true);
   };
 
   // Handle group deletion
@@ -150,15 +231,16 @@ export default function AdminGalleryGroupsPage() {
                 Create Group
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Gallery Group</DialogTitle>
               </DialogHeader>
-              <div className="p-4">
-                <p className="text-sm text-gray-600">
-                  Group creation form will be implemented here
-                </p>
-              </div>
+              <GalleryGroupForm
+                mode="create"
+                onSubmit={handleCreateGroup}
+                onCancel={() => setIsCreateDialogOpen(false)}
+                isLoading={isSubmitting}
+              />
             </DialogContent>
           </Dialog>
         }
@@ -290,9 +372,7 @@ export default function AdminGalleryGroupsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() =>
-                          router.push(`/admin/gallery/groups/${group.id}`)
-                        }
+                        onClick={() => handleOpenEditDialog(group)}
                         className="h-8 w-8 p-0"
                       >
                         <Edit className="h-4 w-4" />
@@ -327,6 +407,27 @@ export default function AdminGalleryGroupsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Group Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Gallery Group</DialogTitle>
+          </DialogHeader>
+          {editingGroup && (
+            <GalleryGroupForm
+              mode="edit"
+              initialData={editingGroup}
+              onSubmit={handleEditGroup}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setEditingGroup(null);
+              }}
+              isLoading={isSubmitting}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

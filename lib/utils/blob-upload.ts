@@ -56,8 +56,10 @@ export async function uploadToBlob(
 
   // Generate secure filename
   const timestamp = Date.now();
+  // Use base64 encoding and clean it up for filename safety
   const hash = Buffer.from(`${timestamp}-${fileSize}-${contentType}`)
-    .toString("base64url")
+    .toString("base64")
+    .replace(/[+/=]/g, "")
     .substring(0, 15);
   const fileExtension = getExtensionFromContentType(contentType);
   const finalFilename = filename || `${timestamp}-${hash}.${fileExtension}`;
@@ -149,4 +151,24 @@ export function validateFileExtension(
   }
 
   return extension === expectedExtension;
+}
+
+/**
+ * Get image dimensions from a File object (server-side)
+ * Returns a promise that resolves with width and height
+ * For now, returns undefined until we implement proper server-side image processing
+ */
+export async function getImageDimensions(
+  file: File
+): Promise<{ width?: number; height?: number }> {
+  try {
+    // TODO: Implement server-side image dimension detection
+    // This could use sharp, jimp, or another server-side image library
+    // For now, returning undefined to avoid errors
+    console.log("Getting dimensions for file:", file.name); // Prevent unused parameter warning
+    return { width: undefined, height: undefined };
+  } catch (error) {
+    console.warn("Failed to get image dimensions:", error);
+    return { width: undefined, height: undefined };
+  }
 }
