@@ -27,16 +27,16 @@ export const MODEL_CONFIG: Record<string, AIModelConfig> = {
     capabilities: ["text", "analysis", "fast-response"],
     costPer1kTokens: 0.00025,
   },
-  "gpt-4o": {
+  "gpt-4.1": {
     provider: "openai",
-    maxTokens: 4000,
+    maxTokens: 1047576,
     temperature: 0.7,
     capabilities: ["text", "analysis", "reasoning", "code"],
     costPer1kTokens: 0.005,
   },
-  "gpt-4o-mini": {
+  "gpt-4.1-mini": {
     provider: "openai",
-    maxTokens: 4000,
+    maxTokens: 1047576,
     temperature: 0.7,
     capabilities: ["text", "analysis", "fast-response"],
     costPer1kTokens: 0.00015,

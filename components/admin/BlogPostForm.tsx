@@ -107,8 +107,10 @@ export function BlogPostForm({
     }
   }, [initialData, mode, form]);
 
-  // Watch title for slug generation
+  // Watch title for slug generation and AI image generation
   const watchedTitle = form.watch("title");
+  const watchedContent = form.watch("content");
+  const watchedExcerpt = form.watch("excerpt");
 
   // Handle form submission
   const onSubmit = async (data: BlogPostFormData) => {
@@ -146,6 +148,57 @@ export function BlogPostForm({
     );
   };
 
+  // Handle direct blog post update for image selection
+  const handleBlogPostUpdate = async (blogPostId: string, imageUrl: string) => {
+    if (mode !== "edit" || !initialData) {
+      throw new Error("Blog post update is only available in edit mode");
+    }
+
+    // Update the form field first for immediate UI feedback
+    form.setValue("featuredImage", imageUrl);
+
+    try {
+      // Create a minimal update payload - only update the featured image
+      const response = await fetch(`/api/admin/blog/${blogPostId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // Include all required fields from current form state
+          title: form.getValues("title"),
+          slug: form.getValues("slug"),
+          excerpt: form.getValues("excerpt"),
+          content: form.getValues("content"),
+          authorId: form.getValues("authorId"),
+          categoryId: form.getValues("categoryId"),
+          status: form.getValues("status"),
+          metaTitle: form.getValues("metaTitle"),
+          metaDescription: form.getValues("metaDescription"),
+          metaKeywords: form.getValues("metaKeywords"),
+          featuredImage: imageUrl, // This is the AI-generated image URL from Vercel Blob
+          tagIds: selectedTags.map((tag) => tag.id),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update blog post");
+      }
+      toast.success("Blog post updated with selected image!");
+    } catch (error) {
+      // Reset the form field if the update failed
+      form.setValue("featuredImage", initialData.featuredImage || "");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update featured image"
+      );
+      throw error;
+    }
+  };
+
   // Loading state
   const isLoading = categoriesLoading || tagsLoading || authorsLoading;
   const hasError = categoriesError || tagsError || authorsError;
@@ -173,7 +226,7 @@ export function BlogPostForm({
   }
 
   return (
-    <div className={cn("max-w-6xl mx-auto", className)}>
+    <div className={cn("max-w-full mx-auto", className)}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Error Message */}
         {submitError && (
@@ -372,6 +425,12 @@ export function BlogPostForm({
                       value={field.value || ""}
                       onChange={field.onChange}
                       error={fieldState.error?.message}
+                      blogTitle={watchedTitle || ""}
+                      blogContent={watchedContent || ""}
+                      blogExcerpt={watchedExcerpt || ""}
+                      mode={mode}
+                      onBlogPostUpdate={handleBlogPostUpdate}
+                      blogPostId={initialData?.id || ""}
                     />
                   )}
                 />
