@@ -46,7 +46,15 @@ export function ImageGenerationPreview({
 
   const handleDownload = () => {
     if (generatedImage?.url) {
-      window.open(generatedImage.url, "_blank");
+      // Create a temporary anchor element for download
+      const link = document.createElement("a");
+      link.href = generatedImage.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.download = `generated-image-${generatedImage.generatedAt}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 

@@ -30,7 +30,7 @@ export class PromptGenerator {
     }
   ): Promise<ImagePromptSuggestion> {
     try {
-      const model = this.modelManager.getModel("gpt-4o-mini");
+      const model = this.modelManager.getModel("gpt-4.1-mini");
 
       const result = await generateObject({
         model,
@@ -138,13 +138,6 @@ You MUST use this exact XML structure for the xmlPrompt field:
 
 \`\`\`xml
 <promptTemplate>
-  <metadata>
-    <model>gpt-4o-image</model>
-    <version>v1</version>
-    <author>SiteWave AI</author>
-    <date>${new Date().toISOString().split("T")[0]}</date>
-  </metadata>
-
   <title>[Blog post inspired title for the image]</title>
 
   <instructions>

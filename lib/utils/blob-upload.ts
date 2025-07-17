@@ -56,9 +56,11 @@ export async function uploadToBlob(
 
   // Generate secure filename
   const timestamp = Date.now();
-  const randomId = Math.random().toString(36).substring(2, 15);
+  const hash = Buffer.from(`${timestamp}-${fileSize}-${contentType}`)
+    .toString("base64url")
+    .substring(0, 15);
   const fileExtension = getExtensionFromContentType(contentType);
-  const finalFilename = filename || `${timestamp}-${randomId}.${fileExtension}`;
+  const finalFilename = filename || `${timestamp}-${hash}.${fileExtension}`;
 
   try {
     // Upload to Vercel Blob

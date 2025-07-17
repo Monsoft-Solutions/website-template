@@ -186,9 +186,15 @@ export function BlogPostForm({
       if (!result.success) {
         throw new Error(result.error || "Failed to update blog post");
       }
+      toast.success("Blog post updated with selected image!");
     } catch (error) {
       // Reset the form field if the update failed
       form.setValue("featuredImage", initialData.featuredImage || "");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update featured image"
+      );
       throw error;
     }
   };

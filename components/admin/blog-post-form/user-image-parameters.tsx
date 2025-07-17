@@ -258,6 +258,7 @@ export function UserImageParametersComponent({
                       />
                       {color}
                       <button
+                        type="button"
                         onClick={() => removeBrandColor(index)}
                         className="ml-1 hover:text-destructive"
                       >
