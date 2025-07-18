@@ -72,11 +72,13 @@ export async function GET(request: NextRequest) {
 
     // Add search query filter
     if (searchQuery) {
+      // Escape any % or _ so they’re treated as literals, not wildcards
+      const escapedQuery = searchQuery.replace(/[%_]/g, "\\$&");
       whereConditions.push(
         or(
-          ilike(galleryGroups.name, `%${searchQuery}%`),
-          ilike(galleryGroups.slug, `%${searchQuery}%`),
-          ilike(galleryGroups.description, `%${searchQuery}%`)
+          ilike(galleryGroups.name, `%${escapedQuery}%`),
+          ilike(galleryGroups.slug, `%${escapedQuery}%`),
+          ilike(galleryGroups.description, `%${escapedQuery}%`)
         )
       );
     }

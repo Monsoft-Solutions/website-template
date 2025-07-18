@@ -151,15 +151,15 @@ export async function PATCH(
       );
     }
 
-    // Check for name/slug conflicts (excluding current group)
-    if (data.name || data.slug) {
-      const conflicts = await db
+    // Check for name conflicts if name is being changed
+    if (data.name !== undefined && data.name !== existingGroup.name) {
+      const nameConflicts = await db
         .select()
         .from(galleryGroups)
-        .where(eq(galleryGroups.name, data.name || existingGroup.name))
+        .where(eq(galleryGroups.name, data.name))
         .limit(1);
 
-      if (conflicts.length > 0 && conflicts[0].id !== id) {
+      if (nameConflicts.length > 0) {
         return NextResponse.json(
           {
             success: false,
@@ -169,14 +169,17 @@ export async function PATCH(
           { status: 409 }
         );
       }
+    }
 
+    // Check for slug conflicts if slug is being changed
+    if (data.slug !== undefined && data.slug !== existingGroup.slug) {
       const slugConflicts = await db
         .select()
         .from(galleryGroups)
-        .where(eq(galleryGroups.slug, data.slug || existingGroup.slug))
+        .where(eq(galleryGroups.slug, data.slug))
         .limit(1);
 
-      if (slugConflicts.length > 0 && slugConflicts[0].id !== id) {
+      if (slugConflicts.length > 0) {
         return NextResponse.json(
           {
             success: false,
@@ -187,7 +190,6 @@ export async function PATCH(
         );
       }
     }
-
     // Prepare update data
     const updateData: Partial<NewGalleryGroup> = {};
 

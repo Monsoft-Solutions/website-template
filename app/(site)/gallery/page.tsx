@@ -212,14 +212,14 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
                       </span>
 
                       {galleryData.hasNextPage && (
-                        <a
+                        <Link
                           href={`/gallery?page=${currentPage + 1}${
                             showFeatured ? "&featured=true" : ""
                           }`}
                           className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
                         >
                           Next
-                        </a>
+                        </Link>
                       )}
                     </div>
                   </div>

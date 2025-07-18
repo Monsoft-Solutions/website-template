@@ -246,26 +246,29 @@ export async function DELETE(
     }
 
     // Check if this image is used as a cover image for any groups
-    const groupsUsingAsCover = await db
-      .select()
-      .from(galleryGroups)
-      .where(eq(galleryGroups.coverImageId, id));
-
-    if (groupsUsingAsCover.length > 0) {
-      // Remove cover image references
-      await db
-        .update(galleryGroups)
-        .set({ coverImageId: null })
+    await db.transaction(async (tx) => {
+      // Check if this image is used as a cover image for any groups
+      const groupsUsingAsCover = await tx
+        .select()
+        .from(galleryGroups)
         .where(eq(galleryGroups.coverImageId, id));
-    }
 
-    // Delete group associations
-    await db
-      .delete(galleryImageGroups)
-      .where(eq(galleryImageGroups.imageId, id));
+      if (groupsUsingAsCover.length > 0) {
+        // Remove cover image references
+        await tx
+          .update(galleryGroups)
+          .set({ coverImageId: null })
+          .where(eq(galleryGroups.coverImageId, id));
+      }
 
-    // Delete the image record
-    await db.delete(galleryImages).where(eq(galleryImages.id, id));
+      // Delete group associations
+      await tx
+        .delete(galleryImageGroups)
+        .where(eq(galleryImageGroups.imageId, id));
+
+      // Delete the image record
+      await tx.delete(galleryImages).where(eq(galleryImages.id, id));
+    });
 
     // TODO: Consider deleting the actual file from blob storage
     // This would require implementing a cleanup service or using blob storage lifecycle rules

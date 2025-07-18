@@ -258,16 +258,7 @@ export async function POST(request: NextRequest) {
 
     // Extract file information from URL
     const fileName = fileUrl.split("/").pop() || "unknown";
-    const mimeType = fileName.toLowerCase().endsWith(".png")
-      ? "image/png"
-      : fileName.toLowerCase().endsWith(".jpg") ||
-          fileName.toLowerCase().endsWith(".jpeg")
-        ? "image/jpeg"
-        : fileName.toLowerCase().endsWith(".webp")
-          ? "image/webp"
-          : fileName.toLowerCase().endsWith(".gif")
-            ? "image/gif"
-            : "image/jpeg";
+    const mimeType = data.mimeType || "image/jpeg";
 
     // Create metadata
     const metadata: ImageMetadata = {

@@ -19,6 +19,7 @@ import {
   Loader2,
 } from "lucide-react";
 import NextImage from "next/image";
+import { toast } from "sonner";
 
 interface UploadFile {
   id: string;
@@ -96,6 +97,9 @@ export function GalleryUpload({
           errors: errors.map((e) => e.message),
         }));
         console.error("Rejected files:", errors);
+        toast.error(
+          `${rejectedFiles.length} file(s) rejected. Check file type and size.`
+        );
       }
 
       // Process accepted files

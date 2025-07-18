@@ -19,7 +19,15 @@ import type { GalleryGroupWithImages } from "@/lib/types/gallery-with-relations.
 import type { GalleryGroup } from "@/lib/types/gallery-group.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import { AdminGalleryGroupsListResponse } from "@/app/api/admin/gallery/groups/route";
-import { Plus, Folder, Image, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import {
+  Plus,
+  Folder,
+  Image as ImageIcon,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import NextImage from "next/image";
 
 /**
@@ -273,8 +281,8 @@ export default function AdminGalleryGroupsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Images</CardTitle>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image className="h-4 w-4 text-blue-600" aria-hidden="true" />
+
+            <ImageIcon className="h-4 w-4 text-blue-600" aria-hidden="true" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
@@ -348,8 +356,7 @@ export default function AdminGalleryGroupsPage() {
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
-                      {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                      <Image
+                      <ImageIcon
                         className="h-4 w-4 text-gray-400"
                         aria-hidden="true"
                       />

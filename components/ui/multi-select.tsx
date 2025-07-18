@@ -112,6 +112,7 @@ export function MultiSelect({
                 size="sm"
                 className="ml-1 h-auto p-0 text-muted-foreground hover:text-foreground"
                 onClick={() => handleRemove(option.value)}
+                aria-label={`Remove ${option.label} from selection`}
               >
                 <X className="h-3 w-3" />
               </Button>
