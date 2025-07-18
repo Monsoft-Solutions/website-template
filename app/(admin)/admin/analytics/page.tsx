@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnalytics } from "@/lib/hooks/use-analytics.hook";
-import { useContactSubmissionAnalytics } from "@/lib/hooks/use-contact-submission-analytics";
+import { useContactSubmissionAnalytics } from "@/lib/hooks/use-contact-submission-analytics.hook";
 import { AnalyticsTimePeriod } from "@/lib/types";
 import {
   FileText,

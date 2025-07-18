@@ -32,9 +32,9 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAnalytics } from "@/lib/hooks/use-analytics.hook";
-import { useAdminBlogPosts } from "@/lib/hooks/use-admin-blog-posts";
-import { useAdminServices } from "@/lib/hooks/use-admin-services";
-import { useContactSubmissionAnalytics } from "@/lib/hooks/use-contact-submission-analytics";
+import { useAdminBlogPosts } from "@/lib/hooks/use-admin-blog-posts.hook";
+import { useAdminServices } from "@/lib/hooks/use-admin-services.hook";
+import { useContactSubmissionAnalytics } from "@/lib/hooks/use-contact-submission-analytics.hook";
 import Link from "next/link";
 
 /**

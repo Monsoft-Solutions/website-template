@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAdminContactSubmissions } from "@/lib/hooks/use-admin-contact-submissions";
+import { useAdminContactSubmissions } from "@/lib/hooks/use-admin-contact-submissions.hook";
 import type { ContactSubmission } from "@/lib/types/contact/contact-submission.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import {

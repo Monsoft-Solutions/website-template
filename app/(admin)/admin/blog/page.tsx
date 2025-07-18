@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAdminBlogPosts } from "@/lib/hooks/use-admin-blog-posts";
+import { useAdminBlogPosts } from "@/lib/hooks/use-admin-blog-posts.hook";
 import type { BlogPostWithRelations } from "@/lib/types/blog-post-with-relations.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
 import {

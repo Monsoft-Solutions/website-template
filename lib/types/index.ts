@@ -50,6 +50,25 @@ export type {
   SiteConfigFormData,
 } from "./site-config.type";
 
+// Gallery types
+export type {
+  GalleryImage,
+  NewGalleryImage,
+  GalleryImageCreateData,
+  GalleryImageUpdateData,
+  ImageMetadata,
+} from "./gallery-image.type";
+export type {
+  GalleryGroup,
+  NewGalleryGroup,
+  GalleryGroupFormData,
+} from "./gallery-group.type";
+export type {
+  GalleryImageWithGroups,
+  GalleryGroupWithImages,
+  GalleryImageWithDetails,
+} from "./gallery-with-relations.type";
+
 // Database entity types
 export * from "./service";
 export * from "./blog";

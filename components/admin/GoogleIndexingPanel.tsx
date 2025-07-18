@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useGoogleIndexing } from "@/lib/hooks/useGoogleIndexing";
+import { useGoogleIndexing } from "@/lib/hooks/useGoogleIndexing.hook";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -151,8 +151,8 @@ export function GoogleIndexingPanel({ className }: GoogleIndexingPanelProps) {
             {configStatus.status === "checking"
               ? "Checking..."
               : configStatus.status === "configured"
-              ? "Configured"
-              : "Not Configured"}
+                ? "Configured"
+                : "Not Configured"}
           </Badge>
         </div>
       </CardHeader>
@@ -166,8 +166,8 @@ export function GoogleIndexingPanel({ className }: GoogleIndexingPanelProps) {
                 configStatus.status === "configured"
                   ? "text-green-600"
                   : configStatus.status === "not-configured"
-                  ? "text-yellow-600"
-                  : "text-muted-foreground"
+                    ? "text-yellow-600"
+                    : "text-muted-foreground"
               }`}
             />
             <span className="text-muted-foreground">{configStatus.text}</span>

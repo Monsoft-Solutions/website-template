@@ -32,6 +32,11 @@ export * from "./view-tracking.table";
 // Site configuration
 export * from "./site-config.table";
 
+// Gallery tables
+export * from "./gallery-image.table";
+export * from "./gallery-group.table";
+export * from "./gallery-image-group.table";
+
 // Auth tables
 export * from "./auth-schema";
 export * from "./admin-activity-log.table";
