@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAdminGallery } from "@/lib/hooks/use-admin-gallery";
+import { useAdminGallery } from "@/lib/hooks/use-admin-gallery.hook";
 import { GalleryGrid } from "@/components/admin/gallery/GalleryGrid";
 import { GalleryFilters } from "@/components/admin/gallery/GalleryFilters";
 import { GalleryUpload } from "@/components/admin/gallery/GalleryUpload";

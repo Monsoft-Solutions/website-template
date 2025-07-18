@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, X, Filter } from "lucide-react";
-import { useAdminGalleryGroups } from "@/lib/hooks/use-admin-gallery-groups";
+import { useAdminGalleryGroups } from "@/lib/hooks/use-admin-gallery-groups.hook";
 
 interface GalleryFiltersProps {
   searchTerm: string;

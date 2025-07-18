@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAdminGalleryGroups } from "@/lib/hooks/use-admin-gallery-groups";
+import { useAdminGalleryGroups } from "@/lib/hooks/use-admin-gallery-groups.hook";
 import {
   Upload,
   X,

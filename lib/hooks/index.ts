@@ -9,5 +9,5 @@ export { useBlogTags } from "./use-blog-tags.hook";
 export { useAnalytics, useRecordView } from "./use-analytics.hook";
 
 // Gallery hooks
-export { useAdminGallery } from "./use-admin-gallery";
-export { useAdminGalleryGroups } from "./use-admin-gallery-groups";
+export { useAdminGallery } from "./use-admin-gallery.hook";
+export { useAdminGalleryGroups } from "./use-admin-gallery-groups.hook";

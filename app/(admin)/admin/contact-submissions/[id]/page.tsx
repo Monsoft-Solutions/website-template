@@ -31,8 +31,8 @@ import {
   Check,
   MessageCircle,
 } from "lucide-react";
-import { useContactSubmissionDetail } from "@/lib/hooks/use-contact-submission-detail";
-import { useAdminComments } from "@/lib/hooks/use-admin-comments";
+import { useContactSubmissionDetail } from "@/lib/hooks/use-contact-submission-detail.hook";
+import { useAdminComments } from "@/lib/hooks/use-admin-comments.hook";
 import { LoadingSpinner } from "@/components/layout/Loading";
 
 /**

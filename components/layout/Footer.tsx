@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSiteConfig } from "@/lib/hooks/use-site-config";
+import { useSiteConfig } from "@/lib/hooks/use-site-config.hook";
 import { Github, Twitter, Linkedin, Facebook, Instagram } from "lucide-react";
 
 const footerLinks = {

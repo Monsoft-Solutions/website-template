@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useSiteConfig } from "@/lib/hooks/use-site-config";
+import { useSiteConfig } from "@/lib/hooks/use-site-config.hook";
 import { cn } from "@/lib/utils/cn";
 
 interface NavItem {

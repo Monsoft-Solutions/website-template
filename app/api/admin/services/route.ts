@@ -17,7 +17,7 @@ import { serviceRelated } from "@/lib/db/schema/service-related.table";
 import { requireAdmin } from "@/lib/auth/server";
 import type { ServiceWithRelations } from "@/lib/types/service-with-relations.type";
 import type { ApiResponse } from "@/lib/types/api-response.type";
-import type { AdminServicesListResponse } from "@/lib/hooks/use-admin-services";
+import type { AdminServicesListResponse } from "@/lib/hooks/use-admin-services.hook";
 import {
   getServiceFeaturesByIds,
   getServiceBenefitsByIds,
@@ -311,10 +311,10 @@ export async function GET(request: NextRequest) {
       sortBy === "title"
         ? services.title
         : sortBy === "category"
-        ? services.category
-        : sortBy === "timeline"
-        ? services.timeline
-        : services.createdAt;
+          ? services.category
+          : sortBy === "timeline"
+            ? services.timeline
+            : services.createdAt;
 
     const orderByClause =
       sortOrder === "asc" ? asc(orderByField) : desc(orderByField);
