@@ -7,6 +7,7 @@ import { Github, Twitter, Linkedin, Facebook, Instagram } from "lucide-react";
 const footerLinks = {
   company: [
     { href: "/about", label: "About" },
+    { href: "/gallery", label: "Gallery" },
     { href: "/blog", label: "Blog" },
     { href: "/contact", label: "Contact" },
   ],
