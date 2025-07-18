@@ -7,6 +7,7 @@ import {
   integer,
   boolean,
 } from "drizzle-orm/pg-core";
+import { galleryImages } from "./gallery-image.table";
 
 /**
  * Gallery groups for organizing images into logical categories
@@ -17,7 +18,9 @@ export const galleryGroups = pgTable("gallery_groups", {
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   description: text("description"),
-  coverImageId: uuid("cover_image_id"), // References a gallery image
+  coverImageId: uuid("cover_image_id").references(() => galleryImages.id, {
+    onDelete: "set null",
+  }), // References a gallery image
   displayOrder: integer("display_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
