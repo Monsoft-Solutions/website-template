@@ -4,6 +4,7 @@ import {
   foreignKey,
   primaryKey,
   integer,
+  timestamp,
 } from "drizzle-orm/pg-core";
 import { galleryImages } from "./gallery-image.table";
 import { galleryGroups } from "./gallery-group.table";
@@ -18,6 +19,11 @@ export const galleryImageGroups = pgTable(
     imageId: uuid("image_id").notNull(),
     groupId: uuid("group_id").notNull(),
     displayOrder: integer("display_order").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.imageId, table.groupId] }),

@@ -1,0 +1,2 @@
+ALTER TABLE "gallery_image_groups" ADD COLUMN "created_at" timestamp DEFAULT now() NOT NULL;--> statement-breakpoint
+ALTER TABLE "gallery_image_groups" ADD COLUMN "updated_at" timestamp DEFAULT now() NOT NULL;
