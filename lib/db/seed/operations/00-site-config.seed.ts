@@ -7,46 +7,54 @@ import type { SeedOperation } from "../types/seed-config.type";
  * Site configuration data based on current hardcoded values
  */
 const siteConfigData: NewSiteConfig = {
-  name: "Monsoft Solutions",
+  name: "Sun Gulf Realty",
   description:
-    "Monsoft Solutions is a software development company that provides software development services to businesses.",
+    "Sun Gulf Realty is a Cape Coral-based real estate company that emphasizes being 'different by design.' We are real and transparent, obsessing about every detail of every transaction.",
   ogImage: "/og-image.jpg",
   links: {
-    twitter: "https://twitter.com/yourhandle",
-    github: "https://github.com/yourhandle",
-    linkedin: "https://linkedin.com/in/yourhandle",
-    facebook: "https://facebook.com/yourpage",
-    instagram: "https://instagram.com/yourhandle",
+    facebook: "https://www.facebook.com/sungulfrealty",
+    instagram: "https://www.instagram.com/sungulfrealty/",
   },
   creator: {
-    name: "Your Name",
-    email: "contact@yoursite.com",
-    twitter: "@yourhandle",
-    url: "https://yoursite.com",
+    name: "Sun Gulf Realty, LLC",
+    email: "info@sungulfrealty.com",
+    url: "https://sungulfrealty.com",
   },
-  keywords: ["nextjs", "react", "template", "website", "seo", "blog"],
+  keywords: [
+    "Cape Coral real estate",
+    "Southwest Florida real estate",
+    "waterfront homes",
+    "property management",
+    "real estate investments",
+    "Cape Coral realtor",
+    "Florida real estate",
+    "luxury homes",
+    "property rentals",
+  ],
   language: "en",
   locale: "en_US",
   theme: {
-    primaryColor: "#000000",
-    secondaryColor: "#ffffff",
+    primaryColor: "#1E3A8A", // Gulf Coast blue
+    secondaryColor: "#F8FAFC", // Warm white
   },
   socialMedia: {
     twitter: {
       card: "summary_large_image",
-      site: "@yourhandle",
-      creator: "@yourhandle",
+      site: "@sungulfrealty",
+      creator: "@sungulfrealty",
     },
   },
   metadata: {
     generator: "Next.js",
-    applicationName: "Your Site Name",
+    applicationName: "Sun Gulf Realty",
     referrer: "origin-when-cross-origin",
-    authors: [{ name: "Your Name", url: "https://yoursite.com" }],
+    authors: [
+      { name: "Sun Gulf Realty, LLC", url: "https://sungulfrealty.com" },
+    ],
     colorScheme: "light dark",
     themeColor: [
-      { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-      { media: "(prefers-color-scheme: dark)", color: "#000000" },
+      { media: "(prefers-color-scheme: light)", color: "#F8FAFC" },
+      { media: "(prefers-color-scheme: dark)", color: "#1E3A8A" },
     ],
     viewport: {
       width: "device-width",
