@@ -5,6 +5,7 @@ import {
   ValuePropositionSection,
   FeaturedPropertiesSection,
   AboutSection,
+  MarketInsightsSection,
 } from "@/components/home";
 import { Testimonials } from "@/components/ui/testimonials";
 
@@ -53,6 +54,8 @@ export default function HomePage() {
         rotationInterval={8000}
         backgroundVariant="light"
       />
+
+      <MarketInsightsSection />
     </div>
   );
 }

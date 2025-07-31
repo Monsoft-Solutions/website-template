@@ -4,3 +4,4 @@ export { PropertySearchBar } from "./property-search-bar";
 export { ValuePropositionSection } from "./value-proposition-section";
 export { FeaturedPropertiesSection } from "./featured-properties-section";
 export { AboutSection } from "./about-section";
+export { default as MarketInsightsSection } from "./market-insights-section";
