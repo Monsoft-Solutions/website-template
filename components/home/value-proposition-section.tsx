@@ -53,20 +53,6 @@ const itemVariants = {
   },
 };
 
-const statisticsVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring" as const,
-      stiffness: 100,
-      damping: 25,
-      delay: 0.6,
-    },
-  },
-};
-
 export function ValuePropositionSection() {
   const [ref, inView] = useInView({
     threshold: 0.2,
@@ -131,63 +117,6 @@ export function ValuePropositionSection() {
               </motion.div>
             );
           })}
-        </motion.div>
-
-        {/* Statistics Row */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mt-24 pt-20 border-t border-neutral-border/30"
-          variants={statisticsVariants}
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
-        >
-          <motion.div
-            className="text-center group"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-blue-dark mb-3 group-hover:text-primary-blue transition-colors duration-300">
-              10+
-            </div>
-            <div className="text-base md:text-lg text-neutral-text font-medium">
-              Years Experience
-            </div>
-          </motion.div>
-          <motion.div
-            className="text-center group"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-blue-dark mb-3 group-hover:text-primary-blue transition-colors duration-300">
-              500+
-            </div>
-            <div className="text-base md:text-lg text-neutral-text font-medium">
-              Happy Clients
-            </div>
-          </motion.div>
-          <motion.div
-            className="text-center group"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-blue-dark mb-3 group-hover:text-primary-blue transition-colors duration-300">
-              95%
-            </div>
-            <div className="text-base md:text-lg text-neutral-text font-medium">
-              Satisfaction Rate
-            </div>
-          </motion.div>
-          <motion.div
-            className="text-center group"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          >
-            <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-blue-dark mb-3 group-hover:text-primary-blue transition-colors duration-300">
-              30
-            </div>
-            <div className="text-base md:text-lg text-neutral-text font-medium">
-              Avg Days on Market
-            </div>
-          </motion.div>
         </motion.div>
       </div>
     </section>

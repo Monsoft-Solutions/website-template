@@ -4,7 +4,9 @@ import {
   HeroSection,
   ValuePropositionSection,
   FeaturedPropertiesSection,
+  AboutSection,
 } from "@/components/home";
+import { Testimonials } from "@/components/ui/testimonials";
 
 export const metadata: Metadata = generateSeoMetadata({
   title: "Sun Gulf Realty - Real Estate Different by Design | Cape Coral, FL",
@@ -38,6 +40,19 @@ export default function HomePage() {
 
       {/* Value Proposition Section */}
       <ValuePropositionSection />
+
+      {/* Component 6: About Sun Gulf Realty */}
+      <AboutSection />
+
+      {/* Component 7: Client Testimonials */}
+      <Testimonials
+        title="What Our Clients Say"
+        subtitle="Real reviews from real Cape Coral families"
+        showStats={true}
+        autoRotate={true}
+        rotationInterval={8000}
+        backgroundVariant="light"
+      />
     </div>
   );
 }
