@@ -11,13 +11,13 @@ import { Calendar, Clock, ArrowRight, BookOpen, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { getBlogPostsForPreview } from "@/lib/api/blog.service";
-import { BlogPostCard } from "./blog-preview-section/blog-post-card";
-import { AnalyticsButton } from "./blog-preview-section/analytics-button";
+import type { BlogPostWithRelations } from "@/lib/types";
 import {
   formatDate,
   getCategoryColor,
-} from "./blog-preview-section/blog-utils";
-import type { BlogPostWithRelations } from "@/lib/types";
+} from "../sections/blog-preview-section/blog-utils";
+import { AnalyticsButton } from "../sections/blog-preview-section/analytics-button";
+import { BlogPostCard } from "../sections/blog-preview-section/blog-post-card";
 
 export async function BlogPreviewSection() {
   let allPosts: BlogPostWithRelations[] = [];

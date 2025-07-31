@@ -1,13 +1,9 @@
 import { Metadata } from "next";
 import { generateSeoMetadata } from "@/lib/config/seo";
+import { BlogPreviewSection } from "@/components/home/blog-preview-section";
 
 // Import all the new section components
-import { HeroSection } from "@/components/sections/hero-section";
-import { FeaturesSection } from "@/components/sections/features-section";
-import { TechStackSection } from "@/components/sections/tech-stack-section";
-import { StatsSection } from "@/components/sections/stats-section";
-import { BlogPreviewSection } from "@/components/sections/blog-preview-section";
-import { FinalCtaSection } from "@/components/sections/final-cta-section";
+// import { HeroSection } from "@/components/home/hero-section";
 
 export const metadata: Metadata = generateSeoMetadata({
   title: "Modern Website Template for Next.js",
@@ -30,22 +26,9 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <HeroSection />
-
-      {/* Features Section */}
-      <FeaturesSection />
-
-      {/* Tech Stack Section */}
-      <TechStackSection />
-
-      {/* Statistics Section */}
-      <StatsSection />
 
       {/* Blog Preview Section */}
       <BlogPreviewSection />
-
-      {/* Final CTA Section */}
-      <FinalCtaSection />
     </div>
   );
 }
