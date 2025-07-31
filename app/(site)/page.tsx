@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import { generateSeoMetadata } from "@/lib/config/seo";
 import {
   HeroSection,
-  PropertySearchBar,
   ValuePropositionSection,
+  FeaturedPropertiesSection,
 } from "@/components/home";
 
 export const metadata: Metadata = generateSeoMetadata({
@@ -30,8 +30,11 @@ export default function HomePage() {
       {/* Hero Section */}
       <HeroSection />
 
+      {/* Featured Properties Section */}
+      <FeaturedPropertiesSection />
+
       {/* Property Search Bar - Overlapping hero section */}
-      <PropertySearchBar />
+      {/* <PropertySearchBar /> */}
 
       {/* Value Proposition Section */}
       <ValuePropositionSection />
