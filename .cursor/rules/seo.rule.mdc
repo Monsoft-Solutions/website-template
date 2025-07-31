@@ -1,0 +1,430 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Sun Gulf Realty SEO Implementation Rules
+
+## Overview
+These rules define the SEO strategy and implementation patterns for Sun Gulf Realty's website using Next.js 15. Focus on Cape Coral/Southwest Florida real estate market with emphasis on local SEO, structured data, and conversion optimization.
+
+## Target Market & Keywords
+- **Primary Location**: Cape Coral, Fort Myers, Southwest Florida
+- **Primary Keywords**: "Cape Coral real estate agent", "Cape Coral homes for sale", "Fort Myers realtor", "Southwest Florida real estate"
+- **Long-tail Keywords**: "Cape Coral waterfront homes", "luxury homes Cape Coral", "investment properties Cape Coral"
+- **Target Audiences**: Move-up buyers (55%), First-time buyers (20%), Florida relocators (10%), Investment buyers (15%)
+
+## 1. Metadata Generation Patterns
+
+### 1.1 Use generateSeoMetadata Function
+Always use the existing `generateSeoMetadata` helper function with these parameters:
+
+```typescript
+export const metadata: Metadata = generateSeoMetadata({
+  title: string, // 50-60 characters max
+  description: string, // 150-160 characters max
+  keywords: string[], // 5-10 relevant keywords
+  canonicalUrl?: string, // Full canonical URL
+  ogImage?: string, // 1200x630px image
+  ogType?: "website" | "article" | "profile", // Default: website
+  twitterCard?: "summary" | "summary_large_image", // Default: summary_large_image
+  noIndex?: boolean, // Default: false
+  additionalMeta?: Record<string, string> // Extra meta tags
+});
+```
+
+### 1.2 Page-Specific Metadata Patterns
+
+#### Homepage
+```typescript
+export const metadata: Metadata = generateSeoMetadata({
+  title: "Sun Gulf Realty - Premier Cape Coral Real Estate Agent | Different by Design",
+  description: "Experience real estate different by design with Sun Gulf Realty. Your trusted Cape Coral real estate experts specializing in waterfront homes, luxury properties, and investment opportunities.",
+  keywords: [
+    "Cape Coral real estate agent",
+    "Fort Myers realtor", 
+    "Southwest Florida real estate",
+    "Cape Coral homes for sale",
+    "waterfront properties Cape Coral"
+  ],
+  canonicalUrl: "https://sungulfrealty.com",
+  ogImage: "/images/sun-gulf-realty-hero.jpg"
+});
+```
+
+#### Property Listings
+```typescript
+export const metadata: Metadata = generateSeoMetadata({
+  title: `${property.address} | ${property.bedrooms}BR/${property.bathrooms}BA | $${property.price.toLocaleString()} | Cape Coral`,
+  description: `${property.bedrooms} bedroom, ${property.bathrooms} bathroom ${property.type.toLowerCase()} in ${property.neighborhood}, Cape Coral. ${property.features?.slice(0, 3).join(", ")}. Contact Sun Gulf Realty today.`,
+  keywords: [
+    `${property.neighborhood} homes for sale`,
+    `Cape Coral ${property.type.toLowerCase()}`,
+    `${property.bedrooms} bedroom homes Cape Coral`,
+    "Cape Coral real estate",
+    "Southwest Florida properties"
+  ],
+  canonicalUrl: `https://sungulfrealty.com/properties/${property.slug}`,
+  ogImage: property.images?.[0] || "/images/default-property.jpg"
+});
+```
+
+#### Neighborhood Pages
+```typescript
+export const metadata: Metadata = generateSeoMetadata({
+  title: `${neighborhood} Cape Coral Real Estate | Homes for Sale | Sun Gulf Realty`,
+  description: `Discover ${neighborhood} Cape Coral real estate. Browse homes for sale, neighborhood insights, and market trends. Your local Cape Coral real estate experts at Sun Gulf Realty.`,
+  keywords: [
+    `${neighborhood} Cape Coral`,
+    `${neighborhood} homes for sale`,
+    `${neighborhood} real estate`,
+    "Cape Coral neighborhoods",
+    "Southwest Florida communities"
+  ],
+  canonicalUrl: `https://sungulfrealty.com/neighborhoods/${neighborhoodSlug}`,
+  ogImage: `/images/neighborhoods/${neighborhoodSlug}-hero.jpg`
+});
+```
+
+#### Blog Posts
+```typescript
+export const metadata: Metadata = generateSeoMetadata({
+  title: `${post.title} | Sun Gulf Realty Blog`,
+  description: post.excerpt,
+  keywords: [...post.tags, "Cape Coral real estate", "real estate tips"],
+  canonicalUrl: `https://sungulfrealty.com/blog/${post.slug}`,
+  ogImage: post.featuredImage || "/images/blog-default.jpg",
+  ogType: "article"
+});
+```
+
+## 2. Structured Data (JsonLd) Implementation
+
+### 2.1 Required Schema Types
+
+#### LocalBusiness (All Pages)
+```typescript
+<JsonLd
+  type="LocalBusiness"
+  data={{
+    "@type": "RealEstateAgent",
+    name: "Sun Gulf Realty, LLC",
+    description: "Cape Coral real estate company specializing in transparent, detail-oriented service for buyers and sellers in Southwest Florida.",
+    url: "https://sungulfrealty.com",
+    image: "https://sungulfrealty.com/images/sun-gulf-realty-logo.jpg",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "1222 SE 47th St, Unit 118",
+      addressLocality: "Cape Coral",
+      addressRegion: "FL",
+      postalCode: "33904",
+      addressCountry: "US"
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: "26.5629",
+      longitude: "-81.9495"
+    },
+    telephone: "(239) 673-8733",
+    faxNumber: "(866) 881-9722",
+    email: "info@sungulfrealty.com",
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "09:00",
+        closes: "17:00"
+      }
+    ],
+    sameAs: [
+      "https://www.facebook.com/sungulfrealty",
+      "https://www.instagram.com/sungulfrealty/"
+    ],
+    areaServed: [
+      "Cape Coral, FL",
+      "Fort Myers, FL", 
+      "Southwest Florida"
+    ],
+    serviceType: [
+      "Real Estate Sales",
+      "Property Rentals",
+      "Real Estate Investments", 
+      "Property Management"
+    ],
+    priceRange: "$$",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      reviewCount: "127"
+    }
+  }}
+/>
+```
+
+#### Product (Property Listings)
+```typescript
+<JsonLd
+  type="Product"
+  data={{
+    "@type": "Accommodation",
+    name: `${property.address} - ${property.bedrooms}BR/${property.bathrooms}BA`,
+    description: property.description,
+    image: property.images,
+    offers: {
+      "@type": "Offer",
+      price: property.price,
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      seller: {
+        "@type": "RealEstateAgent",
+        name: "Sun Gulf Realty, LLC"
+      }
+    },
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: property.address,
+      addressLocality: "Cape Coral",
+      addressRegion: "FL",
+      addressCountry: "US"
+    },
+    numberOfRooms: property.bedrooms,
+    floorSize: {
+      "@type": "QuantitativeValue",
+      value: property.squareFeet,
+      unitCode: "SQF"
+    },
+    amenityFeature: property.features?.map(feature => ({
+      "@type": "LocationFeatureSpecification",
+      name: feature
+    }))
+  }}
+/>
+```
+
+#### FAQPage (Service Pages)
+```typescript
+<JsonLd
+  type="FAQPage"
+  data={{
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "How long does it take to sell a home in Cape Coral?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "The average time to sell a home in Cape Coral is currently 45-60 days, depending on price, condition, and market factors. Sun Gulf Realty's strategic marketing approach often sells homes faster than the market average."
+        }
+      },
+      {
+        "@type": "Question", 
+        name: "What makes Sun Gulf Realty different from other Cape Coral real estate agents?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Sun Gulf Realty is different by design, focusing on transparency, attention to detail, and personalized service. We obsess about every detail of every transaction and provide fresh ideas and bold thinking for our clients."
+        }
+      }
+    ]
+  }}
+/>
+```
+
+#### Article (Blog Posts)
+```typescript
+<JsonLd
+  type="Article"
+  data={{
+    headline: post.title,
+    description: post.excerpt,
+    image: post.featuredImage,
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt,
+    author: {
+      "@type": "Person",
+      name: post.author.name,
+      url: `https://sungulfrealty.com/team/${post.author.slug}`
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Sun Gulf Realty",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://sungulfrealty.com/images/sun-gulf-realty-logo.jpg"
+      }
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://sungulfrealty.com/blog/${post.slug}`
+    },
+    keywords: post.tags?.join(", ")
+  }}
+/>
+```
+
+### 2.2 Schema Stacking Best Practices
+
+#### Multi-Schema Pages
+For pages that warrant multiple schema types, stack them using an array:
+
+```typescript
+<>
+  <JsonLd type="LocalBusiness" data={localBusinessData} />
+  <JsonLd type="FAQPage" data={faqData} />
+  <JsonLd type="WebSite" data={websiteData} />
+</>
+```
+
+#### Website Schema (Layout Level)
+```typescript
+<JsonLd
+  type="WebSite"
+  data={{
+    name: "Sun Gulf Realty",
+    url: "https://sungulfrealty.com",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://sungulfrealty.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Sun Gulf Realty, LLC"
+    }
+  }}
+/>
+```
+
+## 3. Title Tag Optimization Rules
+
+### 3.1 Title Structure Patterns
+- **Homepage**: `[Brand] - [Primary Service] [Location] | [Differentiator]`
+- **Property**: `[Address] | [Beds]BR/[Baths]BA | $[Price] | [Location]`
+- **Neighborhood**: `[Neighborhood] [Location] Real Estate | Homes for Sale | [Brand]`
+- **Service**: `[Service] in [Location] | [Brand] | [Benefit/Differentiator]`
+- **Blog**: `[Post Title] | [Brand] Blog`
+
+### 3.2 Title Optimization Rules
+- Keep titles 50-60 characters maximum
+- Include primary keyword within first 30 characters
+- Always include location (Cape Coral, Fort Myers, etc.)
+- Use pipe (|) separators for better readability
+- Include price for property listings
+- Avoid keyword stuffing
+
+## 4. Meta Description Rules
+
+### 4.1 Description Patterns
+- **Length**: 150-160 characters maximum
+- **Include**: Primary keyword, location, call-to-action
+- **Tone**: Benefit-driven, action-oriented
+- **Format**: Problem/solution or benefit statement + CTA
+
+### 4.2 Description Templates
+```typescript
+// Property listing
+`${bedrooms} bedroom, ${bathrooms} bathroom ${propertyType} in ${neighborhood}, Cape Coral. ${topFeatures}. Contact Sun Gulf Realty for a showing today.`
+
+// Neighborhood page  
+`Discover ${neighborhood} Cape Coral real estate. Browse homes for sale, neighborhood insights, and market trends. Your local experts at Sun Gulf Realty.`
+
+// Service page
+`Expert ${service} in Cape Coral and Southwest Florida. Transparent, detail-oriented approach. Get your free consultation with Sun Gulf Realty today.`
+```
+
+## 5. Image Optimization for SEO
+
+### 5.1 Alt Text Rules
+- **Property images**: `"[PropertyType] at [Address], Cape Coral - [Key Feature]"`
+- **Team photos**: `"[Name], Real Estate Agent at Sun Gulf Realty"`
+- **Neighborhood**: `"[Neighborhood] Cape Coral - [Notable Feature]"`
+- **Logo**: `"Sun Gulf Realty - Cape Coral Real Estate Agent"`
+
+### 5.2 File Naming Convention
+- Use descriptive, keyword-rich filenames
+- Include location when relevant
+- Use hyphens (not underscores)
+- Examples: `cape-coral-waterfront-home-for-sale.jpg`, `sun-gulf-realty-team-photo.jpg`
+
+## 6. Local SEO Optimization
+
+### 6.1 NAP Consistency
+Ensure Name, Address, Phone consistency across:
+- Website footer
+- Contact page
+- Schema markup
+- Google Business Profile
+- All citations
+
+### 6.2 Location-Specific Content
+- Create neighborhood landing pages for major Cape Coral areas
+- Include local landmarks and amenities in descriptions
+- Reference local schools, shopping, and recreation
+- Use local terminology and neighborhood names
+
+## 7. Technical SEO Requirements
+
+### 7.1 Core Web Vitals
+- Largest Contentful Paint (LCP): < 2.5s
+- First Input Delay (FID): < 100ms  
+- Cumulative Layout Shift (CLS): < 0.1
+
+### 7.2 Mobile Optimization
+- Use responsive design for all pages
+- Optimize images with `next/image`
+- Implement touch-friendly navigation
+- Test on multiple device sizes
+
+### 7.3 Page Speed Optimization
+- Implement lazy loading for images
+- Minimize JavaScript bundles
+- Use CDN for image delivery
+- Optimize font loading
+
+## 8. Content Guidelines
+
+### 8.1 Keyword Density
+- Primary keyword: 1-3% density
+- Secondary keywords: 0.5-1% density
+- Natural language integration
+- Avoid keyword stuffing
+
+### 8.2 Content Structure
+- Use H1 for main page title (include primary keyword)
+- Use H2-H6 for logical content hierarchy
+- Include local keywords in subheadings
+- Use bullet points and numbered lists
+- Implement table of contents for long pages
+
+## 9. Monitoring and Analytics
+
+### 9.1 Required Tracking
+- Google Analytics 4
+- Google Search Console
+- Core Web Vitals monitoring
+- Local ranking tracking
+
+### 9.2 Key Metrics to Monitor
+- Organic traffic growth
+- Local keyword rankings
+- Click-through rates from SERPs
+- Conversion rates by traffic source
+- Page speed metrics
+
+## 10. Implementation Checklist
+
+For each new page, verify:
+- [ ] Metadata generated with proper title/description
+- [ ] Appropriate JsonLd schema implemented
+- [ ] Images optimized with alt text
+- [ ] Local keywords included naturally
+- [ ] Internal linking to related pages
+- [ ] Mobile responsiveness tested
+- [ ] Page speed under 3 seconds
+- [ ] Schema markup validated
+- [ ] No duplicate content issues
+- [ ] Proper canonical URL set
+
+## Usage Examples
+
+See the current contact page implementation as a reference pattern for combining metadata generation and structured data.
+
+Always prioritize user experience while implementing SEO best practices. The goal is to help potential clients find Sun Gulf Realty while providing valuable, relevant information about Cape Coral real estate. 
