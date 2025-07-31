@@ -19,12 +19,24 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+
+        // Sun Gulf Realty Brand Variants
+        "brand-primary":
+          "bg-accent-orange text-white hover:bg-orange-600 hover:-translate-y-0.5 shadow-button hover:shadow-button-hover font-semibold transition-all duration-200 focus:ring-accent-orange focus:ring-opacity-50 active:translate-y-0",
+        "brand-secondary":
+          "bg-transparent text-primary-blue border-2 border-primary-blue hover:bg-primary-blue hover:text-white font-semibold transition-all duration-200 focus:ring-primary-blue focus:ring-opacity-50",
+        "brand-outline":
+          "bg-transparent text-neutral-text border border-neutral-border hover:bg-secondary-light hover:border-primary-blue font-medium transition-all duration-200 focus:ring-primary-blue focus:ring-opacity-50",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+
+        // Touch-friendly sizes
+        touch: "h-11 px-6 py-3", // 44px minimum for mobile touch targets
+        "touch-lg": "h-12 px-8 py-4", // Larger touch target
       },
     },
     defaultVariants: {

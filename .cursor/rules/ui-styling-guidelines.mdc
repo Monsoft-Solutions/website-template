@@ -1,0 +1,465 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Sun Gulf Realty UI Styling Guidelines
+
+## Brand Identity & Design Philosophy
+
+Sun Gulf Realty positions itself as "different by design" with emphasis on being "real and transparent, obsessing about every detail of every transaction." The website design should reflect:
+
+- **Modern Minimalism**: Clean, uncluttered layouts focusing on user experience
+- **Local-Inspired Elements**: Design inspired by Cape Coral architecture and Gulf Coast lifestyle
+- **Storytelling Focus**: Visual design that supports narrative and emotional connection
+- **Transparency**: Clear, honest presentation of information and processes
+
+## Color Palette
+
+### Primary Colors
+```css
+--primary-blue-dark: #1E3A8A;    /* Deep Gulf Coast blue for headers, navigation */
+--primary-blue-light: #3B82F6;   /* Lighter blue for accents, links */
+```
+
+### Secondary Colors
+```css
+--secondary-white: #F8FAFC;      /* Warm white for backgrounds */
+--secondary-light: #F1F5F9;      /* Light sand tone for sections */
+```
+
+### Accent Colors
+```css
+--accent-orange: #F97316;        /* Sunset orange for CTAs, highlights, urgent elements */
+```
+
+### Neutral Colors
+```css
+--neutral-text: #374151;         /* Charcoal gray for body text */
+--neutral-light: #9CA3AF;        /* Light gray for secondary text */
+--neutral-border: #E5E7EB;       /* Border color */
+--neutral-background: #F9FAFB;   /* Light background */
+```
+
+### Usage Guidelines
+- **Primary Blue Dark (#1E3A8A)**: Navigation, main headers, footer
+- **Primary Blue Light (#3B82F6)**: Links, buttons, accents
+- **Accent Orange (#F97316)**: Call-to-action buttons, urgency indicators, highlights
+- **Neutral Text (#374151)**: All body text, descriptions
+- **Secondary Whites**: Page backgrounds, card backgrounds
+
+## Typography
+
+### Font Hierarchy
+```css
+/* Headlines - Modern Serif for elegance and trust */
+--font-headline: 'Playfair Display', 'Georgia', serif;
+
+/* Body Text - Clean sans-serif for readability */
+--font-body: 'Inter', 'Helvetica Neue', sans-serif;
+
+/* Accent Text - Script font for personal touches */
+--font-accent: 'Dancing Script', cursive;
+```
+
+### Type Scale
+```css
+--text-xs: 0.75rem;    /* 12px - Fine print, captions */
+--text-sm: 0.875rem;   /* 14px - Secondary text */
+--text-base: 1rem;     /* 16px - Body text */
+--text-lg: 1.125rem;   /* 18px - Large body text */
+--text-xl: 1.25rem;    /* 20px - Subheadings */
+--text-2xl: 1.5rem;    /* 24px - Section headers */
+--text-3xl: 1.875rem;  /* 30px - Page headers */
+--text-4xl: 2.25rem;   /* 36px - Hero headlines */
+--text-5xl: 3rem;      /* 48px - Large hero text */
+```
+
+### Typography Usage
+- **Headlines (H1-H3)**: Use `--font-headline` with appropriate text scale
+- **Body Text**: Use `--font-body` at `--text-base` (16px) minimum
+- **Accent Elements**: Use `--font-accent` sparingly for personal touches
+- **Line Height**: 1.6 for body text, 1.2 for headlines
+
+## Layout & Spacing
+
+### Spacing Scale
+```css
+--space-1: 0.25rem;   /* 4px */
+--space-2: 0.5rem;    /* 8px */
+--space-3: 0.75rem;   /* 12px */
+--space-4: 1rem;      /* 16px */
+--space-6: 1.5rem;    /* 24px */
+--space-8: 2rem;      /* 32px */
+--space-12: 3rem;     /* 48px */
+--space-16: 4rem;     /* 64px */
+--space-20: 5rem;     /* 80px */
+--space-24: 6rem;     /* 96px */
+```
+
+### Container Widths
+```css
+--container-sm: 640px;
+--container-md: 768px;
+--container-lg: 1024px;
+--container-xl: 1280px;
+--container-2xl: 1536px;
+```
+
+### Grid System
+- Use CSS Grid or Flexbox for layouts
+- Mobile-first responsive design
+- Breakpoints: 640px (sm), 768px (md), 1024px (lg), 1280px (xl)
+
+## Component Styling
+
+### Buttons
+
+#### Primary Button (CTA)
+```css
+.btn-primary {
+  background-color: var(--accent-orange);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: var(--text-base);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(249, 115, 22, 0.3);
+}
+```
+
+#### Secondary Button
+```css
+.btn-secondary {
+  background-color: transparent;
+  color: var(--primary-blue-light);
+  padding: 12px 24px;
+  border: 2px solid var(--primary-blue-light);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--primary-blue-light);
+  color: white;
+}
+```
+
+### Cards
+```css
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: var(--space-6);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+```
+
+### Property Cards
+```css
+.property-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.property-card-image {
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  width: 100%;
+}
+
+.property-card-content {
+  padding: var(--space-4);
+}
+
+.property-price {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--primary-blue-dark);
+  margin-bottom: var(--space-2);
+}
+```
+
+### Forms
+```css
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--neutral-border);
+  border-radius: 8px;
+  font-size: var(--text-base);
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-blue-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+  color: var(--neutral-text);
+}
+```
+
+## Navigation Styling
+
+### Header Navigation
+```css
+.main-nav {
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: var(--space-4) 0;
+}
+
+.nav-link {
+  color: var(--neutral-text);
+  font-weight: 500;
+  text-decoration: none;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--primary-blue-light);
+  background-color: var(--secondary-light);
+}
+
+.nav-link.active {
+  color: var(--primary-blue-dark);
+  background-color: var(--secondary-light);
+}
+```
+
+## Hero Section Styling
+
+```css
+.hero-section {
+  background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--primary-blue-light) 100%);
+  color: white;
+  padding: var(--space-20) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-title {
+  font-family: var(--font-headline);
+  font-size: var(--text-5xl);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: var(--space-6);
+}
+
+.hero-subtitle {
+  font-size: var(--text-xl);
+  opacity: 0.9;
+  margin-bottom: var(--space-8);
+  line-height: 1.6;
+}
+```
+
+## Trust Signals & Testimonials
+
+```css
+.testimonial-card {
+  background: white;
+  padding: var(--space-8);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.testimonial-quote {
+  font-size: var(--text-lg);
+  line-height: 1.7;
+  color: var(--neutral-text);
+  margin-bottom: var(--space-6);
+  font-style: italic;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.star-rating {
+  color: #fbbf24; /* Gold for stars */
+  font-size: var(--text-lg);
+}
+```
+
+## Mobile-First Design
+
+### Mobile Breakpoints & Responsive Design
+```css
+/* Mobile First - Default styles for mobile */
+.container {
+  padding: 0 var(--space-4);
+  max-width: 100%;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--space-6);
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 var(--space-8);
+    max-width: var(--container-xl);
+    margin: 0 auto;
+  }
+}
+```
+
+### Touch-Friendly Elements
+- Minimum touch target size: 44px × 44px
+- Adequate spacing between interactive elements (minimum 8px)
+- Large, easy-to-tap buttons on mobile
+
+## Interactive Elements
+
+### Hover Effects
+```css
+.interactive-element {
+  transition: all 0.2s ease;
+}
+
+.interactive-element:hover {
+  transform: translateY(-2px);
+}
+```
+
+### Loading States
+```css
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.spinner {
+  border: 3px solid var(--neutral-border);
+  border-top: 3px solid var(--primary-blue-light);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+```
+
+## Performance & Accessibility
+
+### Performance Guidelines
+- Use `transform` and `opacity` for animations
+- Implement lazy loading for images
+- Optimize images with proper alt tags
+- Use web fonts with `font-display: swap`
+
+### Accessibility Requirements
+- Maintain color contrast ratio of at least 4.5:1
+- Provide focus indicators for interactive elements
+- Use semantic HTML elements
+- Include proper ARIA labels where needed
+
+## Photography & Visual Content
+
+### Image Guidelines
+- **Aspect Ratios**: 16:10 for property photos, 3:2 for lifestyle images
+- **Style**: Bright, aspirational, authentic local community shots
+- **Quality**: High-resolution, professionally shot
+- **Alt Text**: Descriptive, SEO-friendly alternative text
+
+### Icon Usage
+- Use consistent icon library (Heroicons recommended)
+- 24px default size for interface icons
+- Maintain visual consistency across all icons
+
+## Implementation Examples
+
+### Property Search Section
+```css
+.property-search {
+  background: var(--secondary-white);
+  padding: var(--space-8);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.search-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+```
+
+### Call-to-Action Sections
+```css
+.cta-section {
+  background: linear-gradient(135deg, var(--accent-orange) 0%, #ea580c 100%);
+  color: white;
+  padding: var(--space-16) var(--space-8);
+  text-align: center;
+  border-radius: 16px;
+}
+
+.cta-title {
+  font-family: var(--font-headline);
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-4);
+}
+```
+
+## Brand Voice in Visual Design
+
+- **Professional yet Approachable**: Clean lines with warm touches
+- **Transparent**: Clear information hierarchy, no hidden elements
+- **Local Connection**: Use Cape Coral imagery and Gulf Coast colors
+- **Innovation**: Modern design patterns, subtle animations
+- **Trust**: Consistent branding, professional photography
+
+## Don'ts
+
+- Don't use colors outside the defined palette
+- Don't mix serif and sans-serif in the same text block unnecessarily  
+- Don't create overly complex layouts that distract from content
+- Don't use outdated design patterns (gradients with multiple stops, drop shadows, etc.)
+- Don't compromise mobile experience for desktop features
+- Don't use generic stock photography
+- Don't create buttons smaller than 44px touch targets
+- Don't use low contrast color combinations
+
+These guidelines ensure the Sun Gulf Realty website maintains a consistent, professional, and trustworthy appearance that reflects the company's "different by design" philosophy while prioritizing user experience and conversion optimization.

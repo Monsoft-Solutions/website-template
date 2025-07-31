@@ -1,51 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Sun Gulf Realty Brand Colors */
+    --primary-blue-dark: 217 75% 21%; /* #1E3A8A */
+    --primary-blue-light: 217 91% 60%; /* #3B82F6 */
+    --secondary-white: 210 33% 98%; /* #F8FAFC */
+    --secondary-light: 210 40% 96%; /* #F1F5F9 */
+    --accent-orange: 24 95% 53%; /* #F97316 */
+    --neutral-text: 214 20% 27%; /* #374151 */
+    --neutral-light: 214 15% 62%; /* #9CA3AF */
+    --neutral-border: 220 13% 91%; /* #E5E7EB */
+    --neutral-background: 220 14% 98%; /* #F9FAFB */
+
+    /* Shadcn UI Variables mapped to brand colors */
+    --background: 210 33% 98%; /* --secondary-white */
+    --foreground: 214 20% 27%; /* --neutral-text */
+    --card: 0 0% 100%; /* Pure white for cards */
+    --card-foreground: 214 20% 27%; /* --neutral-text */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 214 20% 27%;
+    --primary: 217 75% 21%; /* --primary-blue-dark */
+    --primary-foreground: 210 33% 98%; /* --secondary-white */
+    --secondary: 210 40% 96%; /* --secondary-light */
+    --secondary-foreground: 217 75% 21%; /* --primary-blue-dark */
+    --muted: 210 40% 96%; /* --secondary-light */
+    --muted-foreground: 214 15% 62%; /* --neutral-light */
+    --accent: 24 95% 53%; /* --accent-orange */
+    --accent-foreground: 210 33% 98%; /* --secondary-white */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --border: 220 13% 91%; /* --neutral-border */
+    --input: 220 13% 91%; /* --neutral-border */
+    --ring: 217 91% 60%; /* --primary-blue-light */
+    --radius: 0.75rem; /* Increased from 0.5rem for softer corners */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 217 75% 21%; /* --primary-blue-dark */
+    --foreground: 210 33% 98%; /* --secondary-white */
+    --card: 217 75% 21%;
+    --card-foreground: 210 33% 98%;
+    --popover: 217 75% 21%;
+    --popover-foreground: 210 33% 98%;
+    --primary: 210 33% 98%;
+    --primary-foreground: 217 75% 21%;
+    --secondary: 214 20% 27%; /* --neutral-text */
+    --secondary-foreground: 210 33% 98%;
+    --muted: 214 20% 27%;
+    --muted-foreground: 214 15% 62%;
+    --accent: 24 95% 53%; /* --accent-orange */
+    --accent-foreground: 210 33% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 210 33% 98%;
+    --border: 214 20% 27%;
+    --input: 214 20% 27%;
+    --ring: 217 91% 60%;
   }
 }
 
@@ -53,13 +67,251 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-headline;
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-4xl lg:text-5xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl lg:text-4xl font-semibold;
+  }
+
+  h3 {
+    @apply text-2xl lg:text-3xl font-semibold;
+  }
+
+  h4 {
+    @apply text-xl lg:text-2xl font-medium;
+  }
+
+  h5 {
+    @apply text-lg lg:text-xl font-medium;
+  }
+
+  h6 {
+    @apply text-base lg:text-lg font-medium;
+  }
+
+  p {
+    @apply text-base text-neutral-text;
+    line-height: 1.6;
+  }
+
+  a {
+    @apply text-primary-blue transition-colors duration-200;
+  }
+
+  a:hover {
+    @apply text-primary-blue-light;
+  }
+}
+
+@layer components {
+  /* Button Components */
+  .btn-primary {
+    @apply bg-accent-orange text-white px-6 py-3 rounded-lg font-semibold text-base border-none cursor-pointer;
+    @apply transition-all duration-200 shadow-button;
+    @apply hover:bg-orange-600 hover:-translate-y-0.5 hover:shadow-button-hover;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent-orange focus:ring-opacity-50;
+    @apply active:translate-y-0;
+    min-height: 44px; /* Touch-friendly minimum */
+  }
+
+  .btn-secondary {
+    @apply bg-transparent text-primary-blue px-6 py-3 rounded-lg font-semibold border-2 border-primary-blue cursor-pointer;
+    @apply transition-all duration-200;
+    @apply hover:bg-primary-blue hover:text-white;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-opacity-50;
+    min-height: 44px; /* Touch-friendly minimum */
+  }
+
+  .btn-outline {
+    @apply bg-transparent text-neutral-text px-6 py-3 rounded-lg font-medium border border-neutral-border cursor-pointer;
+    @apply transition-all duration-200;
+    @apply hover:bg-secondary-light hover:border-primary-blue;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-opacity-50;
+    min-height: 44px; /* Touch-friendly minimum */
+  }
+
+  /* Card Components */
+  .card {
+    @apply bg-white rounded-xl shadow-card p-6;
+    @apply transition-shadow duration-200;
+    @apply hover:shadow-card-hover;
+  }
+
+  .property-card {
+    @apply bg-white rounded-xl overflow-hidden shadow-property;
+    @apply transition-all duration-200;
+    @apply hover:-translate-y-1 hover:shadow-property-hover;
+  }
+
+  .property-card-image {
+    @apply w-full object-cover;
+    aspect-ratio: 16/10;
+  }
+
+  .property-card-content {
+    @apply p-4;
+  }
+
+  .property-price {
+    @apply text-xl font-bold text-primary-blue-dark mb-2;
+  }
+
+  .property-details {
+    @apply text-neutral-text text-sm space-y-1;
+  }
+
+  /* Form Components */
+  .form-input {
+    @apply w-full px-4 py-3 border-2 border-neutral-border rounded-lg text-base;
+    @apply transition-colors duration-200;
+    @apply focus:outline-none focus:border-primary-blue focus:ring-2 focus:ring-primary-blue focus:ring-opacity-10;
+    @apply placeholder:text-neutral-light;
+    min-height: 44px; /* Touch-friendly minimum */
+  }
+
+  .form-label {
+    @apply block mb-2 font-semibold text-neutral-text;
+  }
+
+  .form-error {
+    @apply text-red-500 text-sm mt-1;
+  }
+
+  /* Navigation Components */
+  .main-nav {
+    @apply bg-white shadow-sm py-4;
+  }
+
+  .nav-link {
+    @apply text-neutral-text font-medium no-underline px-4 py-2 rounded-md;
+    @apply transition-all duration-200;
+    @apply hover:text-primary-blue hover:bg-secondary-light;
+    min-height: 44px; /* Touch-friendly minimum */
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .nav-link.active {
+    @apply text-primary-blue-dark bg-secondary-light;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    @apply text-white py-20 relative overflow-hidden;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary-blue-dark)) 0%,
+      hsl(var(--primary-blue-light)) 100%
+    );
+  }
+
+  .hero-title {
+    @apply font-headline text-4xl lg:text-5xl font-bold leading-tight mb-6;
+  }
+
+  .hero-subtitle {
+    @apply text-xl mb-8 leading-relaxed opacity-90;
+  }
+
+  /* Testimonial Components */
+  .testimonial-card {
+    @apply bg-white p-8 rounded-2xl shadow-testimonial relative;
+  }
+
+  .testimonial-quote {
+    @apply text-lg leading-relaxed text-neutral-text mb-6 italic;
+  }
+
+  .testimonial-author {
+    @apply flex items-center gap-4;
+  }
+
+  .star-rating {
+    @apply text-yellow-400 text-lg;
+  }
+
+  /* Search Components */
+  .property-search {
+    @apply bg-secondary-white p-8 rounded-2xl shadow-search;
+  }
+
+  .search-filters {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6;
+  }
+
+  /* CTA Sections */
+  .cta-section {
+    @apply text-white p-16 text-center rounded-2xl;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--accent-orange)) 0%,
+      #ea580c 100%
+    );
+  }
+
+  .cta-title {
+    @apply font-headline text-3xl mb-4;
+  }
+
+  /* Container Classes */
+  .container-custom {
+    @apply mx-auto px-4 sm:px-6 lg:px-8;
+    max-width: 1280px;
+  }
+
+  /* Loading States */
+  .loading {
+    @apply opacity-60 pointer-events-none cursor-not-allowed;
+  }
+
+  .spinner {
+    @apply border-4 border-neutral-border border-t-primary-blue rounded-full w-6 h-6 animate-spin;
+  }
+
+  /* Interactive Elements */
+  .interactive-element {
+    @apply transition-transform duration-200;
+  }
+
+  .interactive-element:hover {
+    @apply -translate-y-0.5;
+  }
+
+  /* Glass Card Effect */
+  .glass-card {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    @apply rounded-2xl;
+  }
+
+  /* Accessibility Focus Styles */
+  .focus-visible {
+    @apply outline-none ring-2 ring-primary-blue ring-opacity-50;
   }
 }
 
 @layer utilities {
-  /* Custom animations for the About page */
+  /* Custom animations */
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
@@ -129,6 +381,54 @@
     animation: shimmer 3s infinite;
   }
 
+  /* Responsive spacing utilities */
+  .section-padding {
+    @apply py-16 lg:py-24;
+  }
+
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Touch-friendly utilities */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Typography utilities */
+  .text-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary-blue-dark)) 0%,
+      hsl(var(--primary-blue-light)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Brand-specific utilities */
+  .brand-shadow {
+    box-shadow: 0 4px 20px rgba(30, 58, 138, 0.1);
+  }
+
+  .brand-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary-blue-dark)) 0%,
+      hsl(var(--primary-blue-light)) 100%
+    );
+  }
+
+  .accent-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--accent-orange)) 0%,
+      #ea580c 100%
+    );
+  }
+
   @keyframes float {
     0%,
     100% {
@@ -161,15 +461,6 @@
   }
 
   /* Enhanced glassmorphism effect */
-  .glass-card {
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.125);
-    border-radius: 2rem;
-  }
-
-  /* Morphing border animation */
   .morphing-border {
     position: relative;
     border-radius: 2rem;
@@ -183,13 +474,15 @@
     background: conic-gradient(
       from 0deg,
       transparent,
-      #3b82f6,
+      hsl(var(--primary-blue-light)),
       transparent,
-      #ec4899,
+      hsl(var(--accent-orange)),
       transparent
     );
     border-radius: inherit;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     mask-composite: xor;
     -webkit-mask-composite: xor;
     animation: rotate-border 4s linear infinite;
@@ -198,6 +491,21 @@
   @keyframes rotate-border {
     to {
       transform: rotate(360deg);
+    }
+  }
+
+  /* Mobile-first responsive design helpers */
+  @media (max-width: 640px) {
+    .hero-title {
+      @apply text-3xl;
+    }
+
+    .hero-subtitle {
+      @apply text-lg;
+    }
+
+    .cta-title {
+      @apply text-2xl;
     }
   }
 }
