@@ -210,7 +210,7 @@
   }
 
   .nav-link.active {
-    @apply text-primary-blue-dark bg-secondary-light;
+    @apply text-primary-blue-dark bg-secondary-white-light;
   }
 
   /* Hero Section */

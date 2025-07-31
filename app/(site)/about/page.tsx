@@ -3,16 +3,7 @@
 import { JsonLd } from "@/components/seo/JsonLd";
 
 // Import new About page sections
-import { AboutHeroSection } from "@/components/about/about-hero-section";
-import { AboutTimelineSection } from "@/components/about/about-timeline-section";
-import { AboutMissionSection } from "@/components/about/about-mission-section";
-import { AboutValuesSection } from "@/components/about/about-values-section";
-import { AboutTeamSection } from "@/components/about/about-team-section";
-import { AboutCultureSection } from "@/components/about/about-culture-section";
-import { AboutStatsSection } from "@/components/about/about-stats-section";
-import { AboutRecognitionSection } from "@/components/about/about-recognition-section";
-import { AboutFutureSection } from "@/components/about/about-future-section";
-import { AboutCtaSection } from "@/components/about/about-cta-section";
+// import { AboutHeroSection } from "@/components/about/about-hero-section";
 
 export default function AboutPage() {
   return (
@@ -47,34 +38,6 @@ export default function AboutPage() {
 
       <main className="relative overflow-hidden">
         {/* Dynamic Hero Section */}
-        <AboutHeroSection />
-
-        {/* Interactive Timeline */}
-        <AboutTimelineSection />
-
-        {/* Mission & Vision */}
-        <AboutMissionSection />
-
-        {/* Core Values */}
-        <AboutValuesSection />
-
-        {/* Team Showcase */}
-        <AboutTeamSection />
-
-        {/* Culture Gallery */}
-        <AboutCultureSection />
-
-        {/* Achievement Stats */}
-        <AboutStatsSection />
-
-        {/* Recognition Wall */}
-        <AboutRecognitionSection />
-
-        {/* Future Vision */}
-        <AboutFutureSection />
-
-        {/* Join Us CTA */}
-        <AboutCtaSection />
       </main>
     </>
   );
