@@ -1,6 +1,10 @@
 import { Metadata } from "next";
 import { generateSeoMetadata } from "@/lib/config/seo";
-import { HeroSection } from "@/components/home/hero-section";
+import {
+  HeroSection,
+  PropertySearchBar,
+  ValuePropositionSection,
+} from "@/components/home";
 
 export const metadata: Metadata = generateSeoMetadata({
   title: "Sun Gulf Realty - Real Estate Different by Design | Cape Coral, FL",
@@ -25,6 +29,12 @@ export default function HomePage() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <HeroSection />
+
+      {/* Property Search Bar - Overlapping hero section */}
+      <PropertySearchBar />
+
+      {/* Value Proposition Section */}
+      <ValuePropositionSection />
     </div>
   );
 }
